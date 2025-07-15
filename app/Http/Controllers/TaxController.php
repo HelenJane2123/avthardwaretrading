@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Category;
 use App\Tax;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TaxController extends Controller
 {
@@ -44,7 +45,7 @@ class TaxController extends Controller
 
         $tax = new Tax();
         $tax->name = $request->name;
-        $tax->slug = str_slug($request->name);
+        $tax->slug = Str::slug($request->name);
         $tax->status = 1;
         $tax->save();
 
@@ -89,7 +90,7 @@ class TaxController extends Controller
 
         $tax = Tax::findOrFail($id);
         $tax->name = $request->name;
-        $tax->slug = str_slug($request->name);
+        $tax->slug = Str::slug($request->name);
         $tax->save();
 
         return redirect()->back()->with('message', 'Tax Updated Successfully');

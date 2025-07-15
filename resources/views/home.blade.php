@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('titel', 'Home | ')
+@section('title', 'Home | ')
 @section('content')
     @include('partials.header')
     @include('partials.sidebar')

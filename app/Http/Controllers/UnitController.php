@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Tax;
 use App\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UnitController extends Controller
 {
@@ -44,7 +45,7 @@ class UnitController extends Controller
 
         $unit = new Unit();
         $unit->name = $request->name;
-        $unit->slug = str_slug($request->name);
+        $unit->slug = Str::slug($request->name);
         $unit->status = 1;
         $unit->save();
 
@@ -89,7 +90,7 @@ class UnitController extends Controller
 
         $unit = Unit::findOrFail($id);
         $unit->name = $request->name;
-        $unit->slug = str_slug($request->name);
+        $unit->slug = Str::slug($request->name);
         $unit->save();
 
         return redirect()->back()->with('message', 'Unit Updated Successfully');
