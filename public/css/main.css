@@ -14883,6 +14883,7 @@ be a descendant of the grid when it is being dragged.
   margin-bottom: 40px;
   /* font-family: "Niconne"; */
   color: #fff;
+  text-align: center;
 }
 
 .login-content .logo h1 {
@@ -14968,6 +14969,28 @@ be a descendant of the grid when it is being dragged.
   opacity: 1;
   -webkit-transform: rotateY(0deg);
           transform: rotateY(0deg);
+}
+
+.login-wrapper {
+    height: 100vh;
+    display: flex;
+}
+
+.login-left {
+    width: 50%;
+    background: #fff;
+    padding: 40px;
+}
+
+.login-right {
+    width: 50%;
+    background: linear-gradient(to right, #1d3557, #457b9d);
+    color: white;
+    padding: 40px;
+}
+
+.analytics-text img {
+    max-width: 80%;
 }
 
 @media (max-width: 351px) {
