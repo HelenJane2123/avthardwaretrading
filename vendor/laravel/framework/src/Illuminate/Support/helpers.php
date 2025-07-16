@@ -5,6 +5,8 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Env;
 use Illuminate\Support\HigherOrderTapProxy;
+use Illuminate\Support\Once;
+use Illuminate\Support\Onceable;
 use Illuminate\Support\Optional;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
@@ -152,16 +154,19 @@ if (! function_exists('filled')) {
     }
 }
 
-if (! function_exists('laravel_cloud')) {
+if (! function_exists('literal')) {
     /**
-     * Determine if the application is running on Laravel Cloud.
+     * Return a new literal or anonymous object using named arguments.
      *
-     * @return bool
+     * @return \stdClass
      */
-    function laravel_cloud()
+    function literal(...$arguments)
     {
-        return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1' ||
-               ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
+        if (count($arguments) === 1 && array_is_list($arguments)) {
+            return $arguments[0];
+        }
+
+        return (object) $arguments;
     }
 }
 
@@ -192,6 +197,26 @@ if (! function_exists('object_get')) {
     }
 }
 
+if (! function_exists('once')) {
+    /**
+     * Ensures a callable is only called once, and returns the result on subsequent calls.
+     *
+     * @template  TReturnType
+     *
+     * @param  callable(): TReturnType  $callback
+     * @return TReturnType
+     */
+    function once(callable $callback)
+    {
+        $onceable = Onceable::tryFromTrace(
+            debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 2),
+            $callback,
+        );
+
+        return $onceable ? Once::instance()->value($onceable) : call_user_func($callback);
+    }
+}
+
 if (! function_exists('optional')) {
     /**
      * Provide access to optional objects.
@@ -200,7 +225,7 @@ if (! function_exists('optional')) {
      * @param  callable|null  $callback
      * @return mixed
      */
-    function optional($value = null, ?callable $callback = null)
+    function optional($value = null, callable $callback = null)
     {
         if (is_null($callback)) {
             return new Optional($value);
@@ -440,7 +465,7 @@ if (! function_exists('with')) {
      * @param  (callable(TValue): (TReturn))|null  $callback
      * @return ($callback is null ? TValue : TReturn)
      */
-    function with($value, ?callable $callback = null)
+    function with($value, callable $callback = null)
     {
         return is_null($callback) ? $value : $callback($value);
     }

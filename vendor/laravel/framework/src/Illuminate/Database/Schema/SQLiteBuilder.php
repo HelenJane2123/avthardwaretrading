@@ -34,17 +34,16 @@ class SQLiteBuilder extends Builder
     /**
      * Get the tables for the database.
      *
-     * @param  bool  $withSize
      * @return array
      */
-    public function getTables($withSize = true)
+    public function getTables()
     {
-        if ($withSize) {
-            try {
-                $withSize = $this->connection->scalar($this->grammar->compileDbstatExists());
-            } catch (QueryException $e) {
-                $withSize = false;
-            }
+        $withSize = false;
+
+        try {
+            $withSize = $this->connection->scalar($this->grammar->compileDbstatExists());
+        } catch (QueryException $e) {
+            //
         }
 
         return $this->connection->getPostProcessor()->processTables(
@@ -53,30 +52,18 @@ class SQLiteBuilder extends Builder
     }
 
     /**
-     * Get all of the table names for the database.
+     * Get the columns for a given table.
      *
-     * @deprecated Will be removed in a future Laravel version.
-     *
+     * @param  string  $table
      * @return array
      */
-    public function getAllTables()
+    public function getColumns($table)
     {
-        return $this->connection->select(
-            $this->grammar->compileGetAllTables()
-        );
-    }
+        $table = $this->connection->getTablePrefix().$table;
 
-    /**
-     * Get all of the view names for the database.
-     *
-     * @deprecated Will be removed in a future Laravel version.
-     *
-     * @return array
-     */
-    public function getAllViews()
-    {
-        return $this->connection->select(
-            $this->grammar->compileGetAllViews()
+        return $this->connection->getPostProcessor()->processColumns(
+            $this->connection->selectFromWriteConnection($this->grammar->compileColumns($table)),
+            $this->connection->scalar($this->grammar->compileSqlCreateStatement($table))
         );
     }
 

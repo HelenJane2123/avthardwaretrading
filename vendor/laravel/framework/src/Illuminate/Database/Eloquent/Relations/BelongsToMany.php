@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\Concerns\AsPivot;
 use Illuminate\Database\Eloquent\Relations\Concerns\InteractsWithDictionary;
 use Illuminate\Database\Eloquent\Relations\Concerns\InteractsWithPivotTable;
+use Illuminate\Database\Query\Grammars\MySqlGrammar;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -753,7 +754,7 @@ class BelongsToMany extends Relation
      * @param  \Closure|null  $callback
      * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Collection|mixed
      */
-    public function findOr($id, $columns = ['*'], ?Closure $callback = null)
+    public function findOr($id, $columns = ['*'], Closure $callback = null)
     {
         if ($columns instanceof Closure) {
             $callback = $columns;
@@ -827,7 +828,7 @@ class BelongsToMany extends Relation
      * @param  \Closure|null  $callback
      * @return \Illuminate\Database\Eloquent\Model|static|mixed
      */
-    public function firstOr($columns = ['*'], ?Closure $callback = null)
+    public function firstOr($columns = ['*'], Closure $callback = null)
     {
         if ($columns instanceof Closure) {
             $callback = $columns;
@@ -997,66 +998,19 @@ class BelongsToMany extends Relation
      */
     public function chunkById($count, callable $callback, $column = null, $alias = null)
     {
-        return $this->orderedChunkById($count, $callback, $column, $alias);
-    }
+        $this->prepareQueryBuilder();
 
-    /**
-     * Chunk the results of a query by comparing IDs in descending order.
-     *
-     * @param  int  $count
-     * @param  callable  $callback
-     * @param  string|null  $column
-     * @param  string|null  $alias
-     * @return bool
-     */
-    public function chunkByIdDesc($count, callable $callback, $column = null, $alias = null)
-    {
-        return $this->orderedChunkById($count, $callback, $column, $alias, descending: true);
-    }
-
-    /**
-     * Execute a callback over each item while chunking by ID.
-     *
-     * @param  callable  $callback
-     * @param  int  $count
-     * @param  string|null  $column
-     * @param  string|null  $alias
-     * @return bool
-     */
-    public function eachById(callable $callback, $count = 1000, $column = null, $alias = null)
-    {
-        return $this->chunkById($count, function ($results, $page) use ($callback, $count) {
-            foreach ($results as $key => $value) {
-                if ($callback($value, (($page - 1) * $count) + $key) === false) {
-                    return false;
-                }
-            }
-        }, $column, $alias);
-    }
-
-    /**
-     * Chunk the results of a query by comparing IDs in a given order.
-     *
-     * @param  int  $count
-     * @param  callable  $callback
-     * @param  string|null  $column
-     * @param  string|null  $alias
-     * @param  bool  $descending
-     * @return bool
-     */
-    public function orderedChunkById($count, callable $callback, $column = null, $alias = null, $descending = false)
-    {
         $column ??= $this->getRelated()->qualifyColumn(
             $this->getRelatedKeyName()
         );
 
         $alias ??= $this->getRelatedKeyName();
 
-        return $this->prepareQueryBuilder()->orderedChunkById($count, function ($results, $page) use ($callback) {
+        return $this->query->chunkById($count, function ($results) use ($callback) {
             $this->hydratePivotRelation($results->all());
 
-            return $callback($results, $page);
-        }, $column, $alias, $descending);
+            return $callback($results);
+        }, $column, $alias);
     }
 
     /**
@@ -1109,29 +1063,6 @@ class BelongsToMany extends Relation
         $alias ??= $this->getRelatedKeyName();
 
         return $this->prepareQueryBuilder()->lazyById($chunkSize, $column, $alias)->map(function ($model) {
-            $this->hydratePivotRelation([$model]);
-
-            return $model;
-        });
-    }
-
-    /**
-     * Query lazily, by chunking the results of a query by comparing IDs in descending order.
-     *
-     * @param  int  $chunkSize
-     * @param  string|null  $column
-     * @param  string|null  $alias
-     * @return \Illuminate\Support\LazyCollection
-     */
-    public function lazyByIdDesc($chunkSize = 1000, $column = null, $alias = null)
-    {
-        $column ??= $this->getRelated()->qualifyColumn(
-            $this->getRelatedKeyName()
-        );
-
-        $alias ??= $this->getRelatedKeyName();
-
-        return $this->prepareQueryBuilder()->lazyByIdDesc($chunkSize, $column, $alias)->map(function ($model) {
             $this->hydratePivotRelation([$model]);
 
             return $model;
@@ -1419,6 +1350,42 @@ class BelongsToMany extends Relation
         $this->performJoin($query);
 
         return parent::getRelationExistenceQuery($query, $parentQuery, $columns);
+    }
+
+    /**
+     * Alias to set the "limit" value of the query.
+     *
+     * @param  int  $value
+     * @return $this
+     */
+    public function take($value)
+    {
+        return $this->limit($value);
+    }
+
+    /**
+     * Set the "limit" value of the query.
+     *
+     * @param  int  $value
+     * @return $this
+     */
+    public function limit($value)
+    {
+        if ($this->parent->exists) {
+            $this->query->limit($value);
+        } else {
+            $column = $this->getExistenceCompareKey();
+
+            $grammar = $this->query->getQuery()->getGrammar();
+
+            if ($grammar instanceof MySqlGrammar && $grammar->useLegacyGroupLimit($this->query->getQuery())) {
+                $column = 'pivot_'.last(explode('.', $column));
+            }
+
+            $this->query->groupLimit($value, $column);
+        }
+
+        return $this;
     }
 
     /**
