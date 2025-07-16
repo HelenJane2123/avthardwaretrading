@@ -214,7 +214,7 @@ class FilesystemManager implements FactoryContract
     {
         $provider = SftpConnectionProvider::fromArray($config);
 
-        $root = $config['root'] ?? '/';
+        $root = $config['root'] ?? '';
 
         $visibility = PortableVisibilityConverter::fromArray(
             $config['permissions'] ?? []
@@ -314,10 +314,6 @@ class FilesystemManager implements FactoryContract
 
         if (! empty($config['prefix'])) {
             $adapter = new PathPrefixedAdapter($adapter, $config['prefix']);
-        }
-
-        if (str_contains($config['endpoint'] ?? '', 'r2.cloudflarestorage.com')) {
-            $config['retain_visibility'] = false;
         }
 
         return new Flysystem($adapter, Arr::only($config, [

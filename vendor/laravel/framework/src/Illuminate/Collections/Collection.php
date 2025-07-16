@@ -7,7 +7,6 @@ use ArrayIterator;
 use Illuminate\Contracts\Support\CanBeEscapedWhenCastToString;
 use Illuminate\Support\Traits\EnumeratesValues;
 use Illuminate\Support\Traits\Macroable;
-use InvalidArgumentException;
 use stdClass;
 use Traversable;
 
@@ -382,7 +381,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
      * @param  (callable(TValue, TKey): bool)|null  $callback
      * @return static
      */
-    public function filter(?callable $callback = null)
+    public function filter(callable $callback = null)
     {
         if ($callback) {
             return new static(Arr::where($this->items, $callback));
@@ -400,7 +399,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
      * @param  TFirstDefault|(\Closure(): TFirstDefault)  $default
      * @return TValue|TFirstDefault
      */
-    public function first(?callable $callback = null, $default = null)
+    public function first(callable $callback = null, $default = null)
     {
         return Arr::first($this->items, $callback, $default);
     }
@@ -748,7 +747,7 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
      * @param  TLastDefault|(\Closure(): TLastDefault)  $default
      * @return TValue|TLastDefault
      */
-    public function last(?callable $callback = null, $default = null)
+    public function last(callable $callback = null, $default = null)
     {
         return Arr::last($this->items, $callback, $default);
     }
@@ -999,11 +998,8 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
     /**
      * Push all of the given items onto the collection.
      *
-     * @template TConcatKey of array-key
-     * @template TConcatValue
-     *
-     * @param  iterable<TConcatKey, TConcatValue>  $source
-     * @return static<TKey|TConcatKey, TValue|TConcatValue>
+     * @param  iterable<array-key, TValue>  $source
+     * @return static
      */
     public function concat($source)
     {
@@ -1125,25 +1121,15 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
      *
      * @param  int  $count
      * @return static<int, TValue>|TValue|null
-     *
-     * @throws \InvalidArgumentException
      */
     public function shift($count = 1)
     {
-        if ($count < 0) {
-            throw new InvalidArgumentException('Number of shifted items may not be less than zero.');
+        if ($count === 1) {
+            return array_shift($this->items);
         }
 
         if ($this->isEmpty()) {
-            return null;
-        }
-
-        if ($count === 0) {
             return new static;
-        }
-
-        if ($count === 1) {
-            return array_shift($this->items);
         }
 
         $results = [];
@@ -1160,12 +1146,11 @@ class Collection implements ArrayAccess, CanBeEscapedWhenCastToString, Enumerabl
     /**
      * Shuffle the items in the collection.
      *
-     * @param  int|null  $seed
      * @return static
      */
-    public function shuffle($seed = null)
+    public function shuffle()
     {
-        return new static(Arr::shuffle($this->items, $seed));
+        return new static(Arr::shuffle($this->items));
     }
 
     /**
