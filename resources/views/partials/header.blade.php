@@ -1,4 +1,4 @@
-<header class="app-header"><a class="app-header__logo" href="">AVT Hardware</a>
+<header class="app-header"><a class="app-header__logo" href="">AVT Hardware Trading</a>
     <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
     <!-- Navbar Right Menu-->
     <ul class="app-nav">
