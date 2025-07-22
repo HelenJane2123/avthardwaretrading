@@ -72,7 +72,7 @@
 
                             <div class="form-group col-md-3">
                                 <label class="control-label">Customer Credit Balance</label>
-                                <input name="previous_balance" class="form-control @error('previous_balance') is-invalid @enderror" type="text" placeholder="Example: 111">
+                                <input name="previous_balance" class="form-control @error('previous_balance') is-invalid @enderror" type="text" placeholder="Example: 1000000">
                                 @error('previous_balance')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
