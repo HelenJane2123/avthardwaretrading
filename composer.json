@@ -12,7 +12,9 @@
         "fakerphp/faker": "^1.24",
         "laravel/framework": "11.0",
         "laravel/tinker": "^2.5",
-        "laravel/ui": "^4.6"
+        "laravel/ui": "^4.6",
+        "maatwebsite/excel": "^1.1",
+        "phpoffice/phpspreadsheet": "^4.4"
     },
     "require-dev": {
         "filp/whoops": "^2.0",

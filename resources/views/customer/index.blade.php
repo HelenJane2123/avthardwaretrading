@@ -21,18 +21,32 @@
         <div class="">
             <a class="btn btn-primary" href="{{route('customer.create')}}"><i class="fa fa-plus"></i> Add New Customer</a>
         </div>
-
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
+                    @if(session()->has('message'))
+                        <div class="alert alert-success">
+                            {{ session()->get('message') }}
+                        </div>
+                    @endif
                     <div class="tile-body">
+                        <div class="d-flex justify-content-end mb-3">
+                            <a class="btn btn-success" href="{{ route('export.customers') }}">
+                                <i class="fa fa-file-excel-o"></i> Export to Excel
+                            </a>
+                        </div>
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead>
                             <tr>
                                 <th>Customer </th>
                                 <th>Address </th>
                                 <th>Contact</th>
+                                <th>Email</th>
+                                <th>Tax No.</th>
                                 <th>Details</th>
+                                <th>Credit Balance</th>
+                                <th>Date Created</th>
+                                <th>Date Updated</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
@@ -42,7 +56,12 @@
                                 <td>{{ $customer->name }} </td>
                                 <td>{{ $customer->address }} </td>
                                 <td>{{ $customer->mobile }} </td>
+                                <td>{{ $customer->email }} </td>
+                                <td>{{ $customer->tax }} </td>
                                 <td>{{ $customer->details }} </td>
+                                <td>{{ $customer->previous_balance }} </td>
+                                <td>{{ $customer->created_at }} </td>
+                                <td>{{ $customer->updated_at }} </td>
                                  <td>
                                     <a class="btn btn-primary btn-sm" href="{{route('customer.edit', $customer->id)}}"><i class="fa fa-edit" ></i></a>
                                     <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $customer->id }})">
