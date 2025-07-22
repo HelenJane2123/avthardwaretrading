@@ -5,7 +5,7 @@
     <!-- Left Side: Login -->
     <div class="login-left d-flex flex-column justify-content-center align-items-center">
        <div class="logo text-left w-100 px-4 d-flex align-items-center mb-4">
-            <img src="{{ asset('images/samplelogo.png') }}" alt="Logo" style="height: 130px; margin-right: 15px;">
+            <img src="{{ asset('images/avt_logo.png') }}" alt="Logo" style="height: 130px; margin-right: 15px;">
             <div>
                 <h1 class="mb-0">AVT Hardware Trading</h1>
                 <h5 class="mb-0">Sales and Inventory System</h5>

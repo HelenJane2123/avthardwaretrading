@@ -49,7 +49,5 @@ Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
 
-Route::get('/log-test', function () {
-    file_put_contents(storage_path('logs/test-direct.log'), "✅ Direct file write from Laragon\n", FILE_APPEND);
-    return 'File write test done';
-});
+//Export data to excel
+Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
