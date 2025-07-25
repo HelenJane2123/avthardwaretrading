@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,8 +24,8 @@ class Supplier extends Model
     /**
      * Get the supplier's items.
      */
-    public function supplierItems()
+    public function items()
     {
-        return $this->hasMany(SupplierItem::class);
+        return $this->hasMany(SupplierItem::class); // adjust namespace if needed
     }
 }
