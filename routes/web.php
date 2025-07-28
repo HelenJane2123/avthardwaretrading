@@ -12,6 +12,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesController; 
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ExportSupplierController;
 use Illuminate\Support\Facades\Log;
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +47,9 @@ Route::resource('purchase', PurchaseController::class);
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
+Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'])
+    ->name('supplier.supplier-products');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
+Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');

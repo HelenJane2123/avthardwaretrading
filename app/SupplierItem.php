@@ -28,4 +28,20 @@ class SupplierItem extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    /**
+     * Get the category details owns the item.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    /**
+     * Get the unit details owns the item.
+     */
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
 }

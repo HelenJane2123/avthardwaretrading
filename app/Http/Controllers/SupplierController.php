@@ -110,10 +110,24 @@ class SupplierController extends Controller
      */
     public function edit($id)
     {
-        $supplier = Supplier::with('items')->findOrFail($id);
-        return view('supplier.edit', compact('supplier'));
+         $supplier = Supplier::with('items')->findOrFail($id);
+        $categories = Category::all(); 
+        $units = Unit::all();        
+
+        return view('supplier.edit', compact('supplier', 'categories', 'units'));
     }
 
+    /**
+     * Show product item per Supplier
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function showProducts($id)
+    {
+        $supplier = Supplier::with('items')->findOrFail($id);
+        return view('supplier.supplier-products', compact('supplier'));
+    }
     /**
      * Update the specified resource in storage.
      *
@@ -124,54 +138,59 @@ class SupplierController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
-            'address' => 'required|min:3',
-            'mobile' => 'required|digits:11',
-            'details' => 'required|min:3',
-            'previous_balance' => 'nullable|numeric',
-            'tax' => 'nullable|string',
+            'name' => 'required|string',
+            'mobile' => 'nullable|string',
+            'email' => 'nullable|email',
+            'item_code.*' => 'nullable|string',
+            'item_description.*' => 'nullable|string',
+            'item_price.*' => 'nullable|numeric',
+            'item_amount.*' => 'nullable|numeric',
+            'item_image.*' => 'nullable|image|max:2048',
         ]);
 
-        $supplier = Supplier::findOrFail($id);
         $supplier->update([
+            'supplier_code' => $request->supplier_code,
             'name' => $request->name,
-            'address' => $request->address,
             'mobile' => $request->mobile,
-            'details' => $request->details,
-            'previous_balance' => $request->previous_balance ?? 0,
+            'email' => $request->email,
+            'address' => $request->address,
             'tax' => $request->tax,
+            'details' => $request->details,
         ]);
 
-        // Sync supplier items
-        $existingItemIds = $supplier->supplierItems()->pluck('id')->toArray();
-        $submittedItemIds = $request->item_id ?? [];
+        $supplierCode = $supplier->supplier_code;
+        $itemIds = $request->item_ids ?? [];
+        $descriptions = $request->item_description ?? [];
+        $prices = $request->item_price ?? [];
+        $amounts = $request->item_amount ?? [];
+        $codes = $request->item_code ?? [];
 
-        $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
-        SupplierItem::destroy($itemsToDelete);
+        foreach ($codes as $index => $code) {
+            $itemId = $itemIds[$index] ?? null;
 
-        if ($request->has('item_code')) {
-            foreach ($request->item_code as $index => $code) {
-                $itemId = $request->item_id[$index] ?? null;
+            $data = [
+                'supplier_id' => $supplier->id,
+                'item_code' => $code,
+                'item_description' => $descriptions[$index] ?? '',
+                'item_price' => $prices[$index] ?? 0,
+                'item_amount' => $amounts[$index] ?? 0,
+            ];
 
-                $itemData = [
-                    'supplier_id' => $supplier->id,
-                    'item_code' => $code,
-                    'item_description' => $request->item_description[$index] ?? null,
-                    'item_price' => $request->item_price[$index] ?? 0,
-                    'item_amount' => $request->item_amount[$index] ?? 0,
-                    'category_id' => $request->category_id[$index] ?? null,
-                    'unit_id' => $request->unit_id[$index] ?? null,
-                ];
+            // Handle image upload
+            if ($request->hasFile("item_image.$index")) {
+                $path = $request->file("item_image.$index")->store("items/{$supplierCode}", 'public');
+                $data['item_image'] = basename($path);
+            }
 
-                if ($itemId && in_array($itemId, $existingItemIds)) {
-                    SupplierItem::where('id', $itemId)->update($itemData);
-                } else {
-                    SupplierItem::create($itemData);
-                }
+            // Update or create item
+            if ($itemId) {
+                \App\Models\SupplierItem::where('id', $itemId)->update($data);
+            } else {
+                \App\Models\SupplierItem::create($data);
             }
         }
 
-        return redirect()->route('supplier.index')->with('message', 'Supplier and items updated successfully.');
+        return redirect()->route('supplier.index')->with('message', 'Supplier updated successfully.');
     }
 
     /**
@@ -182,9 +201,9 @@ class SupplierController extends Controller
      */
     public function destroy($id)
     {
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::findOrFail($id);
         $supplier->delete();
-        return redirect()->back();
-
+        return redirect()->back()->with('success', 'Supplier and all items deleted successfully.');
     }
+
 }

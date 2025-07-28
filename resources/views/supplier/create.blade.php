@@ -91,13 +91,13 @@
                                 <thead>
                                     <tr>
                                         <th>Item Code</th>
-                                        <th>Item Category</th>
-                                        <th>Item Description</th>
-                                        <th>Item Qty</th>
-                                        <th>Item Unit</th>
-                                        <th>Item Price</th>
-                                        <th>Item Amount</th>
-                                        <th>Item Image</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <th>Qty</th>
+                                        <th>Unit</th>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                        <th>Image</th>
                                         <th><button type="button" class="btn btn-sm btn-primary" id="add-row">Add New Item</button></th>
                                     </tr>
                                 </thead>
