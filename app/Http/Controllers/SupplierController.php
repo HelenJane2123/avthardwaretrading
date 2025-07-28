@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Supplier;
 use App\SupplierItem;
 use App\Unit;
+use App\Category;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -28,7 +29,9 @@ class SupplierController extends Controller
      */
     public function create()
     {
-        return view('supplier.create');
+        $categories = Category::all();
+        $units = Unit::all();
+        return view('supplier.create', compact('categories', 'units'));
     }
 
     /**
@@ -41,36 +44,50 @@ class SupplierController extends Controller
     {
         $request->validate([
             'supplier_code' => 'required|unique:suppliers',
-            'name' => 'required|min:3|unique:suppliers|regex:/^[a-zA-Z ]+$/',
-            'address' => 'required|min:3',
+            'name' => 'required',
             'mobile' => 'required|min:3|digits:11',
+            'address' => 'required|min:3',
             'details' => 'required|min:3|',
-            'previous_balance' => 'min:3',
-
+            'previous_balance' => 'nullable|numeric',
+            'item_image.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-       $supplier = Supplier::create([
+        $supplier = Supplier::create([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
-            'address' => $request->address,
             'mobile' => $request->mobile,
+            'address' => $request->address,
             'details' => $request->details,
-            'previous_balance' => $request->previous_balance ?? 0,
             'tax' => $request->tax,
+            'email' => $request->email,
+            'previous_balance' => $request->previous_balance ?? 0,
         ]);
+
         if ($request->has('item_code')) {
             foreach ($request->item_code as $index => $code) {
                 if ($code !== null && $code !== '') {
+                    $imagePath = null;
+                    // Check if file exists for this index
+                    if ($request->hasFile('item_image') && isset($request->file('item_image')[$index])) {
+                        $image = $request->file('item_image')[$index];
+                        $supplierFolder = $supplier->supplier_code ?? 'items';
+                        $imagePath = $image->store("items/{$supplierFolder}", 'public'); // Stored in storage/app/public/items/SUP-XXX/
+                    }
                     SupplierItem::create([
                         'supplier_id' => $supplier->id,
                         'item_code' => $code,
+                        'category_id' => $request->item_category[$index] ?? null,
                         'item_description' => $request->item_description[$index] ?? null,
                         'item_price' => $request->item_price[$index] ?? 0,
                         'item_amount' => $request->item_amount[$index] ?? 0,
+                        'unit_id' => $request->unit_id[$index] ?? null,
+                        'item_qty' => $request->item_qty[$index] ?? 0, 
+                        'item_image' => $imagePath,
                     ]);
                 }
             }
         }
+
         return redirect()->back()->with('message', 'New supplier has been added successfully!');
     }
 
@@ -129,11 +146,9 @@ class SupplierController extends Controller
         $existingItemIds = $supplier->supplierItems()->pluck('id')->toArray();
         $submittedItemIds = $request->item_id ?? [];
 
-        // Delete items that were removed in the form
         $itemsToDelete = array_diff($existingItemIds, $submittedItemIds);
         SupplierItem::destroy($itemsToDelete);
 
-        // Update or create supplier items
         if ($request->has('item_code')) {
             foreach ($request->item_code as $index => $code) {
                 $itemId = $request->item_id[$index] ?? null;
@@ -144,13 +159,13 @@ class SupplierController extends Controller
                     'item_description' => $request->item_description[$index] ?? null,
                     'item_price' => $request->item_price[$index] ?? 0,
                     'item_amount' => $request->item_amount[$index] ?? 0,
+                    'category_id' => $request->category_id[$index] ?? null,
+                    'unit_id' => $request->unit_id[$index] ?? null,
                 ];
 
                 if ($itemId && in_array($itemId, $existingItemIds)) {
-                    // Update existing item
                     SupplierItem::where('id', $itemId)->update($itemData);
                 } else {
-                    // Create new item
                     SupplierItem::create($itemData);
                 }
             }
