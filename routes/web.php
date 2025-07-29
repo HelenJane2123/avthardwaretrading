@@ -10,7 +10,6 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\SalesController; 
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ExportSupplierController;
 use App\Http\Controllers\UserController;
