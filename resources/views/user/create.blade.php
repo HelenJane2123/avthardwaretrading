@@ -1,115 +1,127 @@
 @extends('layouts.master')
 
-@section('title', 'User | ')
+@section('title', 'User| ')
 @section('content')
-    @include('partials.header')
-    @include('partials.sidebar')
-    <main class="app-content">
-        <div class="app-title">
-            <div>
-                <h1><i class="fa fa-edit"></i>Add User</h1>
-            </div>
-            <ul class="app-breadcrumb breadcrumb">
-                <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
-                <li class="breadcrumb-item">User</li>
-                <li class="breadcrumb-item"><a href="#">Add User</a></li>
-            </ul>
+@include('partials.header')
+@include('partials.sidebar')
+<main class="app-content">
+    <div class="app-title">
+        <div>
+            <h1><i class="fa fa-edit"></i> Add New User</h1>
         </div>
+        <ul class="app-breadcrumb breadcrumb">
+            <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
+            <li class="breadcrumb-item">User</li>
+            <li class="breadcrumb-item"><a href="#">Add New User</a></li>
+        </ul>
+    </div>
 
-        @if(session()->has('message'))
-            <div class="alert alert-success">
-                {{ session()->get('message') }}
-            </div>
-        @endif
+    <div class="">
+        <a class="btn btn-primary" href="{{ route('user.index') }}">
+            <i class="fa fa-edit"> </i> Manage Users
+        </a>
+    </div>
+    
 
-        <div class="">
-            <a class="btn btn-primary" href="{{route('customer.index')}}"><i class="fa fa-edit"> </i>Manage User</a>
-        </div>
-        <div class="row mt-2">
 
-            <div class="clearix"></div>
-            <div class="col-md-12">
-                <div class="tile">
-                    <h3 class="tile-title">User</h3>
-                    <div class="tile-body">
-                        <form method="POST" action="{{route('customer.store')}}">
-                            @csrf
-                            <div class="form-group col-md-12">
-                                <label class="control-label">First Name</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter First Name">
-                                @error('name')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-12">
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="tile">
+                <h3 class="tile-title">User</h3>
+                @if(session()->has('message'))
+                    <div class="alert alert-success">
+                        {{ session()->get('message') }}
+                    </div>
+                @endif
+                <div class="tile-body">
+                    <form method="POST" action="{{ route('user.store') }}">
+                        @csrf
+                        <div class="row">
+                            <div class="form-group col-md-6">
                                 <label class="control-label">Last Name</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Last Name">
-                                @error('name')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                                <input name="l_name" class="form-control @error('f_name') is-invalid @enderror" type="text" placeholder="Enter First Name">
+                                @error('l_name')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-12">
-                                <label class="control-label">Contact</label>
-                                <input name="mobile" class="form-control @error('mobile') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
-                                @error('mobile')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                            <div class="form-group col-md-6">
+                                <label class="control-label">First Name</label>
+                                <input name="f_name" class="form-control @error('l_name') is-invalid @enderror" type="text" placeholder="Enter First Name">
+                                @error('f_name')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-10">
-                                <label class="control-label">Address</label>
-                                <textarea name="address" class="form-control @error('address') is-invalid @enderror"></textarea>
-                                @error('address')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-12">
+                             <div class="form-group col-md-6">
                                 <label class="control-label">Email</label>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror">
                                 @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            <div class="form-group col-md-12">
-                                <label class="control-label">Details</label>
-                                <textarea name="details" class="form-control @error('details') is-invalid @enderror"></textarea>
-                                @error('details')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                            <div class="form-group col-md-6">
+                                <label class="control-label">Contact</label>
+                                <input name="contact" class="form-control @error('contact') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
+                                @error('contact')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-12">
-                                <label class="control-label">Previous Credit Balance</label>
-                                <input name="previous_balance" class="form-control @error('previous_balance') is-invalid @enderror" type="text" placeholder="Example: 111">
-                                @error('previous_balance')
-                                <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                            <div class="form-group col-md-6">
+                                <label class="control-label">Password</label>
+                                <input name="password" class="form-control" type="text" placeholder="Enter New Password" id="passwordField">
+                                @error('paasword')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
 
+                            <script>
+                                // This script will run once the page is loaded
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Get the input field by its ID
+                                    const passwordInput = document.getElementById('passwordField');
 
-                            <div class="form-group col-md-4 align-self-end">
-                                <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i> Add Customer Details</button>
+                                    // Check if the input field exists before trying to set its value
+                                    if (passwordInput) {
+                                        // Set the value of the input field
+                                        passwordInput.value = 'MyTestPassword123'; // Replace with your desired test password
+                                    }
+                                });
+                            </script>
+
+                            <div class="form-group col-md-3">
+                                <label class="control-label" for="role">Role</label>
+                                <select name="user_role" id="role" class="form-control @error('user_role') is-invalid @enderror">
+                                    <option value="">Select Role</option> 
+                                    <option value="super_admin">Super Admin</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="staff">Staff</option>
+                                </select>
+                                @error('user_role')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
                             </div>
-                        </form>
-                    </div>
+                            
+                            <div class="form-group col-md-3">
+                                <label class="control-label" for="status">Status</label>
+                                <select name="user_status" id="status" class="form-control @error('user_status') is-invalid @enderror">
+                                    <option value="">Select Status</option> <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                @error('user_status')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                           
+                            <div class="form-group col-md-12 mt-3">
+                                <button class="btn btn-success float-right" type="submit">
+                                    <i class="fa fa-fw fa-lg fa-check-circle"></i> Add User Details
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</main>
 @endsection
-
-
-

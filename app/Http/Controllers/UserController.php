@@ -15,8 +15,8 @@ class UserController extends Controller
 
     public function index()
     {
-        $user = User::all();
-        return view('user.index', compact('user'));
+        $users = User::all();
+        return view('user.index', compact('users'));
     }
 
     /**
@@ -38,26 +38,28 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|min:3|unique:customers|regex:/^[a-zA-Z ]+$/',
-            'address' => 'required|min:3',
-            'mobile' => 'required|min:3|digits:11',
-            'email' => 'required|email|unique:customers',
-            'details' => 'required|min:3|',
-            'previous_balance' => 'min:3',
-
+            'f_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
+            'l_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
+            'email' => 'required|email|unique:users',
+            'contact' => 'required|digits:11',
+            'password' => 'required|min:6',
+           'user_role' => 'required|in:super_admin,admin,staff',
+                'user_status' => 'required|in:active,inactive',
         ]);
 
-        $customer = new User();
-        $customer->name = $request->name;
-        $customer->address = $request->address;
-        $customer->mobile = $request->mobile;
-        $customer->email = $request->email;
-        $customer->details = $request->details;
-        $customer->previous_balance = $request->previous_balance;
-        $customer->save();
+        $user = new User();
+        $user->f_name = $request->f_name;
+        $user->l_name = $request->l_name;
+        $user->email = $request->email;
+        $user->contact = $request->contact;
+        $user->password = bcrypt($request->password);
+        $user->user_role = $request->user_role; // Hardcoded role
+        $user->user_status = $request->user_status; // Hardcoded status
+        $user->save();
 
         return redirect()->back()->with('message', 'User added successfully');
     }
+
 
     /**
      * Display the specified resource.
@@ -91,24 +93,34 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // $request->validate([
-        //     'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
-        //     'address' => 'required|min:3',
-        //     'mobile' => 'required|min:3|digits:11',
-        //     'details' => 'required|min:3|',
-        //     'previous_balance' => 'min:3',
-        // ]);
+        // Retrieve the user first
+        $user = User::findOrFail($id);
 
-        // $customer = Customer::findOrFail($id);
-        // $customer->name = $request->name;
-        // $customer->address = $request->address;
-        // $customer->mobile = $request->mobile;
-        // $customer->details = $request->details;
-        // $customer->previous_balance = $request->previous_balance;
-        // $customer->save();
+        // Now use $user->id in the validation
+        $request->validate([
+            'f_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:users,f_name,' . $user->id,
+            'l_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:users,l_name,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'contact' => 'required|digits:11',
+            'password' => 'required|min:6',
+            'user_role' => 'required|in:user,admin,super_admin,staff',
+            'user_status' => 'required|in:active,inactive',
+        ]);
 
-        // return redirect()->back()->with('message', 'Customer Updated Successfully');
+        // Update user data
+        $user->f_name = $request->f_name;
+        $user->l_name = $request->l_name;
+        $user->email = $request->email;
+        $user->contact = $request->contact;
+        $user->password = bcrypt($request->password);
+        $user->user_role = $request->user_role;
+        $user->user_status = $request->user_status;
+        $user->save();
+
+        return redirect()->back()->with('message', 'User updated successfully');
     }
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -118,8 +130,8 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $customer = Customer::find($id);
-        $customer->delete();
+        $user = User::find($id);
+        $user->delete();
         return redirect()->back();
 
     }
