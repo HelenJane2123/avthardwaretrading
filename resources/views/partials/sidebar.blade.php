@@ -105,8 +105,8 @@
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-plus"></i> Add User</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-edit"></i> Manage Users</a></li>
+                <li><a class="treeview-item" href="{{ route('user.create') }}"><i class="icon fa fa-plus"></i> Add User</a></li>
+                <li><a class="treeview-item" href="{{ route('user.index') }}"><i class="icon fa fa-edit"></i> Manage Users</a></li>
             </ul>
         </li>
 

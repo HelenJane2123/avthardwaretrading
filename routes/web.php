@@ -13,6 +13,8 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SalesController; 
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ExportSupplierController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\SalesController; // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +45,8 @@ Route::resource('customer', CustomerController::class);
 Route::resource('product', ProductController::class);
 Route::resource('invoice', InvoiceController::class);
 Route::resource('purchase', PurchaseController::class);
+Route::resource('user', UserController::class);
+
 
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
