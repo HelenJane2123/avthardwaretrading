@@ -59,7 +59,7 @@ class ExportController extends Controller
         $headerRow = 5;
 
         // Column headers
-        $headers = ['Customer', 'Address', 'Contact', 'Email', 'Tax No.', 'Details', 'Credit Balance', 'Date Created', 'Date Updated'];
+        $headers = ['Customer Code','Customer', 'Address', 'Contact', 'Email', 'Tax No.', 'Details', 'Credit Balance', 'Date Created', 'Date Updated'];
         $sheet->fromArray($headers, null, 'A' . $headerRow);
 
         // Style header row
@@ -75,19 +75,20 @@ class ExportController extends Controller
         $customers = Customer::all();
         $row = $headerRow + 1;
         foreach ($customers as $customer) {
-            $sheet->setCellValue('A' . $row, $customer->name);
-            $sheet->setCellValue('B' . $row, $customer->address);
-            $sheet->setCellValue('C' . $row, $customer->mobile);
-            $sheet->setCellValue('D' . $row, $customer->email);
-            $sheet->setCellValue('E' . $row, $customer->tax);
-            $sheet->setCellValue('F' . $row, $customer->details);
-            $sheet->setCellValue('G' . $row, $customer->previous_balance);
-            $sheet->setCellValue('H' . $row, $customer->created_at);
-            $sheet->setCellValue('I' . $row, $customer->updated_at);
+            $sheet->setCellValue('A' . $row, $customer->customer_code);
+            $sheet->setCellValue('B' . $row, $customer->name);
+            $sheet->setCellValue('C' . $row, $customer->address);
+            $sheet->setCellValue('D' . $row, $customer->mobile);
+            $sheet->setCellValue('E' . $row, $customer->email);
+            $sheet->setCellValue('F' . $row, $customer->tax);
+            $sheet->setCellValue('G' . $row, $customer->details);
+            $sheet->setCellValue('H' . $row, $customer->previous_balance);
+            $sheet->setCellValue('I' . $row, $customer->created_at);
+            $sheet->setCellValue('J' . $row, $customer->updated_at);
             $sheet->getStyle('G' . $row)->getNumberFormat()
                 ->setFormatCode('#,##0.00');
             // Apply borders to each row
-            $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray([
+            $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
                 'borders' => [
                     'allBorders' => ['borderStyle' => Border::BORDER_THIN],
                 ],

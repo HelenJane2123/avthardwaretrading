@@ -10,6 +10,8 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ExportSupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController; // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
@@ -48,6 +50,9 @@ Route::resource('user', UserController::class);
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
+Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'])
+    ->name('supplier.supplier-products');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
+Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');

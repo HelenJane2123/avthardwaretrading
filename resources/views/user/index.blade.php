@@ -35,7 +35,6 @@
                                 <th> Email </th>
                                 <th>Image</th>
                                 <th>Contact</th>
-                                <th>Password</th>
                                 <th>Role</th>
                                 <th>Status</th>
                                 <th>Date Created</th>
@@ -51,7 +50,6 @@
                                 <td>{{ $user->email }} </td>
                                 <td>{{ $user->image }} </td>
                                 <td>{{ $user->contact }} </td>
-                                <td>{{ $user->password }} </td>
                                 <td>{{ $user->user_role }} </td>
                                 <td>{{ $user->user_status }} </td>
                                 <td>{{ $user->created_at }} </td>

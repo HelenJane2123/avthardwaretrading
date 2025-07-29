@@ -1,0 +1,66 @@
+[
+    {
+        "municipality": "Quezon City",
+        "province": "Metro Manila"
+    },
+    {
+        "municipality": "Manila",
+        "province": "Metro Manila"
+    },
+    {
+        "municipality": "Cebu City",
+        "province": "Cebu"
+    },
+    {
+        "municipality": "Davao City",
+        "province": "Davao del Sur"
+    },
+    {
+        "municipality": "Baguio City",
+        "province": "Benguet"
+    },
+    {
+        "municipality": "Iloilo City",
+        "province": "Iloilo"
+    },
+    {
+        "municipality": "Makati",
+        "province": "Metro Manila"
+    },
+    {
+        "municipality": "Pasig",
+        "province": "Metro Manila"
+    },
+    {
+        "municipality": "San Fernando",
+        "province": "Pampanga"
+    },
+    {
+        "municipality": "General Santos City",
+        "province": "South Cotabato"
+    },
+    {
+        "municipality": "Zamboanga City",
+        "province": "Zamboanga del Sur"
+    },
+    {
+        "municipality": "Tacloban City",
+        "province": "Leyte"
+    },
+    {
+        "municipality": "Cagayan de Oro",
+        "province": "Misamis Oriental"
+    },
+    {
+        "municipality": "Batangas City",
+        "province": "Batangas"
+    },
+    {
+        "municipality": "Tagaytay",
+        "province": "Cavite"
+    },
+    {
+        "municipality": "Olongapo",
+        "province": "Zambales"
+    }
+]

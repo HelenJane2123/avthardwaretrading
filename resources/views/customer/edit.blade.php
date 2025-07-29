@@ -32,8 +32,14 @@
                         <form class="row" method="POST" action="{{ route('customer.update', $customer->id) }}">
                             @csrf
                             @method('PUT')
-
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
+                                <label class="control-label">Customer Code</label>
+                                <input value="{{ $customer->customer_code }}" name="customer_code" class="form-control @error('customer_code') is-invalid @enderror" id="customer_code" type="text" readonly>
+                                @error('customer_code')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Customer Name</label>
                                 <input value="{{ $customer->name }}" name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Customer's Name">
                                 @error('name')
@@ -41,7 +47,7 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Contact</label>
                                 <input value="{{ $customer->mobile }}" name="mobile" class="form-control @error('mobile') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
                                 @error('mobile')
