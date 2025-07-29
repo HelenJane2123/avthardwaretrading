@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('titel', 'Customer | ')
+@section('titel', 'User | ')
 @section('content')
     @include('partials.header')
     @include('partials.sidebar')
@@ -8,16 +8,16 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-th-list"></i> Manage Customer</h1>
+                <h1><i class="fa fa-th-list"></i> Manage User</h1>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
-                <li class="breadcrumb-item">Customer</li>
-                <li class="breadcrumb-item active"><a href="#">Manage Customer</a></li>
+                <li class="breadcrumb-item">User</li>
+                <li class="breadcrumb-item active"><a href="#">Manage User</a></li>
             </ul>
         </div>
         <div class="">
-            <a class="btn btn-primary" href="{{route('customer.create')}}"><i class="fa fa-plus"></i> Add New Customer</a>
+            <a class="btn btn-primary" href="{{route('user.create')}}"><i class="fa fa-plus"></i> Add New User</a>
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
@@ -27,45 +27,41 @@
                             {{ session()->get('message') }}
                         </div>
                     @endif
-                    <div class="tile-body">
-                        <div class="d-flex justify-content-end mb-3">
-                            <a class="btn btn-success" href="{{ route('export.customers') }}">
-                                <i class="fa fa-file-excel-o"></i> Export to Excel
-                            </a>
-                        </div>
-                        <table class="table table-hover table-bordered" id="sampleTable">
+                        <table class="table table-hover table-bordered" id="userTable">
                             <thead>
                             <tr>
-                                <th>Customer </th>
-                                <th>Address </th>
+                                <th> First Name </th>
+                                <th> Last Name </th>
+                                <th> Email </th>
+                                <th>Image</th>
                                 <th>Contact</th>
-                                <th>Email</th>
-                                <th>Tax No.</th>
-                                <th>Details</th>
-                                <th>Credit Balance</th>
+                                <th>Password</th>
+                                <th>Role</th>
+                                <th>Status</th>
                                 <th>Date Created</th>
                                 <th>Date Updated</th>
                                 <th>Action</th>
                             </tr>
                             </thead>
                             <tbody>
-                            @foreach( $customers as $customer)
+                            @foreach( $users as $user)
                             <tr>
-                                <td>{{ $customer->name }} </td>
-                                <td>{{ $customer->address }} </td>
-                                <td>{{ $customer->mobile }} </td>
-                                <td>{{ $customer->email }} </td>
-                                <td>{{ $customer->tax }} </td>
-                                <td>{{ $customer->details }} </td>
-                                <td>{{ $customer->previous_balance }} </td>
-                                <td>{{ $customer->created_at }} </td>
-                                <td>{{ $customer->updated_at }} </td>
+                                <td>{{ $user->f_name }} </td>
+                                <td>{{ $user->l_name }} </td>
+                                <td>{{ $user->email }} </td>
+                                <td>{{ $user->image }} </td>
+                                <td>{{ $user->contact }} </td>
+                                <td>{{ $user->password }} </td>
+                                <td>{{ $user->user_role }} </td>
+                                <td>{{ $user->user_status }} </td>
+                                <td>{{ $user->created_at }} </td>
+                                <td>{{ $user->updated_at }} </td>
                                  <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('customer.edit', $customer->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $customer->id }})">
+                                    <a class="btn btn-primary btn-sm" href="{{route('user.edit', $user->id)}}"><i class="fa fa-edit" ></i></a>
+                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $user->id }})">
                                         <i class="fa fa-trash"></i>
                                     </button>
-                                    <form id="delete-form-{{ $customer->id }}" action="{{ route('customer.destroy',$customer->id) }}" method="POST" style="display: none;">
+                                    <form id="delete-form-{{ $user->id }}" action="{{ route('user.destroy',$user->id) }}" method="POST" style="display: none;">
                                         @csrf
                                         @method('DELETE')
                                     </form>

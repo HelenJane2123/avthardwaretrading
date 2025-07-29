@@ -100,13 +100,13 @@
 
         {{-- User --}}
         <li class="treeview">
-            <a class="app-menu__item {{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+            <a class="app-menu__item{{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">User</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-plus"></i> Add User</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-edit"></i> Manage Users</a></li>
+                <li><a class="treeview-item" href="{{ route('user.create') }}"><i class="icon fa fa-plus"></i> Add User</a></li>
+                <li><a class="treeview-item" href="{{ route('user.index') }}"><i class="icon fa fa-edit"></i> Manage Users</a></li>
             </ul>
         </li>
 
