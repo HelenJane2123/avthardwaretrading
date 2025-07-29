@@ -83,7 +83,7 @@
 @push('js')
     <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
-    <script type="text/javascript">$('#sampleTable').DataTable();</script>
+    <script type="text/javascript">$('#userTable').DataTable();</script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         function deleteTag(id) {

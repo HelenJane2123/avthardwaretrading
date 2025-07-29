@@ -100,7 +100,7 @@
 
         {{-- User --}}
         <li class="treeview">
-            <a class="app-menu__item{{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+            <a class="app-menu__item {{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">User</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
