@@ -46,6 +46,7 @@ class CustomerController extends Controller
         ]);
 
         $request->validate([
+            'customer_code' => 'required|unique:customers,customer_code',
             'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:customers,name',
             'address' => 'required|min:3',
             'mobile' => 'required|digits:11|unique:customers,mobile',
@@ -56,6 +57,7 @@ class CustomerController extends Controller
         ]);
 
         $customer = new Customer();
+        $customer->customer_code = $request->customer_code;
         $customer->name = $request->name;
         $customer->address = $request->address;
         $customer->mobile = $request->mobile;

@@ -38,6 +38,7 @@
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead>
                             <tr>
+                                <th>Customer Code</th>
                                 <th>Customer </th>
                                 <th>Address </th>
                                 <th>Contact</th>
@@ -53,6 +54,7 @@
                             <tbody>
                             @foreach( $customers as $customer)
                             <tr>
+                                <td>{{ $customer->customer_code }} </td>
                                 <td>{{ $customer->name }} </td>
                                 <td>{{ $customer->address }} </td>
                                 <td>{{ $customer->mobile }} </td>

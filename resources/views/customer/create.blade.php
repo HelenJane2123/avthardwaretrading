@@ -22,6 +22,12 @@
         </a>
     </div>
 
+    @if(session()->has('message'))
+        <div class="alert alert-success">
+            {{ session()->get('message') }}
+        </div>
+    @endif
+
     <div class="row mt-3">
         <div class="col-md-12">
             <div class="tile">
@@ -30,7 +36,14 @@
                     <form method="POST" action="{{ route('customer.store') }}">
                         @csrf
                         <div class="row">
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
+                                <label class="control-label">Customer Code</label>
+                                <input name="customer_code" class="form-control @error('customer_code') is-invalid @enderror" id="customer_code" type="text" readonly>
+                                @error('customer_code')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Customer Name</label>
                                 <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Customer's Name">
                                 @error('name')
@@ -38,7 +51,7 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Contact</label>
                                 <input name="mobile" class="form-control @error('mobile') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
                                 @error('mobile')
@@ -46,15 +59,14 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Address</label>
                                 <textarea name="address" class="form-control @error('address') is-invalid @enderror"></textarea>
                                 @error('address')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Email</label>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror">
                                 @error('email')
@@ -62,7 +74,7 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Details</label>
                                 <textarea name="details" class="form-control @error('details') is-invalid @enderror"></textarea>
                                 @error('details')
@@ -102,3 +114,26 @@
     </div>
 </main>
 @endsection
+@push('js')
+<script src="https://cdn.jsdelivr.net/npm/philippine-location-json-for-geer@1.1.11/build/phil.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Auto-generate customer code
+        function generateCustomerCode() {
+            const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase(); // Example: A1B2
+            const timestampPart = new Date().getTime().toString().slice(-4); // Example: 4583
+            return `CUST-${randomPart}${timestampPart}`; // Final: CUST-A1B24583
+        }
+
+        const codeField = document.getElementById("customer_code");
+        if (codeField && !codeField.value) {
+            codeField.value = generateCustomerCode();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const provinces = phil.getProvinces();
+            console.log("Provinces loaded:", provinces);
+        });
+    });
+</script>
+@endpush

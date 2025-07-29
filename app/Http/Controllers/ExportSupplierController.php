@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
@@ -84,26 +85,49 @@ class ExportSupplierController extends Controller
         ];
         $sheet->getStyle('A9:G9')->applyFromArray($headerStyle);
 
-        // Fill data rows
+        $items = SupplierItem::with(['category', 'unit'])
+            ->where('supplier_id', $id)
+            ->get()
+            ->sortBy(function ($item) {
+                return $item->category->name ?? 'Uncategorized';
+            })
+            ->groupBy(function ($item) {
+                return $item->category->name ?? 'Uncategorized';
+        });
+
         $row = 10;
         $totalQty = 0;
         $totalAmount = 0;
 
-        foreach ($items as $item) {
-            $sheet->setCellValue('A' . $row, $item->item_code);
-            $sheet->setCellValue('B' . $row, $item->category ? $item->category->name : '');
-            $sheet->setCellValue('C' . $row, $item->item_description);
-            $sheet->setCellValue('D' . $row, $item->unit ? $item->unit->name : '');
-            $sheet->setCellValue('E' . $row, $item->item_qty);
-            $sheet->setCellValue('F' . $row, $item->item_price);
-            $sheet->setCellValue('G' . $row, $item->item_amount);
-
-            $totalQty += $item->item_qty;
-            $totalAmount += $item->item_amount;
-
+        foreach ($items as $categoryName => $categoryItems) {
+            // Category header row
+            $sheet->mergeCells("A{$row}:G{$row}");
+            $sheet->setCellValue("A{$row}", strtoupper($categoryName));
+            $sheet->getStyle("A{$row}")->applyFromArray([
+                'font' => ['bold' => true, 'size' => 12],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFDDDDDD']
+                ],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
+            ]);
             $row++;
-        }
 
+            foreach ($categoryItems as $item) {
+                $sheet->setCellValue('A' . $row, $item->item_code);
+                $sheet->setCellValue('B' . $row, $categoryName);
+                $sheet->setCellValue('C' . $row, $item->item_description);
+                $sheet->setCellValue('D' . $row, $item->unit ? $item->unit->name : '');
+                $sheet->setCellValue('E' . $row, $item->item_qty);
+                $sheet->setCellValue('F' . $row, $item->item_price);
+                $sheet->setCellValue('G' . $row, $item->item_amount);
+
+                $totalQty += $item->item_qty;
+                $totalAmount += $item->item_amount;
+
+                $row++;
+            }
+        }
         // Add total row
         $sheet->setCellValue('B' . $row, 'TOTAL:');
         $sheet->getStyle('B' . $row)->getFont()->setBold(true);

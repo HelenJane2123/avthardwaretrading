@@ -7,6 +7,7 @@ use App\SupplierItem;
 use App\Unit;
 use App\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SupplierController extends Controller
 {
@@ -148,6 +149,9 @@ class SupplierController extends Controller
             'item_image.*' => 'nullable|image|max:2048',
         ]);
 
+        // ✅ Fetch the supplier
+        $supplier = Supplier::findOrFail($id);
+
         $supplier->update([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
@@ -164,6 +168,10 @@ class SupplierController extends Controller
         $prices = $request->item_price ?? [];
         $amounts = $request->item_amount ?? [];
         $codes = $request->item_code ?? [];
+        $item_category = $request->category_id ?? [];
+        $unit_id = $request->unit_id ?? [];
+        $item_qty = $request->item_qty ?? [];
+
 
         foreach ($codes as $index => $code) {
             $itemId = $itemIds[$index] ?? null;
@@ -171,27 +179,32 @@ class SupplierController extends Controller
             $data = [
                 'supplier_id' => $supplier->id,
                 'item_code' => $code,
+                'category_id' => $item_category[$index] ?? null,
                 'item_description' => $descriptions[$index] ?? '',
                 'item_price' => $prices[$index] ?? 0,
                 'item_amount' => $amounts[$index] ?? 0,
+                'unit_id' => $unit_id[$index] ?? null,
+                'item_qty' => $item_qty[$index] ?? 0, 
             ];
 
-            // Handle image upload
             if ($request->hasFile("item_image.$index")) {
-                $path = $request->file("item_image.$index")->store("items/{$supplierCode}", 'public');
-                $data['item_image'] = basename($path);
+                $file = $request->file("item_image.$index");
+                $randomName = Str::random(40) . '.' . $file->getClientOriginalExtension();
+                $folder = "items/{$code}";
+                $file->storeAs($folder, $randomName, 'public');
+                $data['item_image'] = "$folder/$randomName";
             }
 
-            // Update or create item
             if ($itemId) {
-                \App\Models\SupplierItem::where('id', $itemId)->update($data);
+               SupplierItem::where('id', $itemId)->update($data);
             } else {
-                \App\Models\SupplierItem::create($data);
+                SupplierItem::create($data);
             }
         }
 
         return redirect()->route('supplier.index')->with('message', 'Supplier updated successfully.');
     }
+
 
     /**
      * Remove the specified resource from storage.

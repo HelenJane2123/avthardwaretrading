@@ -42,6 +42,7 @@
 <script src="{{asset('/')}}js/plugins/pace.min.js"></script>
 <!-- Page specific javascripts-->
 <script type="text/javascript" src="{{asset('/')}}js/plugins/chart.js"></script>
+<script src="{{ asset('js/app.js') }}"></script>
 
 <!-- <script type="text/javascript">
     var data = {

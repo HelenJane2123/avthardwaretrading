@@ -141,6 +141,10 @@
 @endsection
 
 @push('js')
+    <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
+    <script type="text/javascript">$('#supplierEditTable').DataTable();</script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         let itemCount = {{ isset($supplier->items) ? count($supplier->items) + 1 : 1 }};
         const categories = @json($categories);
