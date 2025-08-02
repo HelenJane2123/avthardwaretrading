@@ -26,16 +26,26 @@
             <div class="col-md-12">
                 <div class="tile">
                     <div class="tile-body">
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="{{ route('export.products') }}" class="btn btn-success mb-2">
+                                <i class="fa fa-download"></i> Export to Excel
+                            </a>
+                        </div>  
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead>
                             <tr>
+                                <th>Category </th>
                                 <th>Product </th>
                                 <th>Model </th>
                                 <th>Serial</th>
+                                <th>Discount</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
                                 <th>Sales Price</th>
-                                <th>Purchase Price</th>
                                 <th>Supplier</th>
-                                <th>Image</th>
+                                <th>Purchase Price</th>
+                                <th>Threshold</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
@@ -43,24 +53,44 @@
 
                              @foreach($additional as $add)
                                  <tr>
+                                     <td>{{$add->product->category->name}}</td>
                                      <td>{{$add->product->name}}</td>
                                      <td>{{$add->product->model}}</td>
                                      <td>{{$add->product->serial_number}}</td>
+                                     <td>{{ $add->product?->tax?->name ?? 'No Discount' }}</td>
+                                     <td>{{$add->product->quantity}}</td>
+                                     <td>{{$add->product->unit->name}}</td>
                                      <td>{{$add->product->sales_price}}</td>
-                                     <td>{{$add->price}}</td>
-                                     <td>{{$add->supplier->name}}</td>
-                                     <td><img width="40px" src="{{ asset('images/product/'.$add->product->image) }}"></td>
-
                                      <td>
-                                         <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}"><i class="fa fa-edit" ></i></a>
-                                         <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $add->product->id }})">
-                                             <i class="fa fa-trash"></i>
-                                         </button>
-                                         <form id="delete-form-{{ $add->product->id }}" action="{{ route('product.destroy',$add->product->id) }}" method="POST" style="display: none;">
-                                             @csrf
-                                             @method('DELETE')
-                                         </form>
-                                     </td>
+                                        <a href="{{ route('supplier.supplier-products', $add->supplier->id) }}">
+                                            {{ $add->supplier->name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('supplier.supplier-products', $add->supplier->id) }}">
+                                            {{ $add->price }}
+                                        </a>
+                                    </td>
+                                    <td>{{$add->product->threshold}}</td>
+                                    <td>
+                                        @if ($add->product->status === 'In Stock')
+                                            <span class="badge badge-success">{{ $add->product->status }}</span>
+                                        @elseif ($add->product->status === 'Low Stock')
+                                            <span class="badge badge-warning">{{ $add->product->status }}</span>
+                                        @else
+                                            <span class="badge badge-danger">{{ $add->product->status }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $add->product->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $add->product->id }}" action="{{ route('product.destroy',$add->product->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
                                  </tr>
                              @endforeach
                             </tbody>

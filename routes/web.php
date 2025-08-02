@@ -55,4 +55,5 @@ Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
+Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');

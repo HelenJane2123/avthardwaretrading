@@ -20,14 +20,18 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = Product::all();
-        $additional = ProductSupplier::with(['product', 'supplier'])
-            ->whereHas('product')
-            ->whereHas('supplier')
-            ->get();
-        return view('product.index', compact('products','additional'));
-    }
+        $additional = ProductSupplier::with([
+            'product.category',
+            'product.unit',
+            'product.tax',
+            'supplier'
+        ])
+        ->whereHas('product')
+        ->whereHas('supplier')
+        ->get();
 
+        return view('product.index', compact('additional'));
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -63,7 +67,7 @@ class ProductController extends Controller
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'tax_id' => 'nullable|integer',
             'quantity' => 'required',
-            'remaining_stock' => 'nullable|numeric|min:0',
+            'remaining_stock' => 'nullable|numeric|min:0'        
         ]);
 
 
@@ -79,6 +83,16 @@ class ProductController extends Controller
         $product->quantity = $request->quantity;
         $product->remaining_stock = $request->remaining_stock;
         $product->tax_id = $request->tax_id;
+        $product->threshold = 0;
+
+        // Determine stock status
+        if ($product->quantity <= 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->quantity <= $product->threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
@@ -121,7 +135,7 @@ class ProductController extends Controller
         $productId = $id; // The specific product ID you want to retrieve associated ProductSupplier record for
         $additional = ProductSupplier::where('product_id', $productId)->first();
 
-        $product =Product::findOrFail($id);
+        $product = Product::with('suppliers.supplier')->findOrFail($id);
         $suppliers =Supplier::all();
         $categories = Category::all();
         $taxes = Tax::all();
@@ -137,10 +151,11 @@ class ProductController extends Controller
             'serial_number' => 'required',
             'model' => 'required|min:3',
             'category_id' => 'required',
-            'sales_price' => 'required',
+            'sales_price' => 'required|numeric|min:0',
             'unit_id' => 'required',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'tax_id' => 'required',
+            'quantity' => 'required|integer|min:0',
             'supplier_id.*' => 'required|exists:suppliers,id',
             'supplier_price.*' => 'required|numeric|min:0',
         ]);
@@ -151,6 +166,7 @@ class ProductController extends Controller
             return redirect()->back()->with('error', 'Product not found');
         }
 
+        // Update product fields
         $product->name = $request->name;
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
@@ -159,50 +175,50 @@ class ProductController extends Controller
         $product->unit_id = $request->unit_id;
         $product->tax_id = $request->tax_id;
 
-        // if ($request->hasFile('image')) {
-        //     $existingImagePath = public_path("images/product/{$product->image}");
-        //     if (file_exists($existingImagePath) && is_file($existingImagePath)) {
-        //         unlink($existingImagePath); // Delete the existing image file
-        //     }
+        // Update quantity (initial_qty) and compute threshold
+        $product->quantity = $request->quantity;
+        //$product->qty = $request->initial_qty;
 
-        //     $imageName = $request->image->getClientOriginalName();
-        //     $request->image->move(public_path('images/product/'), $imageName);
-        //     $product->image = $imageName;
-        // }
+        // Compute threshold as 20% of qty or set to at least 1
+        $threshold = ($product->quantity <= 10) ? 1 : floor($product->quantity * 0.2);
+        $product->threshold = $threshold;
 
+        // Determine product status based on qty and threshold
+        if ($product->quantity == 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->quantity <= $threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
+
+        // Handle image upload
         if ($request->hasFile('image')) {
-            // Delete the existing image file if it exists
             $existingImagePath = public_path("images/product/{$product->image}");
             if (file_exists($existingImagePath) && is_file($existingImagePath)) {
                 unlink($existingImagePath);
             }
-        
-            $imageName = time() . '_' . uniqid() . '.' . $request->image->getClientOriginalExtension();    
+
+            $imageName = time() . '_' . uniqid() . '.' . $request->image->getClientOriginalExtension();
             $request->image->move(public_path('images/product/'), $imageName);
-        
             $product->image = $imageName;
         }
-        
 
         $product->save();
 
-                // Update or create product suppliers
+       // Remove old suppliers
+        ProductSupplier::where('product_id', $product->id)->delete();
+
+        // Re-add suppliers from the form
         foreach ($request->supplier_id as $key => $supplier_id) {
-            $supplier = ProductSupplier::where('product_id', $product->id)
-                ->where('supplier_id', $supplier_id)
-                ->first();
-
-            if (!$supplier) {
-                $supplier = new ProductSupplier();
-                $supplier->product_id = $product->id;
-                $supplier->supplier_id = $supplier_id;
-            }
-
-            $supplier->price = $request->supplier_price[$key];
-            $supplier->save();
+            ProductSupplier::create([
+                'product_id' => $product->id,
+                'supplier_id' => $supplier_id,
+                'price' => $request->supplier_price[$key],
+            ]);
         }
 
-        return redirect()->back()->with('message', 'Product has been updated successfully');
+        return redirect()->route('product.index')->with('message', 'Product has been updated successfully');
     }
 
 
@@ -215,8 +231,17 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::find($id);
-        $product->delete();
-        return redirect()->back();
 
+        if (!$product) {
+            return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        // Manually delete related product suppliers
+        ProductSupplier::where('product_id', $id)->delete();
+
+        // Then delete the product
+        $product->delete();
+
+        return redirect()->back()->with('message', 'Product and its suppliers deleted successfully.');
     }
 }

@@ -134,7 +134,7 @@
                                 <div class="form-group col-md-3">
                                     <label class="control-label">Discount </label>
                                     <select name="tax_id" class="form-control">
-                                        <option>---Select Discount---</option>
+                                        <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
                                             <option value="{{$tax->id}}">{{$tax->name}} %</option>
                                         @endforeach
