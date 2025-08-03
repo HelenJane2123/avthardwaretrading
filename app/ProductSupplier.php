@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class ProductSupplier extends Model
 {
 
-    public function product(){
-        return $this->belongsTo('App\Product');
+    protected $fillable = ['product_id', 'supplier_id', 'price'];
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 
-    public function supplier(){
-        return $this->belongsTo('App\Supplier');
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
-
 
 }

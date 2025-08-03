@@ -2,11 +2,15 @@
 namespace App\Http\Controllers;
 
 use App\Customer;
+use App\Product;
+use App\ProductSupplier;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Facades\Response;
 
 class ExportController extends Controller
@@ -131,8 +135,113 @@ class ExportController extends Controller
             $row++;
         }
 
-        return $this->downloadExcel($spreadsheet, 'users.xlsx');
+        return $this->downloadExcel($spreadsheet, 'avthardwaretrading_users.xlsx');
     }
+
+    public function exportProducts()
+    {
+        $groupedProducts = Product::with(['category', 'suppliers'])->get()->groupBy('category.name');
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Logo and title
+        $drawing = new Drawing();
+        $drawing->setName('Logo');
+        $drawing->setPath(public_path('images/avt_logo.png'));
+        $drawing->setHeight(80);
+        $drawing->setCoordinates('A1');
+        $drawing->setWorksheet($sheet);
+
+        $sheet->setCellValue('C1', 'AVT Hardware Trading');
+        $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
+
+        $sheet->setCellValue('C2', '123 Main St., Calamba, Laguna');
+        $sheet->getStyle('C2')->getFont()->setSize(12);
+
+        $sheet->setCellValue('C3', 'Product List Grouped by Category');
+        $sheet->getStyle('C3')->getFont()->setBold(true)->setSize(14);
+
+        $row = 5;
+
+        foreach ($groupedProducts as $categoryName => $products) {
+            $sheet->setCellValue('A' . $row, 'Category: ' . $categoryName);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+
+            // Headers
+            $headers = [
+                'Image', 'Product Code', 'Name', 'Serial Number', 'Model', 'Category',
+                'Sales Price', 'Quantity', 'Remaining Stock', 'Threshold', 'Status',
+                'Supplier', 'Price'
+            ];
+
+            $colIndex = 1;
+            foreach ($headers as $header) {
+                $cell = Coordinate::stringFromColumnIndex($colIndex) . $row;
+                $sheet->setCellValue($cell, $header);
+                $sheet->getStyle($cell)->applyFromArray([
+                    'font' => ['bold' => true],
+                    'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+                ]);
+                $colIndex++;
+            }
+
+            $row++;
+
+            foreach ($products as $product) {
+                foreach ($product->suppliers as $supplier) {
+                    $colIndex = 1;
+
+                    // Image
+                    if ($product->image) {
+                        $imagePath = public_path('images/product/' . $product->image);
+                        if (file_exists($imagePath)) {
+                            $drawing = new Drawing();
+                            $drawing->setPath($imagePath);
+                            $drawing->setHeight(50);
+                            $drawing->setCoordinates(Coordinate::stringFromColumnIndex($colIndex) . $row);
+                            $drawing->setWorksheet($sheet);
+                        }
+                    }
+
+                    $colIndex++; // Move after image
+
+                    $data = [
+                        $product->product_code,
+                        $product->name,
+                        $product->serial_number,
+                        $product->model,
+                        $product->category->name ?? '',
+                        $product->sales_price,
+                        $product->quantity,
+                        $product->remaining_stock,
+                        $product->threshold,
+                        $product->status,
+                        $supplier->name . ' ' . ($supplier->code ?? ''),
+                        $supplier->pivot->price,
+                    ];
+
+                    foreach ($data as $value) {
+                        $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++) . $row, $value);
+                    }
+
+                    $row++;
+                }
+            }
+
+            $row++;
+        }
+
+        // Output file
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'avthardwaretrading_products_' . now()->format('Ymd_His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
+    }
+
 
     // Shared function
     private function downloadExcel(Spreadsheet $spreadsheet, $filename)

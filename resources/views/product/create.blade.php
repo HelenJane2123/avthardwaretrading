@@ -44,16 +44,11 @@
                         <form method="POST" action="{{route('product.store')}}" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label class="control-label">Product</label>
-                                    <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Product Name">
-                                    @error('name')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
+                                <div class="form-group col-md-3">
+                                    <label class="control-label">Product Code</label>
+                                    <input name="product_code" id="product_code" class="form-control" type="text" readonly>
                                 </div>
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-3">
                                     <label class="control-label">Serial Number</label>
                                     <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
                                     @error('serial_number')
@@ -62,17 +57,7 @@
                                     </span>
                                     @enderror
                                 </div>
-
-                                <div class="form-group col-md-6">
-                                    <label class="control-label">Model</label>
-                                    <input name="model" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Model">
-                                    @error('model')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-3">
                                     <label class="control-label">Category</label>
 
                                     <select name="category_id" class="form-control">
@@ -88,8 +73,33 @@
                                     </span>
                                     @enderror
                                 </div>
-
-                                <div class="form-group col-md-6">
+                                 <div class="form-group col-md-3">
+                                    <label class="control-label">Model</label>
+                                    <input name="model" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Model">
+                                    @error('model')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label class="control-label">Product</label>
+                                    <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Product Name">
+                                    @error('name')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="control-label">Initial Quantity</label>
+                                    <input name="quantity" class="form-control" type="number" min="0" placeholder="Enter Initial Stock">
+                                </div>
+                                <div class="form-group col-md-2">
+                                    <label class="control-label">Remaining Stock</label>
+                                    <input name="remaining_stock" id="remaining_stock" class="form-control" type="number" readonly>
+                                </div>
+                                <div class="form-group col-md-3">
                                     <label class="control-label">Selling Price</label>
                                     <input name="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                     @error('sales_price')
@@ -98,7 +108,16 @@
                                     </span>
                                     @enderror
                                 </div>
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
+                                    <label class="control-label">Image</label>
+                                    <input name="image"  class="form-control @error('image') is-invalid @enderror" type="file" >
+                                    @error('image')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-3">
                                     <label class="control-label">Unit</label>
                                     <select name="unit_id" class="form-control">
                                         <option>---Select Unit---</option>
@@ -112,20 +131,10 @@
                                     </span>
                                     @enderror
                                 </div>
-
-                                <div class="form-group col-md-6">
-                                    <label class="control-label">Image</label>
-                                    <input name="image"  class="form-control @error('image') is-invalid @enderror" type="file" >
-                                    @error('image')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="control-label">Tax </label>
+                                <div class="form-group col-md-3">
+                                    <label class="control-label">Discount </label>
                                     <select name="tax_id" class="form-control">
-                                        <option>---Select Tax---</option>
+                                        <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
                                             <option value="{{$tax->id}}">{{$tax->name}} %</option>
                                         @endforeach
@@ -176,10 +185,6 @@
 @push('js')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
      <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
-
-
-
-
     <script type="text/javascript">
         $(document).ready(function(){
             var maxField = 10; //Input fields increment limitation
@@ -210,6 +215,24 @@
                 btnRemove:'.btnRemove'
             });
         });
+        function generateProductCode() {
+            const prefix = "AVT";
+            const timestamp = Date.now().toString().slice(-6); // last 6 digits of timestamp
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return prefix + timestamp + random;
+        }
+
+        // Set it when the page loads
+        $('#product_code').val(generateProductCode());
+
+        const initialStockInput = document.querySelector('input[name="quantity"]');
+        const remainingStockInput = document.querySelector('input[name="remaining_stock"]');
+
+        if (initialStockInput && remainingStockInput) {
+            initialStockInput.addEventListener('input', function () {
+                remainingStockInput.value = this.value;
+            });
+        }
     </script>
 
 @endpush

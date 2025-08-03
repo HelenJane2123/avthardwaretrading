@@ -20,11 +20,18 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = Product::all();
-        $additional = ProductSupplier::all();
-        return view('product.index', compact('products','additional'));
-    }
+        $additional = ProductSupplier::with([
+            'product.category',
+            'product.unit',
+            'product.tax',
+            'supplier'
+        ])
+        ->whereHas('product')
+        ->whereHas('supplier')
+        ->get();
 
+        return view('product.index', compact('additional'));
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -49,34 +56,43 @@ class ProductController extends Controller
     public function store(Request $request)
     {
 
-         $request->validate([
-            'name' => 'required|min:3|unique:products|regex:/^[a-zA-Z ]+$/',
+        $request->validate([
+            'product_code' => 'required|unique:products,product_code',
+            'name' => 'required|string|min:3|max:255|unique:products',
             'serial_number' => 'required',
-            'model' => 'required|min:3',
+            'model' => 'required',
             'category_id' => 'required',
             'sales_price' => 'required',
             'unit_id' => 'required',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'tax_id' => 'required',
-
+            'tax_id' => 'nullable|integer',
+            'quantity' => 'required',
+            'remaining_stock' => 'nullable|numeric|min:0'        
         ]);
 
 
+
         $product = new Product();
+        $product->product_code = $request->product_code;
         $product->name = $request->name;
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
         $product->category_id = $request->category_id;
         $product->sales_price = $request->sales_price;
         $product->unit_id = $request->unit_id;
+        $product->quantity = $request->quantity;
+        $product->remaining_stock = $request->remaining_stock;
         $product->tax_id = $request->tax_id;
+        $product->threshold = 0;
 
-
-        // if ($request->hasFile('image')){
-        //     $imageName =request()->image->getClientOriginalName();
-        //     request()->image->move(public_path('images/product/'), $imageName);
-        //     $product->image = $imageName;
-        // }
+        // Determine stock status
+        if ($product->quantity <= 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->quantity <= $product->threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
@@ -84,8 +100,6 @@ class ProductController extends Controller
             $image->move(public_path('images/product/'), $imageName);
             $product->image = $imageName;
         }
-
-
 
         $product->save();
 
@@ -96,7 +110,7 @@ class ProductController extends Controller
             $supplier->price = $request->supplier_price[$key];
             $supplier->save();
         }
-        return redirect()->back()->with('message', 'New product has been added successfully');
+        return redirect()->route('product.index')->with('message', 'New product has been added successfully');
     }
 
     /**
@@ -118,148 +132,66 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $productId = $id; // The specific product ID you want to retrieve associated ProductSupplier record for
-$additional = ProductSupplier::where('product_id', $productId)->first();
-
-        $product =Product::findOrFail($id);
-        $suppliers =Supplier::all();
+        $product = Product::with('productSuppliers')->findOrFail($id);
         $categories = Category::all();
-        $taxes = Tax::all();
         $units = Unit::all();
-        return view('product.edit', compact('additional','suppliers','categories','taxes','units','product'));
+        $suppliers = Supplier::all();
+        $taxes = Tax::all();
+
+        return view('product.edit', compact('product', 'categories', 'units', 'suppliers', 'taxes'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-
-    // public function update(Request $request, $id)
-    // {
-    //     $request->validate([
-    //         'name' => 'required|min:3|unique:products|regex:/^[a-zA-Z ]+$/',
-    //         'serial_number' => 'required',
-    //         'model' => 'required|min:3',
-    //         'category_id' => 'required',
-    //         'sales_price' => 'required',
-    //         'unit_id' => 'required',
-    //         'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    //         'tax_id' => 'required',
-
-    //     ]);
-
-
-    //     $product = new Product();
-    //     $product->name = $request->name;
-    //     $product->serial_number = $request->serial_number;
-    //     $product->model = $request->model;
-    //     $product->category_id = $request->category_id;
-    //     $product->sales_price = $request->sales_price;
-    //     $product->unit_id = $request->unit_id;
-    //     $product->tax_id = $request->tax_id;
-
-
-    //     if ($request->hasFile('image')){
-    //         $image_path ="images/product/".$product->image;
-    //         if (file_exists($image_path)){
-    //             unlink($image_path);
-    //         }
-    //         $imageName =request()->image->getClientOriginalName();
-    //         request()->image->move(public_path('images/product/'), $imageName);
-    //         $product->image = $imageName;
-    //     }
-
-
-
-    //     $product->save();
-
-    //     foreach($request->supplier_id as $key => $supplier_id){
-    //         $supplier = new ProductSupplier();
-    //         $supplier->product_id = $product->id;
-    //         $supplier->supplier_id = $request->supplier_id[$key];
-    //         $supplier->price = $request->supplier_price[$key];
-    //         $supplier->save();
-    //     }
-    //     return redirect()->back()->with('message', 'Product Updated Successfully');
-    // }
 
     public function update(Request $request, $id)
-{
-    $request->validate([
-        'name' => 'required|min:3|unique:products,name,' . $id . '|regex:/^[a-zA-Z ]+$/',
-        'serial_number' => 'required',
-        'model' => 'required|min:3',
-        'category_id' => 'required',
-        'sales_price' => 'required',
-        'unit_id' => 'required',
-        'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        'tax_id' => 'required',
-        'supplier_id.*' => 'required|exists:suppliers,id',
-        'supplier_price.*' => 'required|numeric|min:0',
-    ]);
+    {
+        $request->validate([
+            'name' => 'required',
+            'category_id' => 'required',
+            'sales_price' => 'required|numeric',
+            'supplier_id' => 'required|array',
+            'supplier_price' => 'required|array',
+        ]);
 
-    $product = Product::find($id);
+        $product = Product::findOrFail($id);
 
-    if (!$product) {
-        return redirect()->back()->with('error', 'Product not found');
-    }
+        // Update basic product fields
+        $product->update([
+            'serial_number' => $request->serial_number,
+            'name' => $request->name,
+            'category_id' => $request->category_id,
+            'model' => $request->model,
+            'quantity' => $request->quantity,
+            'remaining_stock' => $request->quantity, // or however you manage stock
+            'sales_price' => $request->sales_price,
+            'unit_id' => $request->unit_id,
+            'tax_id' => $request->tax_id,
+            'threshold' => $request->quantity <= 10 ? 1 : floor($request->quantity * 0.2),
+            'status' => $request->quantity == 0 ? 'Out of Stock' : ($request->quantity <= ($request->quantity <= 10 ? 1 : floor($request->quantity * 0.2)) ? 'Low Stock' : 'In Stock'),
+        ]);
 
-    $product->name = $request->name;
-    $product->serial_number = $request->serial_number;
-    $product->model = $request->model;
-    $product->category_id = $request->category_id;
-    $product->sales_price = $request->sales_price;
-    $product->unit_id = $request->unit_id;
-    $product->tax_id = $request->tax_id;
-
-    // if ($request->hasFile('image')) {
-    //     $existingImagePath = public_path("images/product/{$product->image}");
-    //     if (file_exists($existingImagePath) && is_file($existingImagePath)) {
-    //         unlink($existingImagePath); // Delete the existing image file
-    //     }
-
-    //     $imageName = $request->image->getClientOriginalName();
-    //     $request->image->move(public_path('images/product/'), $imageName);
-    //     $product->image = $imageName;
-    // }
-
-    if ($request->hasFile('image')) {
-        // Delete the existing image file if it exists
-        $existingImagePath = public_path("images/product/{$product->image}");
-        if (file_exists($existingImagePath) && is_file($existingImagePath)) {
-            unlink($existingImagePath);
-        }
-    
-        $imageName = time() . '_' . uniqid() . '.' . $request->image->getClientOriginalExtension();    
-        $request->image->move(public_path('images/product/'), $imageName);
-    
-        $product->image = $imageName;
-    }
-    
-
-    $product->save();
-
-            // Update or create product suppliers
-    foreach ($request->supplier_id as $key => $supplier_id) {
-        $supplier = ProductSupplier::where('product_id', $product->id)
-            ->where('supplier_id', $supplier_id)
-            ->first();
-
-        if (!$supplier) {
-            $supplier = new ProductSupplier();
-            $supplier->product_id = $product->id;
-            $supplier->supplier_id = $supplier_id;
+        // Handle image update if uploaded
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('images/product'), $filename);
+            $product->image = $filename;
+            $product->save();
         }
 
-        $supplier->price = $request->supplier_price[$key];
-        $supplier->save();
-    }
+        // Delete old supplier records
+        ProductSupplier::where('product_id', $product->id)->delete();
 
-    return redirect()->back()->with('message', 'Product has been updated successfully');
-}
+        // Recreate supplier records
+        foreach ($request->supplier_id as $index => $supplierId) {
+            ProductSupplier::create([
+                'product_id' => $product->id,
+                'supplier_id' => $supplierId,
+                'price' => $request->supplier_price[$index],
+            ]);
+        }
+
+        return redirect()->route('product.index')->with('message', 'Product updated successfully!');
+    }
 
 
     /**
@@ -271,8 +203,17 @@ $additional = ProductSupplier::where('product_id', $productId)->first();
     public function destroy($id)
     {
         $product = Product::find($id);
-        $product->delete();
-        return redirect()->back();
 
+        if (!$product) {
+            return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        // Manually delete related product suppliers
+        ProductSupplier::where('product_id', $id)->delete();
+
+        // Then delete the product
+        $product->delete();
+
+        return redirect()->back()->with('message', 'Product and its suppliers deleted successfully.');
     }
 }
