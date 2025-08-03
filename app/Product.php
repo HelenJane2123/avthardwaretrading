@@ -14,31 +14,38 @@ class Product extends Model
     ];
 
     public function category(){
-       return $this->belongsTo('App\Category');
+       return $this->belongsTo(Category::class);
     }
 
     public function unit(){
-        return $this->belongsTo('App\Unit');
+        return $this->belongsTo(Unit::class);
     }
 
     public function tax()
     {
-        return $this->belongsTo('App\Tax');
+        return $this->belongsTo(Tax::class);
     }
 
     public function additionalProduct(){
-        return $this->hasMany('App\ProductSupplier');
+        return $this->hasMany(ProductSupplier::class);
     }
 
     public function sale(){
-        return $this->hasMany('App\Sale');
+        return $this->hasMany(Sales::class);
     }
 
     public function invoice(){
-        return $this->belongsToMany('App\Invoice');
+        return $this->belongsToMany(Invoice::class);
     }
 
-    public function suppliers()
+   public function suppliers()
+    {
+        return $this->belongsToMany(Supplier::class, 'product_suppliers')
+                    ->withPivot('price')
+                    ->withTimestamps();
+    }
+
+    public function productSuppliers()
     {
         return $this->hasMany(ProductSupplier::class);
     }

@@ -132,93 +132,65 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $productId = $id; // The specific product ID you want to retrieve associated ProductSupplier record for
-        $additional = ProductSupplier::where('product_id', $productId)->first();
-
-        $product = Product::with('suppliers.supplier')->findOrFail($id);
-        $suppliers =Supplier::all();
+        $product = Product::with('productSuppliers')->findOrFail($id);
         $categories = Category::all();
-        $taxes = Tax::all();
         $units = Unit::all();
-        return view('product.edit', compact('additional','suppliers','categories','taxes','units','product'));
+        $suppliers = Supplier::all();
+        $taxes = Tax::all();
+
+        return view('product.edit', compact('product', 'categories', 'units', 'suppliers', 'taxes'));
     }
 
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|min:3|unique:products,name,' . $id . '|regex:/^[a-zA-Z ]+$/',
-            'serial_number' => 'required',
-            'model' => 'required|min:3',
+            'name' => 'required',
             'category_id' => 'required',
-            'sales_price' => 'required|numeric|min:0',
-            'unit_id' => 'required',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'tax_id' => 'required',
-            'quantity' => 'required|integer|min:0',
-            'supplier_id.*' => 'required|exists:suppliers,id',
-            'supplier_price.*' => 'required|numeric|min:0',
+            'sales_price' => 'required|numeric',
+            'supplier_id' => 'required|array',
+            'supplier_price' => 'required|array',
         ]);
 
-        $product = Product::find($id);
+        $product = Product::findOrFail($id);
 
-        if (!$product) {
-            return redirect()->back()->with('error', 'Product not found');
-        }
+        // Update basic product fields
+        $product->update([
+            'serial_number' => $request->serial_number,
+            'name' => $request->name,
+            'category_id' => $request->category_id,
+            'model' => $request->model,
+            'quantity' => $request->quantity,
+            'remaining_stock' => $request->quantity, // or however you manage stock
+            'sales_price' => $request->sales_price,
+            'unit_id' => $request->unit_id,
+            'tax_id' => $request->tax_id,
+            'threshold' => $request->quantity <= 10 ? 1 : floor($request->quantity * 0.2),
+            'status' => $request->quantity == 0 ? 'Out of Stock' : ($request->quantity <= ($request->quantity <= 10 ? 1 : floor($request->quantity * 0.2)) ? 'Low Stock' : 'In Stock'),
+        ]);
 
-        // Update product fields
-        $product->name = $request->name;
-        $product->serial_number = $request->serial_number;
-        $product->model = $request->model;
-        $product->category_id = $request->category_id;
-        $product->sales_price = $request->sales_price;
-        $product->unit_id = $request->unit_id;
-        $product->tax_id = $request->tax_id;
-
-        // Update quantity (initial_qty) and compute threshold
-        $product->quantity = $request->quantity;
-        //$product->qty = $request->initial_qty;
-
-        // Compute threshold as 20% of qty or set to at least 1
-        $threshold = ($product->quantity <= 10) ? 1 : floor($product->quantity * 0.2);
-        $product->threshold = $threshold;
-
-        // Determine product status based on qty and threshold
-        if ($product->quantity == 0) {
-            $product->status = 'Out of Stock';
-        } elseif ($product->quantity <= $threshold) {
-            $product->status = 'Low Stock';
-        } else {
-            $product->status = 'In Stock';
-        }
-
-        // Handle image upload
+        // Handle image update if uploaded
         if ($request->hasFile('image')) {
-            $existingImagePath = public_path("images/product/{$product->image}");
-            if (file_exists($existingImagePath) && is_file($existingImagePath)) {
-                unlink($existingImagePath);
-            }
-
-            $imageName = time() . '_' . uniqid() . '.' . $request->image->getClientOriginalExtension();
-            $request->image->move(public_path('images/product/'), $imageName);
-            $product->image = $imageName;
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $image->move(public_path('images/product'), $filename);
+            $product->image = $filename;
+            $product->save();
         }
 
-        $product->save();
-
-       // Remove old suppliers
+        // Delete old supplier records
         ProductSupplier::where('product_id', $product->id)->delete();
 
-        // Re-add suppliers from the form
-        foreach ($request->supplier_id as $key => $supplier_id) {
+        // Recreate supplier records
+        foreach ($request->supplier_id as $index => $supplierId) {
             ProductSupplier::create([
                 'product_id' => $product->id,
-                'supplier_id' => $supplier_id,
-                'price' => $request->supplier_price[$key],
+                'supplier_id' => $supplierId,
+                'price' => $request->supplier_price[$index],
             ]);
         }
 
-        return redirect()->route('product.index')->with('message', 'Product has been updated successfully');
+        return redirect()->route('product.index')->with('message', 'Product updated successfully!');
     }
 
 

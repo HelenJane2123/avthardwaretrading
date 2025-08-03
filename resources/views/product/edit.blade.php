@@ -88,13 +88,6 @@
                             <!-- More Details -->
                             <div class="row mt-3">
                                 <div class="col-md-2">
-                                    <label>Image</label>
-                                    <input type="file" name="image" class="form-control">
-                                    @if($product->image)
-                                        <img src="{{ asset('storage/products/' . $product->image) }}" width="80" class="mt-2">
-                                    @endif
-                                </div>
-                                <div class="col-md-2">
                                     <label>Unit</label>
                                     <select name="unit_id" class="form-control">
                                         <option value="">---Select Unit---</option>
@@ -131,7 +124,15 @@
                                     </span>
                                 </div>                                      
                             </div>
-
+                            <div class="row mt-3">
+                                <div class="col-md-2">
+                                    <label>Image</label>
+                                    <input type="file" name="image" class="form-control">
+                                    @if($product->image)
+                                        <img src="{{ asset('/images/product/' . $product->image) }}" width="80" class="mt-2">
+                                    @endif
+                                </div>
+                            </div>
                             <!-- Supplier Section -->
                             <div class="card mt-4">
                                 <div class="field_wrapper">

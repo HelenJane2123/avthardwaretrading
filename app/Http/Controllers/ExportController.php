@@ -3,11 +3,14 @@ namespace App\Http\Controllers;
 
 use App\Customer;
 use App\Product;
+use App\ProductSupplier;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Facades\Response;
 
 class ExportController extends Controller
@@ -137,99 +140,106 @@ class ExportController extends Controller
 
     public function exportProducts()
     {
+        $groupedProducts = Product::with(['category', 'suppliers'])->get()->groupBy('category.name');
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Insert logo
+        // Logo and title
         $drawing = new Drawing();
         $drawing->setName('Logo');
-        $drawing->setDescription('Company Logo');
         $drawing->setPath(public_path('images/avt_logo.png'));
-        $drawing->setHeight(60);
+        $drawing->setHeight(80);
         $drawing->setCoordinates('A1');
-        $drawing->setOffsetX(5);
-        $drawing->setOffsetY(5);
         $drawing->setWorksheet($sheet);
 
-        // Company info
-        $sheet->mergeCells('B1:F1');
-        $sheet->mergeCells('B2:F2');
-        $sheet->mergeCells('B3:F3');
-        $sheet->setCellValue('B1', 'AVT Hardware Trading');
-        $sheet->setCellValue('B2', '123 Main St., Calamba, Laguna');
-        $sheet->setCellValue('B3', 'Product List Grouped by Category');
+        $sheet->setCellValue('C1', 'AVT Hardware Trading');
+        $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
 
-        // Header styles
-        $sheet->getStyle('B1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 14],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('B2')->applyFromArray([
-            'font' => ['size' => 10],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-        $sheet->getStyle('B3')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 13],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
+        $sheet->setCellValue('C2', '123 Main St., Calamba, Laguna');
+        $sheet->getStyle('C2')->getFont()->setSize(12);
+
+        $sheet->setCellValue('C3', 'Product List Grouped by Category');
+        $sheet->getStyle('C3')->getFont()->setBold(true)->setSize(14);
 
         $row = 5;
 
-        // Group products by category
-        $products = Product::with('category')->get()->groupBy(function ($item) {
-            return $item->category->name ?? 'Uncategorized';
-        });
-
-        foreach ($products as $categoryName => $groupedProducts) {
-
-            // Category title row
-            $sheet->setCellValue("A{$row}", "Category: {$categoryName}");
-            $sheet->mergeCells("A{$row}:K{$row}");
-            $sheet->getStyle("A{$row}")->applyFromArray([
-                'font' => ['bold' => true, 'size' => 12],
-                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE0E0E0']],
-            ]);
+        foreach ($groupedProducts as $categoryName => $products) {
+            $sheet->setCellValue('A' . $row, 'Category: ' . $categoryName);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
             $row++;
 
-            // Table headers
-            $headers = ['Image', 'Product Code', 'Name', 'Serial Number', 'Model', 'Category', 'Sales Price', 'Quantity', 'Remaining Stock', 'Threshold', 'Status'];
-            $col = 'A';
+            // Headers
+            $headers = [
+                'Image', 'Product Code', 'Name', 'Serial Number', 'Model', 'Category',
+                'Sales Price', 'Quantity', 'Remaining Stock', 'Threshold', 'Status',
+                'Supplier', 'Price'
+            ];
+
+            $colIndex = 1;
             foreach ($headers as $header) {
-                $sheet->setCellValue("{$col}{$row}", $header);
-                $sheet->getStyle("{$col}{$row}")->applyFromArray([
+                $cell = Coordinate::stringFromColumnIndex($colIndex) . $row;
+                $sheet->setCellValue($cell, $header);
+                $sheet->getStyle($cell)->applyFromArray([
                     'font' => ['bold' => true],
                     'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
                 ]);
-                $col++;
+                $colIndex++;
             }
+
             $row++;
 
-            // Products under this category
-            foreach ($groupedProducts as $product) {
-                $sheet->setCellValue("A{$row}", $product->image ?? 'N/A');
-                $sheet->setCellValue("B{$row}", $product->product_code);
-                $sheet->setCellValue("C{$row}", $product->name);
-                $sheet->setCellValue("D{$row}", $product->serial_number);
-                $sheet->setCellValue("E{$row}", $product->model);
-                $sheet->setCellValue("F{$row}", $product->category->name ?? 'N/A');
-                $sheet->setCellValue("G{$row}", $product->sales_price);
-                $sheet->setCellValue("H{$row}", $product->quantity);
-                $sheet->setCellValue("I{$row}", $product->remaining_stock);
-                $sheet->setCellValue("J{$row}", $product->threshold);
-                $sheet->setCellValue("K{$row}", $product->status);
-                $row++;
+            foreach ($products as $product) {
+                foreach ($product->suppliers as $supplier) {
+                    $colIndex = 1;
+
+                    // Image
+                    if ($product->image) {
+                        $imagePath = public_path('images/product/' . $product->image);
+                        if (file_exists($imagePath)) {
+                            $drawing = new Drawing();
+                            $drawing->setPath($imagePath);
+                            $drawing->setHeight(50);
+                            $drawing->setCoordinates(Coordinate::stringFromColumnIndex($colIndex) . $row);
+                            $drawing->setWorksheet($sheet);
+                        }
+                    }
+
+                    $colIndex++; // Move after image
+
+                    $data = [
+                        $product->product_code,
+                        $product->name,
+                        $product->serial_number,
+                        $product->model,
+                        $product->category->name ?? '',
+                        $product->sales_price,
+                        $product->quantity,
+                        $product->remaining_stock,
+                        $product->threshold,
+                        $product->status,
+                        $supplier->name . ' ' . ($supplier->code ?? ''),
+                        $supplier->pivot->price,
+                    ];
+
+                    foreach ($data as $value) {
+                        $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIndex++) . $row, $value);
+                    }
+
+                    $row++;
+                }
             }
 
-            $row++; // Add space between categories
+            $row++;
         }
 
-        // Export file
+        // Output file
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'avthardwaretrading_products_grouped_' . now()->format('Ymd_His') . '.xlsx';
-        $tempFile = storage_path("app/public/{$fileName}");
-        $writer->save($tempFile);
-
-        return response()->download($tempFile)->deleteFileAfterSend(true);
+        $fileName = 'avthardwaretrading_products_' . now()->format('Ymd_His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
     }
 
 
