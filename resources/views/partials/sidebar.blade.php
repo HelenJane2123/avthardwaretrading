@@ -145,6 +145,19 @@
                 <li><a class="treeview-item" href="{{ route('unit.index') }}"><i class="icon fa fa-circle-o"></i> Manage Unit</a></li>
             </ul>
         </li>
+
+        {{-- Mode of Payment --}}
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('modeofpayment*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-bars"></i><span class="app-menu__label">Mode of Payment</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('modeofpayment.create') }}"><i class="icon fa fa-circle-o"></i> Add Mode of Payment</a></li>
+                <li><a class="treeview-item" href="{{ route('modeofpayment.index') }}"><i class="icon fa fa-circle-o"></i> Manage Mode of Payment</a></li>
+            </ul>
+        </li>
+
         {{-- 📈 Reports --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Reports —</li>
 
