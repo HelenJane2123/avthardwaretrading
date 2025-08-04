@@ -193,6 +193,28 @@ class ProductController extends Controller
         return redirect()->route('product.index')->with('message', 'Product updated successfully!');
     }
 
+    public function getProductInfo($id)
+    {
+        $product = Product::with(['tax', 'unit'])->findOrFail($id);
+
+        $status = 'In Stock';
+        if ($product->remaining_stock <= $product->threshold) {
+            $status = 'Low Stock';
+        }
+        if ($product->remaining_stock == 0) {
+            $status = 'Out of Stock';
+        }
+
+        return response()->json([
+            'code' => $product->product_code,
+            'price' => $product->sales_price,
+            'unit' => $product->unit->name ?? '',
+            'tax' => $product->tax->name ?? 0,  // Make sure 'value' is the tax percentage (e.g., 12 for 12%)
+            'stock'  => $product->remaining_stock ?? 0,
+            'status' => $status,
+        ]);
+    }
+
 
     /**
      * Remove the specified resource from storage.

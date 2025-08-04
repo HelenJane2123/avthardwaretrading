@@ -57,6 +57,9 @@ Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPri
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
 Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'])
     ->name('supplier.supplier-products');
+Route::get('/supplier/{id}/info', [SupplierController::class, 'getInfo'])->name('supplier.info');
+Route::get('/getproduct/{id}', [ProductController::class, 'getProductInfo']);
+Route::get('/po/latest', [PurchaseController::class, 'getLatestPoNumber']);
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

@@ -205,6 +205,17 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')->with('message', 'Supplier updated successfully.');
     }
 
+    public function getInfo($id)
+    {
+        $supplier = Supplier::findOrFail($id);
+        return response()->json([
+            'supplier_code' => $supplier->supplier_code,
+            'name' => $supplier->name,
+            'address' => $supplier->address,
+            'phone' => $supplier->mobile,
+            'email' => $supplier->email,
+        ]);
+    }
 
     /**
      * Remove the specified resource from storage.
