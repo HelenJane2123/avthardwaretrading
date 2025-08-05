@@ -117,10 +117,7 @@
                                         </td>
                                         <td>
                                             <input type="number" name="qty[]" class="form-control qty">
-                                            <small class="text-muted stock-info">
-                                                <span class="stock"></span> pcs —
-                                                <span class="status badge"></span>
-                                            </small>
+                                            <small class="text-muted stock-info"></small>
                                         </td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
                                         <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td> <!-- Tax will go here -->
@@ -130,6 +127,13 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
+                                        <input type="hidden" name="discount_type" id="hidden_discount_type">
+                                        <input type="hidden" name="overall_discount" id="hidden_overall_discount">
+                                        <input type="hidden" name="subtotal_value" id="hidden_subtotal">
+                                        <input type="hidden" name="discount_value" id="hidden_discount_value">
+                                        <input type="hidden" name="shipping_value" id="hidden_shipping">
+                                        <input type="hidden" name="other_value" id="hidden_other">
+                                        <input type="hidden" name="grand_total_value" id="hidden_grand_total">
                                         <th colspan="5" class="text-right">Discount Type</th>
                                         <th colspan="2">
                                             <select id="discount_type" class="form-control">
@@ -326,6 +330,16 @@
             });
         });
 
+        $('form').on('submit', function () {
+            $('#hidden_discount_type').val($('#discount_type').val());
+            $('#hidden_overall_discount').val($('#discount_type').val() === 'overall' ? $('#tax').val() : 0);
+            $('#hidden_subtotal').val($('#subtotal').val());
+            $('#hidden_discount_value').val($('#discount_type').val() === 'per_item' ? 0 : $('#tax').val());
+            $('#hidden_shipping').val($('#shipping').val());
+            $('#hidden_other').val($('#other').val());
+            $('#hidden_grand_total').val($('#grand_total').val());
+        });
+
         //Populate Product details
         $(document).on('change', '.productname', function () {
             var $row = $(this).closest('tr');
@@ -340,7 +354,9 @@
                         $row.find('.code').val(data.code);
                         $row.find('.price').val(data.price);
                         $row.find('.dis').val(data.tax); // Fill tax in discount field
-                        $row.find('.stock').text(data.stock);
+                        $row.find('.stock-info').html(
+                            `<span class="stock">${data.stock}</span> ${data.unit} — <span class="status badge"></span>`
+                        );
                         var badgeClass = 'badge-secondary';
                         if (data.status === 'Low Stock') badgeClass = 'badge-warning';
                         if (data.status === 'Out of Stock') badgeClass = 'badge-danger';
@@ -406,6 +422,18 @@
                 $('.dis').prop('disabled', false);
             }
             $('#discount_label').text(type === 'per_item' ? 'Discount (Per Item)' : 'Discount (Overall %)');
+            calculateTotals();
+        });
+        $(document).on('input', '.qty', function () {
+            const $row = $(this).closest('tr');
+            const enteredQty = parseFloat($(this).val()) || 0;
+            const availableStock = parseFloat($row.find('.stock').text()) || 0;
+
+            if (enteredQty > availableStock) {
+                alert('Entered quantity exceeds available stock!');
+                $(this).val(availableStock);
+            }
+
             calculateTotals();
         });
     </script>

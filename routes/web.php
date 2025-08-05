@@ -31,7 +31,6 @@ use Illuminate\Support\Facades\Log;
 
 Auth::routes();
 
-
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/edit_profile', [HomeController::class, 'edit_profile'])->name('edit_profile');
@@ -65,3 +64,6 @@ Route::get('/po/latest', [PurchaseController::class, 'getLatestPoNumber']);
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
+
+//Print pdf receipt
+Route::get('/purchase/{id}/pdf', [PurchaseController::class, 'generatePurchase'])->name('print_purchase_receipt.pdf');
