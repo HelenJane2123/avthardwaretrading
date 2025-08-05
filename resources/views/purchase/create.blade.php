@@ -23,14 +23,15 @@
                 <div class="tile">
                     <h3 class="tile-title">Purchase Order</h3>
                     <div class="tile-body">
-                        <div class="d-flex justify-content-end mb-3">
+                        <!-- <div class="d-flex justify-content-end mb-3">
                             <button type="button" class="btn btn-primary mb-3" onclick="printPurchaseOrder()">
                                 <i class="fa fa-print"></i> Print Purchase Order
                             </button>
-                        </div>
+                        </div> -->
                         <form method="POST" action="{{ route('invoice.store') }}">
                             @csrf
                             <div class="row mb-4">
+                                {{-- Supplier --}}
                                 <div class="col-md-4 form-group">
                                     <label>Supplier</label>
                                     <select name="supplier_id" class="form-control" required>
@@ -41,16 +42,35 @@
                                     </select>
                                 </div>
 
+                                {{-- Purchase Date --}}
                                 <div class="col-md-3 form-group">
                                     <label>Purchase Date</label>
                                     <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
                                 </div>
 
-                                <div class="form-group">
+                                {{-- PO Number --}}
+                                <div class="col-md-3 form-group">
                                     <label for="po_number">PO Number</label>
                                     <input type="text" name="po_number" id="po_number" class="form-control" readonly>
                                 </div>
-                                
+
+                                {{-- Salesman --}}
+                                <div class="col-md-4 form-group">
+                                    <label for="salesman">Salesman</label>
+                                    <input type="text" name="salesman" id="salesman" class="form-control" placeholder="Enter salesman's name">
+                                </div>
+
+                                {{-- Payment Term --}}
+                                <div class="col-md-3 form-group">
+                                    <label for="payment_term">Payment Term</label>
+                                    <select name="payment_term" id="payment_term" class="form-control">
+                                        <option value="">Select Term</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="7 Days">7 Days</option>
+                                        <option value="15 Days">15 Days</option>
+                                        <option value="30 Days">30 Days</option>
+                                    </select>
+                                </div>
                             </div>
                             <div id="supplier-info" class="mt-3 p-3 border rounded bg-light" style="display: none;">
                                 <h5 class="mb-3">Supplier Information</h5>
@@ -109,6 +129,15 @@
                                     </tr>
                                 </tbody>
                                 <tfoot>
+                                    <tr>
+                                        <th colspan="5" class="text-right">Discount Type</th>
+                                        <th colspan="2">
+                                            <select id="discount_type" class="form-control">
+                                                <option value="per_item" selected>Per Item</option>
+                                                <option value="overall">Overall</option>
+                                            </select>
+                                        </th>
+                                    </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Subtotal</th>
                                         <td colspan="2"><input type="text" class="form-control" id="subtotal" readonly></td>
@@ -331,35 +360,52 @@
         });
         function calculateTotals() {
             let subtotal = 0;
-            let totalTax = 0;
+            let discountType = $('#discount_type').val();
+            let overallDiscount = parseFloat($('#tax').val()) || 0;
+            let totalDiscount = 0;
 
             $('#po-body tr').each(function () {
                 const qty = parseFloat($(this).find('.qty').val()) || 0;
                 const price = parseFloat($(this).find('.price').val()) || 0;
-                const taxRate = parseFloat($(this).find('.dis').val()) || 0;
+                const dis = parseFloat($(this).find('.dis').val()) || 0;
 
-                const lineTotal = qty * price;
-                const taxAmount = lineTotal * (taxRate / 100);
+                let lineTotal = qty * price;
 
-                const total = lineTotal; // no tax added to amount column
-                $(this).find('.amount').val(total.toFixed(2));
+                if (discountType === 'per_item') {
+                    let discountAmount = lineTotal * dis / 100;
+                    lineTotal = lineTotal - discountAmount;
+                    totalDiscount += discountAmount;
+                }
 
-                subtotal += total;
-                totalTax += taxAmount;
+                $(this).find('.amount').val(lineTotal.toFixed(2));
+                subtotal += lineTotal;
             });
+
+            if (discountType === 'overall') {
+                totalDiscount = subtotal * overallDiscount / 100;
+                subtotal = subtotal - totalDiscount;
+            }
 
             const shipping = parseFloat($('#shipping').val()) || 0;
             const other = parseFloat($('#other').val()) || 0;
-
-            const grandTotal = subtotal + totalTax + shipping + other;
+            const grandTotal = subtotal + shipping + other;
 
             $('#subtotal').val(subtotal.toFixed(2));
-            $('#tax').val(totalTax.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
         }
 
         // Trigger on keyup/input changes
-        $(document).on('input', '.qty, .price, .dis, #shipping, #other', function () {
+        $(document).on('input', '.qty, .price, .dis, #shipping, #other, #tax', function () {
+            calculateTotals();
+        });
+        $('#discount_type').on('change', function () {
+            const type = $(this).val();
+            if (type === 'overall') {
+                $('.dis').prop('disabled', true);
+            } else {
+                $('.dis').prop('disabled', false);
+            }
+            $('#discount_label').text(type === 'per_item' ? 'Discount (Per Item)' : 'Discount (Overall %)');
             calculateTotals();
         });
     </script>
