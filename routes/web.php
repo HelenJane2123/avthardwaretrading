@@ -49,8 +49,6 @@ Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
 
 
-
-
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
@@ -59,6 +57,11 @@ Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'
 Route::get('/supplier/{id}/info', [SupplierController::class, 'getInfo'])->name('supplier.info');
 Route::get('/getproduct/{id}', [ProductController::class, 'getProductInfo']);
 Route::get('/po/latest', [PurchaseController::class, 'getLatestPoNumber']);
+
+//suggest product based on user input
+Route::get('/products/suggest', [ProductController::class, 'suggest'])->name('products.suggest');
+Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name('products.suppliers');
+Route::get('/products/{id}', [ProductController::class, 'show']);
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

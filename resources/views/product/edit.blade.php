@@ -45,6 +45,10 @@
                                     <input type="text" class="form-control" value="{{ $product->product_code }}" readonly>
                                 </div>
                                 <div class="col-md-3">
+                                    <label>Product Code</label>
+                                    <input type="text" class="form-control" value="{{ $product->supplier_product_code }}" readonly>
+                                </div>
+                                <div class="col-md-3">
                                     <label>Serial Number</label>
                                     <input type="text" name="serial_number" class="form-control" value="{{ $product->serial_number }}">
                                 </div>

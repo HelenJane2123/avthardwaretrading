@@ -6,6 +6,7 @@ use App\Category;
 use App\Product;
 use App\ProductSupplier;
 use App\Supplier;
+use App\SupplierItem;
 use App\Tax;
 use App\Unit;
 use Illuminate\Http\Request;
@@ -70,11 +71,10 @@ class ProductController extends Controller
             'remaining_stock' => 'nullable|numeric|min:0'        
         ]);
 
-
-
         $product = new Product();
         $product->product_code = $request->product_code;
-        $product->name = $request->name;
+        $product->supplier_product_code = $request->supplier_product_code;
+        $product->name = $request->product_name;
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
         $product->category_id = $request->category_id;
@@ -121,9 +121,10 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        //
-    }
+        $product = Product::with(['category','supplierItems.supplier','unit','tax'])->findOrFail($id);
 
+        return view('product.partials.view', compact('product'));
+    }
     /**
      * Show the form for editing the specified resource.
      *
@@ -215,6 +216,33 @@ class ProductController extends Controller
         ]);
     }
 
+    // Suggest items from supplier_items
+    public function suggest(Request $request)
+    {
+        $query = $request->get('query');
+
+        $items = SupplierItem::where('item_description', 'LIKE', "%{$query}%")
+            ->orWhere('item_code', 'LIKE', "%{$query}%")
+            ->limit(10)
+            ->get(['id', 'item_code', 'item_description', 'item_price', 'supplier_id']);
+
+        return response()->json($items);
+    }
+
+    // Get suppliers based on chosen item_code
+    public function suppliers(Request $request)
+    {
+        $itemCode = $request->get('item_code');
+        $suppliers = SupplierItem::where('item_code', $itemCode)
+            ->join('suppliers', 'supplier_items.supplier_id', '=', 'suppliers.id')
+            ->get([
+                'suppliers.id',
+                'suppliers.name',
+                'supplier_items.item_price'
+            ]);
+
+        return response()->json($suppliers);
+    }
 
     /**
      * Remove the specified resource from storage.
