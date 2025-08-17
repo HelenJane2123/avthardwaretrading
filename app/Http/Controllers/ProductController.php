@@ -56,36 +56,39 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate([
             'product_code' => 'required|unique:products,product_code',
-            'name' => 'required|string|min:3|max:255|unique:products',
+            'product_name' => 'required|string|min:3|max:255|unique:products,product_name',
             'serial_number' => 'required',
             'model' => 'required',
             'category_id' => 'required',
-            'sales_price' => 'required',
+            'sales_price' => 'required|numeric',
             'unit_id' => 'required',
+            'quantity' => 'required|integer|min:0',
+            'remaining_stock' => 'nullable|numeric|min:0',
+            'supplier_id' => 'required|array',  // must be array
+            'supplier_id.*' => 'exists:suppliers,id',
+            'supplier_price' => 'required|array',
+            'supplier_price.*' => 'numeric|min:0',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'tax_id' => 'nullable|integer',
-            'quantity' => 'required',
-            'remaining_stock' => 'nullable|numeric|min:0'        
         ]);
 
         $product = new Product();
         $product->product_code = $request->product_code;
         $product->supplier_product_code = $request->supplier_product_code;
-        $product->name = $request->product_name;
+        $product->product_name = $request->product_name;
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
         $product->category_id = $request->category_id;
         $product->sales_price = $request->sales_price;
         $product->unit_id = $request->unit_id;
         $product->quantity = $request->quantity;
-        $product->remaining_stock = $request->remaining_stock;
+        $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
         $product->tax_id = $request->tax_id;
         $product->threshold = 0;
 
-        // Determine stock status
+        // Set stock status
         if ($product->quantity <= 0) {
             $product->status = 'Out of Stock';
         } elseif ($product->quantity <= $product->threshold) {
@@ -94,22 +97,23 @@ class ProductController extends Controller
             $product->status = 'In Stock';
         }
 
+        // Handle image
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();        
+            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('images/product/'), $imageName);
             $product->image = $imageName;
         }
 
         $product->save();
 
-        foreach($request->supplier_id as $key => $supplier_id){
-            $supplier = new ProductSupplier();
-            $supplier->product_id = $product->id;
-            $supplier->supplier_id = $request->supplier_id[$key];
-            $supplier->price = $request->supplier_price[$key];
-            $supplier->save();
+        // ✅ Attach suppliers with pivot data
+        $syncData = [];
+        foreach ($request->supplier_id as $key => $supplierId) {
+            $syncData[$supplierId] = ['price' => $request->supplier_price[$key]];
         }
+        $product->suppliers()->sync($syncData);
+
         return redirect()->route('product.index')->with('message', 'New product has been added successfully');
     }
 
@@ -121,7 +125,7 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        $product = Product::with(['category','supplierItems.supplier','unit','tax'])->findOrFail($id);
+        $product = Product::with(['category','suppliers','unit','tax'])->findOrFail($id);
 
         return view('product.partials.view', compact('product'));
     }
@@ -133,7 +137,13 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product = Product::with('productSuppliers')->findOrFail($id);
+        $product = Product::with([
+            'productSuppliers.supplier',
+            'category',
+            'unit',
+            'tax'
+        ])->findOrFail($id);
+
         $categories = Category::all();
         $units = Unit::all();
         $suppliers = Supplier::all();
@@ -142,15 +152,31 @@ class ProductController extends Controller
         return view('product.edit', compact('product', 'categories', 'units', 'suppliers', 'taxes'));
     }
 
+    public function getProductDetails(Request $request)
+    {
+        $product = Product::with(['productSuppliers.supplier', 'unit', 'category', 'tax'])
+            ->where('product_code', $request->product_code)
+            ->first();
+
+        if (!$product) {
+            return response()->json(['error' => 'Product not found'], 404);
+        }
+
+        return response()->json($product);
+    }
+
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required',
+            'product_name' => 'required',
+            'supplier_product_code' => 'required',
             'category_id' => 'required',
             'sales_price' => 'required|numeric',
             'supplier_id' => 'required|array',
+            'supplier_id.*' => 'required|integer|exists:suppliers,id',
             'supplier_price' => 'required|array',
+            'supplier_price.*' => 'required|numeric|min:0',
         ]);
 
         $product = Product::findOrFail($id);
@@ -158,7 +184,8 @@ class ProductController extends Controller
         // Update basic product fields
         $product->update([
             'serial_number' => $request->serial_number,
-            'name' => $request->name,
+            'supplier_product_code' => $request->supplier_product_code,
+            'product_name' => $request->product_name,
             'category_id' => $request->category_id,
             'model' => $request->model,
             'quantity' => $request->quantity,
@@ -184,11 +211,13 @@ class ProductController extends Controller
 
         // Recreate supplier records
         foreach ($request->supplier_id as $index => $supplierId) {
-            ProductSupplier::create([
-                'product_id' => $product->id,
-                'supplier_id' => $supplierId,
-                'price' => $request->supplier_price[$index],
-            ]);
+            if (!empty($supplierId) && !empty($request->supplier_price[$index])) {
+                ProductSupplier::create([
+                    'product_id' => $product->id,
+                    'supplier_id' => $supplierId,
+                    'price' => $request->supplier_price[$index],
+                ]);
+            }
         }
 
         return redirect()->route('product.index')->with('message', 'Product updated successfully!');

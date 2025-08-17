@@ -209,7 +209,7 @@ class ExportController extends Controller
 
                     $data = [
                         $product->product_code,
-                        $product->name,
+                        $product->product_name,
                         $product->serial_number,
                         $product->model,
                         $product->category->name ?? '',

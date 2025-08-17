@@ -25,6 +25,11 @@
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
+                    @if(session()->has('message'))
+                        <div class="alert alert-success">
+                            {{ session()->get('message') }}
+                        </div>
+                    @endif
                     <div class="tile-body">
                         <div class="d-flex justify-content-end mb-3">
                             <a href="{{ route('export.products') }}" class="btn btn-success mb-2">
@@ -48,7 +53,7 @@
                                 @foreach($additional as $add)
                                     <tr>
                                         <td>{{ $add->product->product_code }}</td>
-                                        <td>{{ $add->product->name }}</td>
+                                        <td>{{ $add->product->product_name }}</td>
                                         <td>{{ $add->product->quantity }}</td>
                                         <td>{{ $add->product->supplier_product_code }}</td>
                                         <td>{{ $add->supplier->name }}</td>

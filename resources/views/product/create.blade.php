@@ -44,139 +44,156 @@
                         <form method="POST" action="{{route('product.store')}}" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Product Code</label>
-                                    <input name="product_code" id="product_code" class="form-control" type="text" readonly>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Supplier Product Code</label>
-                                    <input name="supplier_product_code" id="supplier_product_code" class="form-control" type="text" readonly>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Serial Number</label>
-                                    <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
-                                    @error('serial_number')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Category</label>
+                                <!-- Left Column: Image -->
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label class="control-label">Image</label>
+                                        <i class="fa fa-image fa-5x text-muted mb-2"></i>
+                                        <div class="form-group mt-2">
+                                            <label>Change Image</label>
+                                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror">
+                                        </div>
+                                        <!-- <input name="image" class="form-control @error('image') is-invalid @enderror" type="file"> -->
+                                        @error('image')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                        @enderror
 
-                                    <select name="category_id" class="form-control">
-                                        <option>---Select Category---</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{$category->id}}">{{$category->name}}</option>
-                                        @endforeach
-                                    </select>
+                                        {{-- Show current image if exists --}}
+                                        @if(isset($product) && $product->image)
+                                            <div class="mt-2">
+                                                <img src="{{ asset('storage/'.$product->image) }}" 
+                                                    alt="Product Image" 
+                                                    class="img-thumbnail" 
+                                                    style="max-width: 100%; height: auto;">
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
 
-                                    @error('category_id')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                 <div class="form-group col-md-3">
-                                    <label class="control-label">Model</label>
-                                    <input name="model" class="form-control @error('model') is-invalid @enderror" type="text" placeholder="Enter Model">
-                                    @error('model')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-4 position-relative">
-                                    <label class="control-label">Product</label>
-                                    <input type="text" id="product_name" name="product_name" class="form-control" placeholder="Search product...">
-                                    <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div>
-                                </div>
-                                <div class="form-group col-md-2">
-                                    <label class="control-label">Initial Quantity</label>
-                                    <input name="quantity" class="form-control" type="number" min="0" placeholder="Enter Initial Stock">
-                                </div>
-                                <div class="form-group col-md-2">
-                                    <label class="control-label">Remaining Stock</label>
-                                    <input name="remaining_stock" id="remaining_stock" class="form-control" type="number" readonly>
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Selling Price</label>
-                                    <input name="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
-                                    @error('sales_price')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="control-label">Image</label>
-                                    <input name="image"  class="form-control @error('image') is-invalid @enderror" type="file" >
-                                    @error('image')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Unit</label>
-                                    <select name="unit_id" class="form-control">
-                                        <option>---Select Unit---</option>
-                                        @foreach($units as $unit)
-                                            <option value="{{$unit->id}}">{{$unit->name}}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('unit_id')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-3">
-                                    <label class="control-label">Discount </label>
-                                    <select name="tax_id" class="form-control">
-                                        <option value="0">---Select Discount---</option>
-                                        @foreach($taxes as $tax)
-                                            <option value="{{$tax->id}}">{{$tax->name}} %</option>
-                                        @endforeach
-                                    </select>
-                                    @error('tax_id')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                    @enderror
+                                <!-- Right Column: Product Details -->
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="form-group col-md-4 position-relative">
+                                            <label class="control-label">Product</label>
+                                            <input type="text" id="product_name" name="product_name" class="form-control" placeholder="Search product...">
+                                            <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Product Code</label>
+                                            <input name="product_code" id="product_code" class="form-control" type="text" readonly>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Supplier Product Code</label>
+                                            <input name="supplier_product_code" id="supplier_product_code" class="form-control" type="text" readonly>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Serial Number</label>
+                                            <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
+                                            @error('serial_number')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Category</label>
+                                            <select name="category_id" class="form-control">
+                                                <option>---Select Category---</option>
+                                                @foreach($categories as $category)
+                                                    <option value="{{$category->id}}">{{$category->name}}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('category_id')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Model</label>
+                                            <input name="model" class="form-control @error('model') is-invalid @enderror" type="text" placeholder="Enter Model">
+                                            @error('model')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+
+                                        
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Initial Quantity</label>
+                                            <input name="quantity" class="form-control" type="number" min="0" placeholder="Enter Initial Stock">
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Remaining Stock</label>
+                                            <input name="remaining_stock" id="remaining_stock" class="form-control" type="number" readonly>
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Selling Price</label>
+                                            <input name="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
+                                            @error('sales_price')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Unit</label>
+                                            <select name="unit_id" class="form-control">
+                                                <option>---Select Unit---</option>
+                                                @foreach($units as $unit)
+                                                    <option value="{{$unit->id}}">{{$unit->name}}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('unit_id')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Discount</label>
+                                            <select name="tax_id" class="form-control">
+                                                <option value="0">---Select Discount---</option>
+                                                @foreach($taxes as $tax)
+                                                    <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                                @endforeach
+                                            </select>
+                                            @error('tax_id')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="tile">
+                                <h5 class="text-center mb-3">Supplier Details</h5>
                                 <div id="example-2" class="content">
-                                    <div class="group row">
-                                        <!--<div class="form-group col-md-5">
-                                            <label for="supplier_id">Supplier</label>
-                                            <select id="supplier_id" name="supplier_id" class="form-control">
-                                                <option value="">-- Select Supplier --</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group col-md-5">
-                                            <input name="supplier-price" class="form-control supplier-price @error('supplier_price') is-invalid @enderror" 
-                                                type="number" placeholder="Purchase Price">
-                                            <span class="text-danger">{{ $errors->has('supplier_price') ? $errors->first('supplier_price') : '' }}</span>
-                                        </div>-->
+                                    <div class="group row justify-content-center">
                                         <div class="form-group col-md-5">
                                             <label for="supplier_name">Supplier</label>
                                             <input type="text" id="supplier_name" name="supplier_name" class="form-control" autocomplete="off">
                                             <div id="supplierSuggestions" class="list-group"></div>
-                                            <input type="hidden" id="supplier_id" name="supplier_id">
+                                            <input type="hidden" id="supplier_id" name="supplier_id[]">
                                         </div>
                                         <div class="form-group col-md-5">
-                                            <label for="supplier_name">Supplier Item Price</label>
+                                            <label for="supplier_price">Supplier Item Price</label>
                                             <input type="number" id="supplier_price" name="supplier_price[]" class="form-control" placeholder="Purchase Price">
                                         </div>
-                                        <!-- <div class="form-group col-md-2">
-                                            <button type="button" id="btnAdd-2" class="btn btn-success btn-sm float-right"><i class="fa fa-plus"></i></button>
-                                            <button type="button" class="btn btn-danger btn-sm btnRemove float-right"><i class="fa fa-trash"></i></button>
-                                        </div> -->
                                     </div>
                                 </div>
-                             </div>
+                            </div>
                             <div class="form-group col-md-4 align-self-end">
                                 <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
                             </div>

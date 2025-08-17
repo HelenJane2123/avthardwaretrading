@@ -62,6 +62,7 @@ Route::get('/po/latest', [PurchaseController::class, 'getLatestPoNumber']);
 Route::get('/products/suggest', [ProductController::class, 'suggest'])->name('products.suggest');
 Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name('products.suppliers');
 Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

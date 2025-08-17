@@ -8,6 +8,7 @@ class ProductSupplier extends Model
 {
 
     protected $fillable = ['product_id', 'supplier_id', 'price'];
+
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -16,6 +17,11 @@ class ProductSupplier extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function productSuppliers()
+    {
+        return $this->hasMany(ProductSupplier::class);
     }
 
 }
