@@ -1,3 +1,122 @@
+<style>
+/* General Styling for all section containers (Highest Selling, Latest Sales, Recently Added) */
+.section-container {
+  background-color: #fff; /* White background for the tile */
+  border: 1px solid #e0e0e0; /* Light border around the whole container */
+  border-radius: 4px; /* Slightly rounded corners */
+  margin-bottom: 30px; /* Space below each section container */
+  overflow: hidden; /* Ensures borders/shadows are contained */
+}
+
+/* General Styling for all section header text (e.g., "HIGHEST SELLING PRODUCTS") */
+.section-header {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  padding: 15px 20px; /* Padding around the header text */
+  border-bottom: 1px solid #e0e0e0; /* Thin gray line below header */
+  position: relative; /* Needed for the blue line pseudo-element */
+  text-transform: uppercase; /* Uppercase as in the image */
+}
+
+/* The blue line below the section headers */
+.section-header::after {
+  content: '';
+  display: block;
+  width: 100%; /* Spans full width */
+  height: 3px; /* Thickness of the blue line */
+  background-color: #007bff; /* Bootstrap primary blue */
+  position: absolute;
+  bottom: -1px; /* Adjust to sit directly on the bottom border */
+  left: 0;
+}
+
+/* Table specific styling (Applies to Highest Selling and Latest Sales) */
+.section-container table {
+  width: 100%;
+  border-collapse: collapse; /* Essential for clean grid borders */
+  font-size: 14px;
+}
+
+.section-container th, .section-container td {
+  padding: 12px 20px; /* Padding for cells */
+  border: 1px solid #e0e0e0; /* All-around borders for cells */
+  text-align: left;
+  vertical-align: middle;
+  color: #333;
+}
+
+.section-container th {
+  background-color: #f5f5f5; /* Light gray background for table headers */
+  color: #555; /* Darker text for headers */
+  font-weight: bold;
+}
+
+/* Optional: Style for the last row to remove bottom border in tables */
+.section-container tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Specific styling for the Latest Sales product names (blue links) */
+.latest-sales-table td a {
+  color: #007bff; /* Blue color for links */
+  text-decoration: none; /* No underline */
+}
+
+.latest-sales-table td a:hover {
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Styling for Recently Added Products list items */
+.product-list {
+  list-style: none; /* Remove bullet points */
+  padding: 0;
+  margin: 0;
+}
+
+.product-list-item {
+  display: flex; /* Use flexbox for layout */
+  align-items: center; /* Align items vertically */
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee; /* Light separator */
+}
+
+.product-list-item:last-child {
+  border-bottom: none; /* No border for the last item */
+}
+
+.product-list-item .product-icon {
+  font-size: 20px; /* Adjust icon size */
+  margin-right: 15px;
+  color: #666; /* Icon color */
+}
+
+.product-list-item .product-details {
+  flex-grow: 1; /* Allows details to take available space */
+}
+
+.product-list-item .product-name {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.product-list-item .product-category {
+  font-size: 12px;
+  color: #777;
+}
+
+.product-list-item .product-price {
+  background-color: #ffc107; /* Orange background for price */
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 14px;
+  margin-left: 15px;
+}
+</style>
+
 <main class="app-content">
     <div class="app-title">
         <div>
@@ -46,6 +165,52 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+        <div class="col-md-6 col-lg-4">
+    <div class="section-container">
+        <div class="section-header"><i class="fa fa-th"></i> HIGHEST SELLING PRODUCTS</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Total Sold</th>
+                    <th>Total Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="section-container">
+                <div class="section-header"><i class="fa fa-th"></i> LATEST SALES</div>
+                <table class="latest-sales-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product Name</th>
+                            <th>Date</th>
+                            <th>Total Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="section-container">
+                <div class="section-header"><i class="fa fa-th"></i> RECENTLY ADDED PRODUCTS</div>
+                <ul class="product-list">
+                </ul>
+            </div>
+        </div>
+
+    </div> 
 
     <div class="row">
     <div class="col-md-6">

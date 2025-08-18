@@ -88,7 +88,7 @@ class HomeController extends Controller
     // Fetch last week's sales
     $lastWeekSales = Sale::whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()])
                         ->sum('amount');
-
+    
     return view('home', [
         'monthlySales' => $formattedMonthlySales,
         'formattedTopSales'=> $formattedTopSales,
