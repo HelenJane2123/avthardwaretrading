@@ -15,10 +15,13 @@
                 <li class="breadcrumb-item"><a href="#">Add Purchase</a></li>
             </ul>
         </div>
-
-
-         <div class="row">
-             <div class="clearix"></div>
+        @if(session()->has('message'))
+            <div class="alert alert-success">
+                {{ session()->get('message') }}
+            </div>
+        @endif
+        <div class="row">
+            <div class="clearix"></div>
             <div class="col-md-12">
                 <div class="tile">
                     <h3 class="tile-title">Purchase Order</h3>
@@ -61,14 +64,16 @@
                                 </div>
 
                                 {{-- Payment Term --}}
-                                <div class="col-md-3 form-group">
-                                    <label for="payment_term">Payment Term</label>
-                                    <select name="payment_term" id="payment_term" class="form-control">
-                                        <option value="">Select Term</option>
-                                        <option value="Cash">Cash</option>
-                                        <option value="7 Days">7 Days</option>
-                                        <option value="15 Days">15 Days</option>
-                                        <option value="30 Days">30 Days</option>
+                                <div class="form-group">
+                                    <label for="payment_id">Mode of Payment</label>
+                                    <select name="payment_id" id="payment_id" class="form-control" required>
+                                        <option value="">-- Select Payment Mode --</option>
+                                        @foreach($paymentModes as $mode)
+                                            <option value="{{ $mode->id }}">
+                                                {{ $mode->name }} 
+                                                @if($mode->term) ({{ $mode->term }} days) @endif
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -110,6 +115,7 @@
                                     <tr>
                                         <th>Product Code</th>
                                         <th>Product</th>
+                                        <th>Unit</th>
                                         <th>Quantity Ordered</th>
                                         <th>Unit Price</th>
                                         <th>Discount (%)</th>
@@ -121,15 +127,14 @@
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                                         <td>
-                                            <select name="product_id[]" class="form-control productname">
-                                                <!-- <option value="">Select Product</option>
-                                                @foreach($products as $product)
-                                                    <option value="{{ $product->id }}" 
-                                                        data-code="{{ $product->item_code }}" 
-                                                        data-price="{{ $product->item_price }}">
-                                                        {{ $product->item_code }} - {{ $product->item_description }}
-                                                    </option>
-                                                @endforeach -->
+                                            <select name="product_id[]" class="form-control productname"></select>
+                                        </td>
+                                        <td>
+                                            <select name="unit[]" class="form-control unit">
+                                                <option value="">Select Unit</option>
+                                                @foreach($units as $unit)
+                                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                                @endforeach
                                             </select>
                                         </td>
                                         <td>
@@ -176,7 +181,7 @@
                                         <td colspan="2"><input type="text" class="form-control" id="subtotal" readonly></td>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-right">Total</th>
+                                        <th colspan="5" class="text-right">Grand Total</th>
                                         <td colspan="2"><input type="text" class="form-control" id="grand_total" readonly></td>
                                     </tr>
                                 </tfoot>
@@ -230,6 +235,14 @@
                     <td>
                         <select name="product_id[]" class="form-control productname">
                             ${options}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="unit[]" class="form-control unit">
+                            <option value="">Select Unit</option>
+                            @foreach($units as $unit)
+                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                            @endforeach
                         </select>
                     </td>
                     <td><input type="number" name="qty[]" class="form-control qty"></td>
@@ -330,13 +343,17 @@
         });
 
         $('form').on('submit', function () {
-            $('#hidden_discount_type').val($('#discount_type').val());
-            $('#hidden_overall_discount').val($('#discount_type').val() === 'overall' ? $('#tax').val() : 0);
-            $('#hidden_subtotal').val($('#subtotal').val());
-            $('#hidden_discount_value').val($('#discount_type').val() === 'per_item' ? 0 : $('#tax').val());
-            $('#hidden_shipping').val($('#shipping').val());
-            $('#hidden_other').val($('#other').val());
-            $('#hidden_grand_total').val($('#grand_total').val());
+            const type = $('#discount_type').val();
+            $('#hidden_discount_type').val(type);
+
+            // store overall discount PERCENT only when overall mode
+            $('#hidden_overall_discount').val(type === 'overall' ? ($('#discount').val() || 0) : 0);
+
+            // these are already set inside calculateTotals, but keep them fresh
+            $('#hidden_subtotal').val($('#subtotal').val() || 0);
+            $('#hidden_shipping').val($('#shipping').val() || 0);
+            $('#hidden_other').val($('#other').val() || 0);
+            $('#hidden_grand_total').val($('#grand_total').val() || 0);
         });
 
         //Populate Product details
@@ -368,64 +385,88 @@
             } else {
                 $('.productname').empty().append('<option value="">Select Product</option>');
             }
+
+            $('#discount_type').trigger('change');
         });
+
         function calculateTotals() {
-            let subtotal = 0;
-            let totalDiscount = 0;
-            let discountType = $('#discount_type').val();
-            
-            // Calculate line totals
+            let baseSubtotal = 0;     // sum of qty*price for all lines (no discounts, no charges)
+            let totalDiscount = 0;    // total discount in amount
+            const discountType = $('#discount_type').val();
+
+            // --- Line items ---
             $('#po-body tr').each(function () {
-                const qty = parseFloat($(this).find('.qty').val()) || 0;
+                const qty   = parseFloat($(this).find('.qty').val())   || 0;
                 const price = parseFloat($(this).find('.price').val()) || 0;
-                const dis = parseFloat($(this).find('.dis').val()) || 0;
+                const disP  = parseFloat($(this).find('.dis').val())   || 0;
 
-                let lineTotal = qty * price;
+                const lineBase = qty * price;
+                baseSubtotal += lineBase;
 
-                if (discountType === 'per_item') {
-                    let discountAmount = lineTotal * dis / 100;
-                    lineTotal -= discountAmount;
-                    totalDiscount += discountAmount;
+                let lineNet = lineBase;
+
+                if (discountType === 'per_item' && disP > 0) {
+                    const lineDiscAmt = lineBase * disP / 100;
+                    totalDiscount += lineDiscAmt;
+                    lineNet = lineBase - lineDiscAmt;
                 }
 
-                $(this).find('.amount').val(lineTotal.toFixed(2));
-                subtotal += lineTotal;
+                $(this).find('.amount').val(lineNet.toFixed(2));
             });
 
-            // Apply overall discount if selected
+            // --- Overall discount ---
             if (discountType === 'overall') {
-                const overallDiscountPercent = parseFloat($('#discount').val()) || 0;
-                totalDiscount = subtotal * overallDiscountPercent / 100;
-                subtotal -= totalDiscount;
+                const overallPct = parseFloat($('#discount').val()) || 0;
+                totalDiscount = baseSubtotal * overallPct / 100;
             }
 
-            // Apply tax
-            const taxPercent = parseFloat($('#tax').val()) || 0;
-            const taxAmount = subtotal * taxPercent / 100;
-
+            // --- Charges ---
             const shipping = parseFloat($('#shipping').val()) || 0;
-            const other = parseFloat($('#other').val()) || 0;
+            const other    = parseFloat($('#other').val())    || 0;
 
-            const grandTotal = subtotal + taxAmount + shipping + other;
+            // --- Tax ---
+            let taxAmount = 0;
+            if (discountType === 'overall') {
+                const taxPercent = parseFloat($('#tax').val()) || 0;
+                const taxableBase = (baseSubtotal - totalDiscount) + shipping + other;
+                taxAmount = taxableBase * taxPercent / 100;
+            } 
+            // else if per_item → tax = 0 automatically
 
-            // Update UI
-            $('#subtotal').val(subtotal.toFixed(2));
+            // --- Final computation ---
+            const taxableBase = (baseSubtotal - totalDiscount) + shipping + other;
+            const grandTotal  = taxableBase + taxAmount;
+
+            // --- Update UI ---
+            $('#subtotal').val(baseSubtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
 
-            // Update hidden fields for submission
+            // Hidden fields for backend
+            $('#hidden_subtotal').val(baseSubtotal.toFixed(2));
             $('#hidden_discount_value').val(totalDiscount.toFixed(2));
-            $('#hidden_subtotal').val(subtotal.toFixed(2));
             $('#hidden_grand_total').val(grandTotal.toFixed(2));
+            $('#hidden_tax').val(taxAmount.toFixed(2)); // store tax separately if needed
         }
-         $(document).on('input', '.qty, .price, .dis, #discount, #tax, #shipping, #other', function() {
+
+        $(document).on('input', '.qty, .price, .dis, #discount, #tax, #shipping, #other', function() {
             calculateTotals();
         });
         $('#discount_type').on('change', function() {
             const type = $(this).val();
-            if(type === 'overall') $('.dis').prop('disabled', true);
-            else $('.dis').prop('disabled', false);
+
+            if (type === 'overall') {
+                // Enable overall discount
+                $('#discount').prop('disabled', false);
+                $('.dis').prop('disabled', true).val(0); // disable per-item discounts
+            } else if (type === 'per_item') {
+                // Disable overall discount & reset value to 0
+                $('#discount').prop('disabled', true).val(0);
+                $('.dis').prop('disabled', false); // allow per-item discounts
+            }
+
             calculateTotals();
         });
+                
     </script>
 
 @endpush

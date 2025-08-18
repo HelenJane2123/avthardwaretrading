@@ -10,6 +10,8 @@ use App\Supplier;
 use App\SupplierItem;
 use App\Invoice;
 use App\PurchaseDetail;
+use App\ModeofPayment;
+use App\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -44,7 +46,14 @@ class PurchaseController extends Controller
     {
         $suppliers = Supplier::all();
         $products = SupplierItem::all();
-        return view('purchase.create', compact('suppliers','products'));
+        $units = Unit::all();
+
+        // get all active payment modes
+        $paymentModes = ModeOfPayment::where('is_active', 1)->get();
+
+         // get all active payment modes
+        $paymentModes = ModeOfPayment::where('is_active', 1)->get();
+        return view('purchase.create', compact('suppliers','products','paymentModes','units'));
     }
 
     public function getSupplierItems($id)
@@ -75,11 +84,15 @@ class PurchaseController extends Controller
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'date' => 'required|date',
+            'salesman' => 'nullable|string|max:255',
+            'payment_id' => 'required|exists:mode_of_payments,id',
             'product_id.*' => 'required|exists:products,id',
+            'po_number' => 'required|string',
             'qty.*' => 'required|numeric|min:1',
             'price.*' => 'required|numeric|min:0',
             'dis.*' => 'required|numeric|min:0|max:100',
             'amount.*' => 'required|numeric|min:0',
+            'unit.*' => 'required|string',
             'discount_type' => 'required|in:per_item,overall',
             'subtotal' => 'required|numeric|min:0',
             'overall_discount' => 'nullable|numeric|min:0',
@@ -87,33 +100,39 @@ class PurchaseController extends Controller
             'shipping' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'grand_total' => 'required|numeric|min:0',
+            'remarks' => 'nullable|string|max:255',
         ]);
 
-        // Create a new purchase
+        // Create Purchase
         $purchase = new Purchase();
         $purchase->supplier_id = $request->supplier_id;
+        $purchase->po_number = $request->po_number;
+        $purchase->salesman = $request->salesman;
+        $purchase->payment_id = $request->payment_id;
         $purchase->date = $request->date;
 
-        // New total fields
         $purchase->discount_type = $request->discount_type;
+        $purchase->discount_value = $request->discount_value;
         $purchase->overall_discount = $request->overall_discount ?? 0;
         $purchase->subtotal = $request->subtotal;
-        $purchase->discount_value = $request->discount_value;
         $purchase->shipping = $request->shipping ?? 0;
         $purchase->other_charges = $request->other_charges ?? 0;
         $purchase->grand_total = $request->grand_total;
+        $purchase->remarks = $request->remarks;
 
         $purchase->save();
 
         // Store purchase details
         foreach ($request->product_id as $key => $productId) {
             $purchase->purchaseDetails()->create([
-                'supplier_id' => $request->supplier_id,
+                'purchase_id' => $purchase->id, // ✅ Use the saved purchase ID
                 'product_id' => $productId,
+                'product_code' => $request->product_code[$key] ?? null, // ✅ Make it per-item
                 'qty' => $request->qty[$key],
                 'price' => $request->price[$key],
                 'discount' => $request->dis[$key],
-                'amount' => $request->amount[$key],
+                'unit' => $request->unit[$key],
+                'total' => $request->amount[$key],
             ]);
         }
 

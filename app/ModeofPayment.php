@@ -16,4 +16,17 @@ class ModeofPayment extends Model
     public function modeofpayment(){
         return $this->hasMany('App\ModeofPayment');
     }
+
+     public function getDisplayNameAttribute()
+    {
+        if ($this->name === 'PDC/Check' && $this->term) {
+            return $this->name . ' (' . $this->term . ' days)';
+        }
+        return $this->name;
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'payment_id');
+    }
 }
