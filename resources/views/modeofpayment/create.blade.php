@@ -59,7 +59,7 @@
                                 @error('description')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
-                            </div>   
+                            </div>
                            
                             <div class="form-group col-md-12 mt-3">
                                 <button class="btn btn-success float-right" type="submit">
