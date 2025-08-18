@@ -64,6 +64,10 @@ Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
 
+//get supplier items
+Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
+
+
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');

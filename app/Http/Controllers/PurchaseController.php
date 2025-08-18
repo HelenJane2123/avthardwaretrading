@@ -7,6 +7,7 @@ use App\Product;
 use App\Purchase;
 use App\Sale;
 use App\Supplier;
+use App\SupplierItem;
 use App\Invoice;
 use App\PurchaseDetail;
 use Illuminate\Http\Request;
@@ -42,10 +43,26 @@ class PurchaseController extends Controller
     public function create()
     {
         $suppliers = Supplier::all();
-        $products = Product::all();
+        $products = SupplierItem::all();
         return view('purchase.create', compact('suppliers','products'));
     }
 
+    public function getSupplierItems($id)
+    {
+        try {
+            $supplier = Supplier::findOrFail($id);
+            $items = SupplierItem::where('supplier_id', $id)
+                ->select('id', 'item_code', 'item_description', 'item_price', 'item_amount')
+                ->get();
+
+           return response()->json([
+                'supplier' => $supplier,
+                'items' => $items
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
     /**
      * Store a newly created resource in storage.
      *

@@ -58,7 +58,8 @@ class ProductController extends Controller
     {
         $request->validate([
             'product_code' => 'required|unique:products,product_code',
-            'product_name' => 'required|string|min:3|max:255|unique:products,product_name',
+            'supplier_product_code' => 'required|unique:products,supplier_product_code',
+            'product_name' => 'required|string|min:3|max:255,product_name',
             'serial_number' => 'required',
             'model' => 'required',
             'category_id' => 'required',
@@ -281,16 +282,16 @@ class ProductController extends Controller
      */
     public function destroy($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('productSuppliers')->find($id);
 
         if (!$product) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
-        // Manually delete related product suppliers
-        ProductSupplier::where('product_id', $id)->delete();
+        // Delete related suppliers first
+        $product->productSuppliers()->delete();
 
-        // Then delete the product
+        // Delete the product
         $product->delete();
 
         return redirect()->back()->with('message', 'Product and its suppliers deleted successfully.');

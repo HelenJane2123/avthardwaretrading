@@ -83,6 +83,13 @@
                                             <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
                                                 <i class="fa fa-trash"></i>
                                             </button>
+                                            <!-- Hidden Delete Form -->
+                                            <form id="delete-form-{{ $add->product->id }}" 
+                                                action="{{ route('product.destroy', $add->product->id) }}" 
+                                                method="POST" style="display:none;">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach

@@ -34,7 +34,7 @@
                                 {{-- Supplier --}}
                                 <div class="col-md-4 form-group">
                                     <label>Supplier</label>
-                                    <select name="supplier_id" class="form-control" required>
+                                    <select name="supplier_id" id="supplierSelect" class="form-control" required>
                                         <option value="">Select Supplier</option>
                                         @foreach($suppliers as $supplier)
                                             <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -72,25 +72,38 @@
                                     </select>
                                 </div>
                             </div>
-                            <div id="supplier-info" class="mt-3 p-3 border rounded bg-light" style="display: none;">
-                                <h5 class="mb-3">Supplier Information</h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p><strong>Supplier Code:</strong><br><span id="info-supplier-code"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Name:</strong><br><span id="info-name"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Phone:</strong><br><span id="info-phone"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Email:</strong><br><span id="info-email"></span></p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p><strong>Address:</strong><br><span id="info-address"></span></p>
-                                    </div>
-                                </div>
+                            <div id="supplier-info" class="table-responsive mb-4" style="display: none;">
+                                <table class="table table-bordered table-striped shadow-sm">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th colspan="2" class="bg-primary text-white">
+                                                <i class="fa fa-building"></i> Supplier Information
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th>Supplier Code</th>
+                                            <td id="info-supplier-code"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Name</th>
+                                            <td id="info-name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone</th>
+                                            <td id="info-phone"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td id="info-email"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Address</th>
+                                            <td id="info-address"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                             <table class="table table-bordered table-striped">
                                 <thead class="thead-dark">
@@ -109,15 +122,19 @@
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                                         <td>
                                             <select name="product_id[]" class="form-control productname">
-                                                <option value="">Select Product</option>
+                                                <!-- <option value="">Select Product</option>
                                                 @foreach($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                                @endforeach
+                                                    <option value="{{ $product->id }}" 
+                                                        data-code="{{ $product->item_code }}" 
+                                                        data-price="{{ $product->item_price }}">
+                                                        {{ $product->item_code }} - {{ $product->item_description }}
+                                                    </option>
+                                                @endforeach -->
                                             </select>
                                         </td>
                                         <td>
                                             <input type="number" name="qty[]" class="form-control qty">
-                                            <small class="text-muted stock-info"></small>
+                                            <!-- <small class="text-muted stock-info"></small> -->
                                         </td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
                                         <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td> <!-- Tax will go here -->
@@ -143,12 +160,8 @@
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-right">Subtotal</th>
-                                        <td colspan="2"><input type="text" class="form-control" id="subtotal" readonly></td>
-                                    </tr>
-                                    <tr>
                                         <th colspan="5" class="text-right">Tax/Discount</th>
-                                        <td colspan="2"><input type="text" class="form-control" id="tax"></td>
+                                        <td colspan="2"><input type="text" class="form-control" id="discount"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Shipping</th>
@@ -157,6 +170,10 @@
                                     <tr>
                                         <th colspan="5" class="text-right">Other Charges</th>
                                         <td colspan="2"><input type="number" class="form-control" id="other" value="0"></td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="5" class="text-right">Subtotal</th>
+                                        <td colspan="2"><input type="text" class="form-control" id="subtotal" readonly></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Total</th>
@@ -184,56 +201,13 @@
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            
-            $('tbody').delegate('.productname', 'change', function () {
-                var  tr = $(this).parent().parent();
-                tr.find('.qty').focus();
-            })
 
-            $('tbody').delegate('.productname', 'change', function () {
-                var tr = $(this).parent().parent();
-                var productId = tr.find('.productname').val();
-                var supplierId = $('select[name="supplier_id"]').val(); // Get the selected supplier ID
-
-                $.ajax({
-                    type: 'GET',
-                    url: '{{ route('findPricePurchase') }}',
-                    dataType: 'json',
-                    data: {
-                        "_token": $('meta[name="csrf-token"]').attr('content'),
-                        'id': productId,
-                        'supplier_id': supplierId // Pass supplier_id to backend
-                    },
-                    success: function (data) {
-                        tr.find('.price').val(data.price);
-                    },
-                    error: function (xhr, status, error) {
-                        console.error(error);
-                    }
-                });
-            });
-
-            $('tbody').delegate('.qty,.price,.dis', 'keyup', function () {
-
-                var tr = $(this).parent().parent();
-                var qty = tr.find('.qty').val();
-                var price = tr.find('.price').val();
-                var dis = tr.find('.dis').val();
-                var amount = (qty * price)-(qty * price * dis)/100;
-                tr.find('.amount').val(amount);
-                total();
-            });
-            function total(){
-                var total = 0;
-                $('.amount').each(function (i,e) {
-                    var amount =$(this).val()-0;
-                    total += amount;
-                })
-                $('.total').html(total);
-            }
-
-            $('.addRow').on('click', function () {
-                addRow();
+            $('.addRow').on('click', function() {
+                if (!window.supplierItems || window.supplierItems.length === 0) {
+                    alert('Please select a supplier first.');
+                    return;
+                }
+                addRow(window.supplierItems);
                 calculateTotals();
             });
             const productOptions = `{!! 
@@ -241,30 +215,36 @@
                     return '<option value="'.$product->id.'">'.$product->name.'</option>';
                 })->implode('') 
             !!}`;
-            function addRow() {
-                var addRow = `<tr>
+
+            function addRow(supplierItems = []) {
+                let options = '<option value="">Select Product</option>';
+
+                supplierItems.forEach(function(item){
+                    options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}" data-dis="${item.item_amount || 0}">
+                                   ${item.item_description}
+                                </option>`;
+                });
+
+                const addRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
                         <select name="product_id[]" class="form-control productname">
-                            <option value="">Select Product</option>
-                            ${productOptions}
+                            ${options}
                         </select>
                     </td>
-                    <td>
-                        <input type="number" name="qty[]" class="form-control qty">
-                        <small class="text-muted stock-info">
-                            <span class="stock"></span> pcs — <span class="status badge badge-secondary"></span>
-                        </small>
-                    </td>
+                    <td><input type="number" name="qty[]" class="form-control qty"></td>
                     <td><input type="text" name="price[]" class="form-control price"></td>
                     <td><input type="text" name="dis[]" class="form-control dis"></td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
                     <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
                 </tr>`;
 
-                $('tbody').append(addRow);
+                $('#po-body').append(addRow);
+                // DISABLE discount input if overall is selected
+                if ($('#discount_type').val() === 'overall') {
+                    $('#po-body tr:last').find('.dis').prop('disabled', true);
+                }
             }
-
 
             $('.remove').live('click', function () {
                 var l =$('tbody tr').length;
@@ -279,31 +259,50 @@
             });
 
             //Populate Supplier Information
-            $('select[name="supplier_id"]').on('change', function () {
-                var supplierId = $(this).val();
-                if (supplierId) {
-                    $.ajax({
-                        url: '/supplier/' + supplierId + '/info',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function (data) {
-                            $('#supplier-info').show();
-                            $('#info-supplier-code').text(data.supplier_code);
-                            $('#info-name').text(data.name);
-                            $('#info-address').text(data.address);
-                            $('#info-phone').text(data.phone);
-                            $('#info-email').text(data.email);
-                        },
-                        error: function () {
-                            $('#supplier-info').hide();
-                            alert('Could not fetch supplier info.');
-                        }
-                    });
-                } else {
-                    $('#supplier-info').hide();
-                }
+            let supplierProductOptions = '';
+            $('#supplierSelect').on('change', function () {
+                const supplierId = $(this).val();
+                if (!supplierId) return;
+
+                $.ajax({
+                    url: '/supplier/' + supplierId + '/items',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        // Store supplier items globally
+                        window.supplierItems = data.items || [];
+                         $('#supplier-info').show();
+                        $('#info-supplier-code').text(data.supplier.supplier_code);
+                        $('#info-name').text(data.supplier.name);
+                        $('#info-address').text(data.supplier.address);
+                        $('#info-phone').text(data.supplier.mobile);
+                        $('#info-email').text(data.supplier.email);
+
+                        // Update existing rows
+                        $('.productname').each(function () {
+                            let options = '<option value="">Select Product</option>';
+                            window.supplierItems.forEach(function(item){
+                                options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}" data-dis="${item.item_amount || 0}">
+                                               ${item.item_description}
+                                            </option>`;
+                            });
+                            $(this).html(options);
+                        });
+                    }
+                });
             });
 
+            $(document).on('change', '.productname', function () {
+                var $row = $(this).closest('tr');
+                var selected = $(this).find(':selected');
+
+                $row.find('.code').val(selected.data('code') || '');
+                $row.find('.price').val(selected.data('price') || '');
+                //$row.find('.dis').val(selected.data('dis') || '');
+
+                calculateTotals(); // make sure this function exists
+            });
+            
             // get the latest PO number in database
             $.ajax({
                 url: '/api/po/latest',
@@ -341,45 +340,41 @@
         });
 
         //Populate Product details
-        $(document).on('change', '.productname', function () {
-            var $row = $(this).closest('tr');
-            var productId = $(this).val();
-
-            if (productId) {
+        $(document).on('change', 'select[name="supplier_id"]', function () {
+            var supplierId = $(this).val();
+            if (supplierId) {
                 $.ajax({
-                    url: '/getproduct/' + productId,
+                    url: '/supplier/' + supplierId + '/items',
                     type: 'GET',
                     dataType: 'json',
                     success: function (data) {
-                        $row.find('.code').val(data.code);
-                        $row.find('.price').val(data.price);
-                        $row.find('.dis').val(data.tax); // Fill tax in discount field
-                        $row.find('.stock-info').html(
-                            `<span class="stock">${data.stock}</span> ${data.unit} — <span class="status badge"></span>`
-                        );
-                        var badgeClass = 'badge-secondary';
-                        if (data.status === 'Low Stock') badgeClass = 'badge-warning';
-                        if (data.status === 'Out of Stock') badgeClass = 'badge-danger';
-                        if (data.status === 'In Stock') badgeClass = 'badge-success';
+                        // update all product dropdowns
+                        $('.productname').each(function () {
+                            var $dropdown = $(this);
+                            $dropdown.empty().append('<option value="">Select Product</option>');
 
-                        $row.find('.status')
-                            .text(data.status)
-                            .removeClass('badge-secondary badge-warning badge-danger badge-success')
-                            .addClass(badgeClass);
+                            $.each(data.items, function (index, item) {
+                                var $option = $('<option>', {
+                                    value: item.id,
+                                    text: item.item_description,
+                                    'data-code': item.item_code,
+                                    'data-price': item.item_price
+                                });
+                                $dropdown.append($option);
+                            });
+                        });
                     }
                 });
             } else {
-                $row.find('.code, .price, .dis').val('');
+                $('.productname').empty().append('<option value="">Select Product</option>');
             }
-
-            calculateTotals();
         });
         function calculateTotals() {
             let subtotal = 0;
-            let discountType = $('#discount_type').val();
-            let overallDiscount = parseFloat($('#tax').val()) || 0;
             let totalDiscount = 0;
-
+            let discountType = $('#discount_type').val();
+            
+            // Calculate line totals
             $('#po-body tr').each(function () {
                 const qty = parseFloat($(this).find('.qty').val()) || 0;
                 const price = parseFloat($(this).find('.price').val()) || 0;
@@ -389,7 +384,7 @@
 
                 if (discountType === 'per_item') {
                     let discountAmount = lineTotal * dis / 100;
-                    lineTotal = lineTotal - discountAmount;
+                    lineTotal -= discountAmount;
                     totalDiscount += discountAmount;
                 }
 
@@ -397,43 +392,38 @@
                 subtotal += lineTotal;
             });
 
+            // Apply overall discount if selected
             if (discountType === 'overall') {
-                totalDiscount = subtotal * overallDiscount / 100;
-                subtotal = subtotal - totalDiscount;
+                const overallDiscountPercent = parseFloat($('#discount').val()) || 0;
+                totalDiscount = subtotal * overallDiscountPercent / 100;
+                subtotal -= totalDiscount;
             }
+
+            // Apply tax
+            const taxPercent = parseFloat($('#tax').val()) || 0;
+            const taxAmount = subtotal * taxPercent / 100;
 
             const shipping = parseFloat($('#shipping').val()) || 0;
             const other = parseFloat($('#other').val()) || 0;
-            const grandTotal = subtotal + shipping + other;
 
+            const grandTotal = subtotal + taxAmount + shipping + other;
+
+            // Update UI
             $('#subtotal').val(subtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
+
+            // Update hidden fields for submission
+            $('#hidden_discount_value').val(totalDiscount.toFixed(2));
+            $('#hidden_subtotal').val(subtotal.toFixed(2));
+            $('#hidden_grand_total').val(grandTotal.toFixed(2));
         }
-
-        // Trigger on keyup/input changes
-        $(document).on('input', '.qty, .price, .dis, #shipping, #other, #tax', function () {
+         $(document).on('input', '.qty, .price, .dis, #discount, #tax, #shipping, #other', function() {
             calculateTotals();
         });
-        $('#discount_type').on('change', function () {
+        $('#discount_type').on('change', function() {
             const type = $(this).val();
-            if (type === 'overall') {
-                $('.dis').prop('disabled', true);
-            } else {
-                $('.dis').prop('disabled', false);
-            }
-            $('#discount_label').text(type === 'per_item' ? 'Discount (Per Item)' : 'Discount (Overall %)');
-            calculateTotals();
-        });
-        $(document).on('input', '.qty', function () {
-            const $row = $(this).closest('tr');
-            const enteredQty = parseFloat($(this).val()) || 0;
-            const availableStock = parseFloat($row.find('.stock').text()) || 0;
-
-            if (enteredQty > availableStock) {
-                alert('Entered quantity exceeds available stock!');
-                $(this).val(availableStock);
-            }
-
+            if(type === 'overall') $('.dis').prop('disabled', true);
+            else $('.dis').prop('disabled', false);
             calculateTotals();
         });
     </script>

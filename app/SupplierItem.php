@@ -30,7 +30,7 @@ class SupplierItem extends Model
     }
 
     /**
-     * Get the category details owns the item.
+     * Get the category details.
      */
     public function category()
     {
@@ -38,10 +38,25 @@ class SupplierItem extends Model
     }
 
     /**
-     * Get the unit details owns the item.
+     * Get the unit details.
      */
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
+
+    /**
+     * 🔹 Custom function: get item codes by supplier_id
+     */
+    public static function getItemCodesBySupplier($supplierId)
+    {
+        return self::where('supplier_id', $supplierId)
+               ->get(['item_code', 'item_description', 'item_price', 'item_amount']);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+    
 }

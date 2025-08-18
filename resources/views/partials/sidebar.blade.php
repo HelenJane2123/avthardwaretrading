@@ -46,11 +46,11 @@
         </li>
 
         {{-- View Sales --}}
-        <li>
+        <!-- <li>
             <a class="app-menu__item {{ request()->is('sales') ? 'active' : ''}}" href="/sales">
                 <i class="app-menu__icon fa fa-dollar"></i><span class="app-menu__label">View Sales</span>
             </a>
-        </li>
+        </li> -->
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('purchase*') ? 'active' : ''}}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-shopping-cart"></i><span class="app-menu__label">Purchase Order</span>
