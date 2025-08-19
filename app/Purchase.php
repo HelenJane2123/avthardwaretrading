@@ -6,10 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class Purchase extends Model
 {
+    protected $table = 'purchases';
     protected $fillable = [
         'supplier_id',
+        'po_number',
+        'salesman',
+        'payment_id',
         'date',
-        // Add other fillable attributes here
+        'discount_type',
+        'discount_value',
+        'overall_discount',
+        'subtotal',
+        'shipping',
+        'other_charges',
+        'remarks',
+        'grand_total'
     ];
 
     public function supplier()
@@ -17,19 +28,30 @@ class Purchase extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    public function purchaseItems()
+    {
+        return $this->hasMany(PurchaseItem::class, 'purchase_id', 'id');
+    }
+
     public function purchaseDetails()
     {
-        return $this->hasMany(PurchaseDetail::class);
+        return $this->hasMany(PurchaseItem::class);
     }
+
 
     public function paymentMode()
     {
-        return $this->belongsTo(PaymentMode::class, 'payment_id');
+        return $this->belongsTo(ModeofPayment::class, 'id');
     }
 
     public function items()
     {
         return $this->hasMany(PurchaseItem::class, 'purchase_id');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(ModeOfPayment::class, 'payment_id');
     }
 }
 

@@ -31,7 +31,7 @@
                                 <i class="fa fa-print"></i> Print Purchase Order
                             </button>
                         </div> -->
-                        <form method="POST" action="{{ route('invoice.store') }}">
+                        <form method="POST" action="{{ route('purchase.store') }}">
                             @csrf
                             <div class="row mb-4">
                                 {{-- Supplier --}}
@@ -189,7 +189,7 @@
 
                             <div class="form-group mt-3">
                                 <label>Comments or Special Instructions</label>
-                                <textarea name="comments" rows="4" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
+                                <textarea name="remarks" rows="4" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary mt-3">Submit Purchase Order</button>
@@ -321,15 +321,14 @@
                 url: '/api/po/latest',
                 method: 'GET',
                 success: function (response) {
+                    console.log("Latest PO response:", response);
                     let newPoNumber;
 
                     if (response.po_number) {
-                        // Extract the numeric part, increment, then pad again
                         const numPart = parseInt(response.po_number.replace('PO', ''), 10);
                         const nextNum = numPart + 1;
                         newPoNumber = 'PO' + nextNum.toString().padStart(4, '0');
                     } else {
-                        // If no existing PO, start from PO0001
                         newPoNumber = 'PO0001';
                     }
 

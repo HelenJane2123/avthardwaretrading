@@ -10,6 +10,7 @@ class ModeofPayment extends Model
 
     protected $fillable = [
         'name',
+        'term',
         'description',
         'is_active'
     ];

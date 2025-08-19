@@ -33,7 +33,7 @@ class PurchaseController extends Controller
 
     public function index()
     {
-        $purchases = Purchase::with('supplier')->orderBy('created_at', 'desc')->get();
+        $purchases = Purchase::with('supplier')->get();
         return view('purchase.index', compact('purchases'));
     }
 
@@ -72,6 +72,19 @@ class PurchaseController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function showDetails($id)
+    {
+        $purchase = Purchase::with(['supplier', 'items.supplierItem'])->findOrFail($id);
+        return view('purchase.partial.details', compact('purchase'));
+    }
+
+    public function print($id)
+    {
+        $purchase = Purchase::with(['supplier', 'items.supplierItem'])->findOrFail($id);
+        return view('purchase.partial.print', compact('purchase'));
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -80,68 +93,86 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
-        // Validation rules
-        $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'date' => 'required|date',
-            'salesman' => 'nullable|string|max:255',
-            'payment_id' => 'required|exists:mode_of_payments,id',
-            'product_id.*' => 'required|exists:products,id',
-            'po_number' => 'required|string',
-            'qty.*' => 'required|numeric|min:1',
-            'price.*' => 'required|numeric|min:0',
-            'dis.*' => 'required|numeric|min:0|max:100',
-            'amount.*' => 'required|numeric|min:0',
-            'unit.*' => 'required|string',
-            'discount_type' => 'required|in:per_item,overall',
-            'subtotal' => 'required|numeric|min:0',
-            'overall_discount' => 'nullable|numeric|min:0',
-            'discount_value' => 'required|numeric|min:0',
-            'shipping' => 'nullable|numeric|min:0',
-            'other_charges' => 'nullable|numeric|min:0',
-            'grand_total' => 'required|numeric|min:0',
-            'remarks' => 'nullable|string|max:255',
-        ]);
+        // ✅ Validation rules
+        // $request->validate([
+        //     'supplier_id'         => 'required|exists:suppliers,id',
+        //     'date'                => 'required|date',
+        //     'po_number'           => 'required|string|max:50|unique:purchases,po_number',
+        //     'salesman'            => 'nullable|string|max:100',
+        //     'payment_id'          => 'nullable|exists:mode_of_payment,id',
+        //     'discount_type'       => 'nullable|string|in:percent,fixed',
+        //     'overall_discount'    => 'nullable|numeric|min:0',
+        //     'subtotal_value'      => 'required|numeric|min:0',
+        //     'discount_value'      => 'nullable|numeric|min:0',
+        //     'shipping_value'      => 'nullable|numeric|min:0',
+        //     'other_value'         => 'nullable|numeric|min:0',
+        //     'grand_total_value'   => 'required|numeric|min:0',
+        //     'remarks'             => 'nullable|string',
 
-        // Create Purchase
-        $purchase = new Purchase();
-        $purchase->supplier_id = $request->supplier_id;
-        $purchase->po_number = $request->po_number;
-        $purchase->salesman = $request->salesman;
-        $purchase->payment_id = $request->payment_id;
-        $purchase->date = $request->date;
+        //     // ✅ Validate product line arrays
+        //     'product_id'          => 'required|array|min:1',
+        //     'product_id.*'        => 'required|exists:supplier_items,id',
+        //     'product_code'        => 'required|array|min:1',
+        //     'product_code.*'      => 'required|string|max:50',
+        //     'qty'                 => 'required|array|min:1',
+        //     'qty.*'               => 'required|integer|min:1',
+        //     'price'               => 'required|array|min:1',
+        //     'price.*'             => 'required|numeric|min:0',
+        //     'dis'                 => 'nullable|array',
+        //     'dis.*'               => 'nullable|numeric|min:0',
+        //     'unit'                => 'required|array|min:1',
+        //     'unit.*'              => 'required|string|max:50',
+        //     'amount'              => 'required|array|min:1',
+        //     'amount.*'            => 'required|numeric|min:0',
+        // ]);
 
-        $purchase->discount_type = $request->discount_type;
-        $purchase->discount_value = $request->discount_value;
-        $purchase->overall_discount = $request->overall_discount ?? 0;
-        $purchase->subtotal = $request->subtotal;
-        $purchase->shipping = $request->shipping ?? 0;
-        $purchase->other_charges = $request->other_charges ?? 0;
-        $purchase->grand_total = $request->grand_total;
-        $purchase->remarks = $request->remarks;
+        // dd("Validation passed!", $request->all());
 
-        $purchase->save();
-
-        // Store purchase details
-        foreach ($request->product_id as $key => $productId) {
-            $purchase->purchaseDetails()->create([
-                'purchase_id' => $purchase->id, // ✅ Use the saved purchase ID
-                'product_id' => $productId,
-                'product_code' => $request->product_code[$key] ?? null, // ✅ Make it per-item
-                'qty' => $request->qty[$key],
-                'price' => $request->price[$key],
-                'discount' => $request->dis[$key],
-                'unit' => $request->unit[$key],
-                'total' => $request->amount[$key],
+        DB::transaction(function () use ($request) {
+            $purchase = Purchase::create([
+                'supplier_id'        => $request->supplier_id,
+                'date'               => $request->date,
+                'po_number'          => $request->po_number,
+                'salesman'           => $request->salesman,
+                'payment_id'         => $request->payment_id,
+                'discount_type'      => $request->discount_type,
+                'overall_discount'   => $request->overall_discount,
+                'subtotal'           => $request->subtotal,
+                'discount_value'     => $request->discount_value,
+                'shipping_value'     => $request->shipping_value,
+                'other_value'        => $request->other_value,
+                'grand_total'        => $request->grand_total_value,
+                'remarks'            => $request->remarks,
             ]);
-        }
 
-        return redirect()->route('purchase.index')->with('success', 'Purchase added successfully');
+            foreach ($request->product_id as $index => $supplierItemId) {
+                $purchase->items()->create([
+                    'supplier_item_id' => $supplierItemId,
+                    'product_code'     => $request->product_code[$index],
+                    'qty'              => $request->qty[$index],
+                    'unit_price'       => $request->price[$index],
+                    'discount'         => $request->dis[$index] ?? 0,
+                    'unit'             => $request->unit[$index],
+                    'total'            => $request->amount[$index],
+                ]);
+            }
+        });
+
+        return redirect()->route('purchase.create')->with('success', 'Purchase saved successfully.');
     }
 
     public function findPrice(Request $request){
         $data = DB::table('products')->select('sales_price')->where('id', $request->id)->first();
         return response()->json($data);
+    }
+
+    public function getLatestPo()
+    {
+        $latest = Purchase::orderBy('id', 'desc')->first();
+
+        return response()->json([
+            'po_number' => $latest?->po_number
+        ]);
     }
 
     public function findPricePurchase(Request $request) {
@@ -162,10 +193,9 @@ class PurchaseController extends Controller
      */
     public function show($id)
     {
-        $invoice = Invoice::findOrFail($id);
-        $sales = Sale::where('invoice_id', $id)->get();
-        return view('invoice.show', compact('invoice','sales'));
-
+        $purchase = Purchase::findOrFail($id);
+        $purchase_items = PurchaseItem::where('purchase_id', $id)->get();
+        return view('purhcase.show', compact('purchase','purchase_items'));
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Purchase;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/po/latest', function () {
+    $latest = Purchase::latest('id')->first(); // or ->orderBy('id','desc')->first()
+    return response()->json([
+        'po_number' => $latest?->po_number
+    ]);
+});

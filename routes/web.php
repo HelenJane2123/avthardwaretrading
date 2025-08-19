@@ -67,6 +67,8 @@ Route::get('/products/details', [ProductController::class, 'getProductDetails'])
 //get supplier items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
 
+//get purchase details
+Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
@@ -74,4 +76,4 @@ Route::get('/export/products', [ExportController::class, 'exportProducts'])->nam
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
 
 //Print pdf receipt
-Route::get('/purchase/{id}/pdf', [PurchaseController::class, 'generatePurchase'])->name('print_purchase_receipt.pdf');
+Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
