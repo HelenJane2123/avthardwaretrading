@@ -19,5 +19,10 @@ class PurchaseItem extends Model
         return $this->belongsTo(SupplierItem::class, 'supplier_item_id'); 
         // assuming your purchase_items table has supplier_item_id
     }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 }
 

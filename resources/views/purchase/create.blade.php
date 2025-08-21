@@ -15,12 +15,19 @@
                 <li class="breadcrumb-item"><a href="#">Add Purchase</a></li>
             </ul>
         </div>
+        <div class="">
+            <a class="btn btn-primary" href="{{ route('purchase.index') }}">
+                <i class="fa fa-edit"> </i> Manage Purchase
+            </a>
+        </div>
+
         @if(session()->has('message'))
             <div class="alert alert-success">
                 {{ session()->get('message') }}
             </div>
         @endif
-        <div class="row">
+
+        <div class="row mt-3">
             <div class="clearix"></div>
             <div class="col-md-12">
                 <div class="tile">
@@ -158,7 +165,7 @@
                                         <input type="hidden" name="grand_total_value" id="hidden_grand_total">
                                         <th colspan="5" class="text-right">Discount Type</th>
                                         <th colspan="2">
-                                            <select id="discount_type" class="form-control">
+                                            <select id="discount_type" name="discount_type" class="form-control">
                                                 <option value="per_item" selected>Per Item</option>
                                                 <option value="overall">Overall</option>
                                             </select>
@@ -166,23 +173,23 @@
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Tax/Discount</th>
-                                        <td colspan="2"><input type="text" class="form-control" id="discount"></td>
+                                        <td colspan="2"><input type="text" name="discount_value" class="form-control" id="discount"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Shipping</th>
-                                        <td colspan="2"><input type="number" class="form-control" id="shipping" value="0"></td>
+                                        <td colspan="2"><input type="number" name="shipping" class="form-control" id="shipping" value="0"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Other Charges</th>
-                                        <td colspan="2"><input type="number" class="form-control" id="other" value="0"></td>
+                                        <td colspan="2"><input type="number" name="other_charges" class="form-control" id="other" value="0"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Subtotal</th>
-                                        <td colspan="2"><input type="text" class="form-control" id="subtotal" readonly></td>
+                                        <td colspan="2"><input type="text" name="subtotal" class="form-control" id="subtotal" readonly></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-right">Grand Total</th>
-                                        <td colspan="2"><input type="text" class="form-control" id="grand_total" readonly></td>
+                                        <td colspan="2"><input type="text" name="grand_total" class="form-control" id="grand_total" readonly></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -469,6 +476,3 @@
     </script>
 
 @endpush
-
-
-

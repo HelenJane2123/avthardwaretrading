@@ -19,6 +19,10 @@
     <div class="row mt-2">
         <div class="col-md-12">
             <div class="tile">
+                @if(session()->has('message'))
+                    <div class="alert alert-success">{{ session()->get('message') }}</div>
+                @endif
+
                 <div class="tile-body">
                     <table class="table table-hover table-bordered" id="sampleTable">
                         <thead>
