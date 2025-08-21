@@ -46,19 +46,19 @@
         </li>
 
         {{-- View Sales --}}
-        <li>
+        <!-- <li>
             <a class="app-menu__item {{ request()->is('sales') ? 'active' : ''}}" href="/sales">
                 <i class="app-menu__icon fa fa-dollar"></i><span class="app-menu__label">View Sales</span>
             </a>
-        </li>
+        </li> -->
         <li class="treeview">
-            <a class="app-menu__item {{ request()->is('invoice*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+            <a class="app-menu__item {{ request()->is('purchase*') ? 'active' : ''}}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-shopping-cart"></i><span class="app-menu__label">Purchase Order</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="{{ route('invoice.create') }}"><i class="icon fa fa-plus"></i> Create Purchase</a></li>
-                <li><a class="treeview-item" href="{{ route('invoice.index') }}"><i class="icon fa fa-edit"></i> Manage Purchase</a></li>
+                <li><a class="treeview-item" href="{{ route('purchase.create') }}"><i class="icon fa fa-plus"></i> Create Purchase</a></li>
+                <li><a class="treeview-item" href="{{ route('purchase.index') }}"><i class="icon fa fa-edit"></i> Manage Purchase</a></li>
             </ul>
         </li>
 

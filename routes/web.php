@@ -31,7 +31,6 @@ use Illuminate\Support\Facades\Log;
 
 Auth::routes();
 
-
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/edit_profile', [HomeController::class, 'edit_profile'])->name('edit_profile');
@@ -50,15 +49,31 @@ Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
 
 
-
-
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
 Route::get('/findPricePurchase', [PurchaseController::class, 'findPricePurchase'])->name('findPricePurchase');
 Route::get('/supplier/{id}/products', [SupplierController::class, 'showProducts'])
     ->name('supplier.supplier-products');
+Route::get('/supplier/{id}/info', [SupplierController::class, 'getInfo'])->name('supplier.info');
+Route::get('/getproduct/{id}', [ProductController::class, 'getProductInfo']);
+Route::get('/po/latest', [PurchaseController::class, 'getLatestPoNumber']);
+
+//suggest product based on user input
+Route::get('/products/suggest', [ProductController::class, 'suggest'])->name('products.suggest');
+Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name('products.suppliers');
+Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
+
+//get supplier items
+Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
+
+//get purchase details
+Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
+
+//Print pdf receipt
+Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');

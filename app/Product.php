@@ -8,7 +8,7 @@ class Product extends Model
 {
     // App\Product.php
     protected $fillable = [
-        'product_code', 'name', 'serial_number', 'model',
+        'product_code','supplier_product_code', 'product_name', 'serial_number', 'model',
         'category_id', 'sales_price', 'unit_id', 'quantity',
         'remaining_stock', 'tax_id', 'image', 'threshold', 'status',
     ];
@@ -38,7 +38,7 @@ class Product extends Model
         return $this->belongsToMany(Invoice::class);
     }
 
-   public function suppliers()
+    public function suppliers()
     {
         return $this->belongsToMany(Supplier::class, 'product_suppliers')
                     ->withPivot('price')
@@ -47,6 +47,6 @@ class Product extends Model
 
     public function productSuppliers()
     {
-        return $this->hasMany(ProductSupplier::class);
+        return $this->hasMany(ProductSupplier::class, 'product_id');
     }
 }

@@ -15257,3 +15257,15 @@ be a descendant of the grid when it is being dragged.
 .user .user-settings label {
   color: #666;
 }
+
+/* Reduce padding in table cells */
+#supplier-info table th,
+#supplier-info table td {
+    padding: 6px 8px; /* smaller than default 12px */
+    vertical-align: middle; /* align text vertically center */
+}
+
+/* Optional: make font slightly smaller */
+#supplier-info table {
+    font-size: 15px;
+}
