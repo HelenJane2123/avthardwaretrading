@@ -64,7 +64,7 @@ class CustomerController extends Controller
         $customer->email = $request->email;
         $customer->tax = $request->tax;
         $customer->details = $request->details;
-        $customer->previous_balance = $request->previous_balance;
+        $customer->previous_balance = $request->previous_balance ?? 0;
         $customer->save();
 
         return redirect()->route('customer.index')->with('message', 'Customer added successfully');
@@ -121,7 +121,7 @@ class CustomerController extends Controller
         $customer->mobile = $request->mobile;
         $customer->tax = $request->tax;
         $customer->details = $request->details;
-        $customer->previous_balance = $request->previous_balance;
+        $customer->previous_balance = $request->previous_balance ?? 0;
         $customer->save();
 
         return redirect()->route('customer.index')->with('message', 'Customer updated successfully.');
