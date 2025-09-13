@@ -8,9 +8,12 @@ use App\Product;
 use App\Sale;          // singular Sale model
 use App\Supplier;
 use App\Invoice;
+use App\InvoiceSales;
 use App\Unit;
 use App\ModeOfPayment;
 use App\Customer;
+use App\Category;
+use App\User;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
@@ -41,6 +44,14 @@ class InvoiceController extends Controller
      */
     public function create()
     {
+        // Load categories with their products (only necessary columns)
+        $categories = Category::with(['products' => function($q){
+            $q->select('id','product_name','product_code','sales_price','remaining_stock','category_id');
+        }])->get();
+
+        // Also load a flat products list (fallback or for other places in the form)
+        $products = Product::select('id','product_name','product_code','sales_price','remaining_stock','category_id')->get();
+
         $customers = Customer::all();
         $products = Product::all();
         $units = Unit::all();
@@ -72,56 +83,72 @@ class InvoiceController extends Controller
     {
         DB::beginTransaction();
         try {
-            // 1. Create invoice header (totals will be recalculated below)
-            $invoice = Invoice::create([
-                'invoice_number' => $request->invoice_number,
-                'customer_id'    => $request->customer_id,
-                'invoice_date'   => $request->date,
-                'payment_id'     => $request->payment_id,
-                'discount_type'  => $request->discount_type, // per_item | overall
-                'discount_value' => $request->discount_value ?? 0,
-                'subtotal'       => 0,
-                'shipping'       => $request->shipping ?? 0,
-                'other_charges'  => $request->other_charges ?? 0,
-                'grand_total'    => 0,
-                'remarks'        => $request->remarks,
-                'status'         => 'Pending',
-                'discount_approved' => $request->discount_approved
+            // ✅ Step 1: Validate request
+            $request->validate([
+                'customer_id'      => 'required|exists:customers,id',
+                'payment_mode_id'  => 'required|exists:mode_of_payment,id',
+                'invoice_date'     => 'required|date',
+                'product_id'       => 'required|array|min:1',
+                'qty'              => 'required|array|min:1',
+                'price'            => 'required|array|min:1',
             ]);
+
+            // ✅ Debug: check incoming request
+            \Log::info('Invoice request data', $request->all());
+
+            // ✅ Step 2: Create invoice header
+            $invoice = Invoice::create([
+                'invoice_number'    => $request->invoice_number,
+                'customer_id'       => $request->customer_id,
+                'invoice_date'      => $request->invoice_date, // FIXED (was $request->date)
+                'payment_mode_id'   => $request->payment_mode_id,
+                'discount_type'     => $request->discount_type,
+                'discount_value'    => $request->discount_value ?? 0,
+                'subtotal'          => 0,
+                'shipping_fee'      => $request->shipping_fee ?? 0,
+                'other_charges'     => $request->other_charges ?? 0,
+                'grand_total'       => 0,
+                'remarks'           => $request->remarks,
+                'status'            => 'pending',
+                'discount_approved' => $request->discount_approved ?? 0
+            ]);
+
+            \Log::info('Invoice created', $invoice->toArray());
 
             $products   = $request->product_id;
             $qtys       = $request->qty;
             $prices     = $request->price;
-            $discounts  = $request->dis;
-            $discount_approved = $request->discount_approved;
+            $discounts  = $request->dis ?? [];
 
             $subtotal = 0;
 
-            // 2. Insert invoice line items
+            // ✅ Step 3: Insert invoice line items
             foreach ($products as $index => $productId) {
-                $qty   = $qtys[$index];
-                $price = $prices[$index];
+                $qty   = $qtys[$index] ?? 0;
+                $price = $prices[$index] ?? 0;
                 $dis   = $discounts[$index] ?? 0;
 
                 $lineTotal = $price * $qty;
 
-                // Apply per-item discount ONLY if type = per_item
+                // Apply per-item discount
                 if ($request->discount_type === 'per_item' && $dis > 0) {
                     $lineTotal -= ($lineTotal * $dis / 100);
                 }
 
-                InvoiceSales::create([
+                $line = InvoiceSales::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => $productId,
                     'qty'        => $qty,
                     'price'      => $price,
-                    'discount'   => $request->discount_type === 'per_item' ? $dis : 0,
+                    'dis'        => $request->discount_type === 'per_item' ? $dis : 0,
                     'amount'     => $lineTotal,
                 ]);
 
+                \Log::info('Invoice line inserted', $line->toArray());
+
                 $subtotal += $lineTotal;
 
-                // Update product stock, threshold, and status
+                // ✅ Step 4: Update product stock
                 $product = Product::find($productId);
                 if ($product) {
                     $product->remaining_stock -= $qty;
@@ -139,10 +166,12 @@ class InvoiceController extends Controller
                     }
 
                     $product->save();
+
+                    \Log::info('Product stock updated', $product->toArray());
                 }
             }
 
-            // 3. Apply overall discount (if type = overall)
+            // ✅ Step 5: Apply overall discount
             $overallDiscount = 0;
             if ($request->discount_type === 'overall' && $request->discount_value > 0) {
                 $overallDiscount = $subtotal * ($request->discount_value / 100);
@@ -150,30 +179,48 @@ class InvoiceController extends Controller
 
             $afterDiscount = $subtotal - $overallDiscount;
 
-            // 4. Add shipping + other charges
-            $shipping   = $request->shipping ?? 0;
+            // ✅ Step 6: Add shipping + other charges
+            $shipping   = $request->shipping_fee ?? 0;
             $other      = $request->other_charges ?? 0;
             $grandTotal = $afterDiscount + $shipping + $other;
 
-            // 5. Update invoice totals
+            // ✅ Step 7: Update totals
             $invoice->update([
                 'subtotal'    => $subtotal,
                 'grand_total' => $grandTotal,
             ]);
 
+            \Log::info('Invoice totals updated', [
+                'subtotal'    => $subtotal,
+                'grand_total' => $grandTotal,
+            ]);
+
             DB::commit();
-            return redirect()->route('invoice.index')->with('message', 'Invoice created successfully!');
+
+            return redirect()->route('invoice.index')
+                ->with('message', 'Invoice created successfully!');
         } catch (\Exception $e) {
             DB::rollback();
-            return back()->withErrors(['error' => 'Failed to create invoice: '.$e->getMessage()]);
+
+            // ✅ Log the error with stack trace
+            \Log::error('Invoice creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withErrors([
+                'error' => 'Failed to create invoice: ' . $e->getMessage()
+            ])->withInput();
         }
     }
+
+
 
     public function validateAdminPassword(Request $request)
     {
         $request->validate(['password' => 'required']);
 
-        $admin = User::where('role', 'admin')->first();
+        $admin = User::where('role', 'super_admin')->first();
 
         if ($admin && \Hash::check($request->password, $admin->password)) {
             return response()->json(['success' => true]);

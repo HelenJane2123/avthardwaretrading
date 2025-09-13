@@ -8,7 +8,7 @@
     <main class="app-content">
         <div class="app-title d-flex justify-content-between align-items-center">
             <div>
-                <h1><i class="fa fa-shopping-cart"></i> Add Invoice</h1>
+                <h1><i class="fa fa-file-text"></i> Add Invoice</h1>
                 <p class="text-muted mb-0">Create a new invoice for customers.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
@@ -51,7 +51,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Date</label>
-                                <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="invoice_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Number</label>
@@ -59,7 +59,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                                <select name="payment_id" id="payment_id" class="form-control" required>
+                                <select name="payment_mode_id" id="payment_id" class="form-control" required>
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}">
@@ -157,7 +157,7 @@
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Shipping</th>
-                                        <td colspan="3"><input type="number" id="shipping" name="shipping" class="form-control" value="0"></td>
+                                        <td colspan="3"><input type="number" id="shipping" name="shipping_fee" class="form-control" value="0"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Other Charges</th>
@@ -177,6 +177,7 @@
 
                         {{-- Remarks --}}
                         <div class="form-group mb-4">
+                            <input type="hidden" name="discount_approved" id="discount_approved" value="0">
                             <label class="form-label">Comments / Special Instructions</label>
                             <textarea name="remarks" rows="3" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
                         </div>
@@ -192,21 +193,20 @@
         </div>
     </main>
     {{-- Discount Approval Modal --}}
-    <div id="discountApprovalModal" class="modal" tabindex="-1">
-        <div class="modal-dialog">
+    <div id="discountApprovalModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
                     <h5 class="modal-title">Discount Approval Required</h5>
-                    <button type="button" class="close" id="closeModal">&times;</button>
+                    <button type="button" class="close" id="closeModal" data-bs-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="discount_approved" id="discount_approved" value="0">
                     <p>This discount requires admin approval. Please enter the admin password:</p>
                     <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password">
                     <small class="text-danger d-none" id="passwordError">Invalid password. Try again.</small>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="cancelModal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" id="cancelModal" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-success" id="approveDiscount">Approve</button>
                 </div>
             </div>
@@ -216,17 +216,10 @@
 @endsection
 
 @push('js')
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
-    <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-
             $('.addRow').on('click', function() {
-                if (!window.supplierItems || window.supplierItems.length === 0) {
-                    alert('Please select a supplier first.');
-                    return;
-                }
-                addRow(window.supplierItems);
+                addRow();
                 calculateTotals();
             });
             const productOptions = `{!! 
@@ -241,12 +234,13 @@
                 @foreach($products as $product)
                     options += `<option value="{{ $product->id }}" 
                                     data-code="{{ $product->product_code }}" 
-                                    data-price="{{ $product->price }}">
+                                    data-price="{{ $product->price }}" 
+                                    data-stock="{{ $product->remaining_stock }}">
                                     {{ $product->product_name }}
                                 </option>`;
                 @endforeach
 
-                const addRow = `<tr>
+                const newRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
                         <select name="product_id[]" class="form-control productname">
@@ -261,26 +255,27 @@
                             @endforeach
                         </select>
                     </td>
-                    <td><input type="number" name="qty[]" class="form-control qty"></td>
+                    <td>
+                        <input type="number" name="qty[]" class="form-control qty">
+                        <small class="text-muted available-stock"></small>
+                    </td>
                     <td><input type="text" name="price[]" class="form-control price"></td>
                     <td><input type="text" name="dis[]" class="form-control dis"></td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
                     <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
                 </tr>`;
 
-                $('#po-body').append(addRow);
+                $('#po-body').append(newRow);
             }
-
-            $('.remove').live('click', function () {
-                var l =$('tbody tr').length;
-                if(l==1){
-                    alert('you cant delete last one');
+            $(document).on('click', '.remove', function () {
+                var l = $('tbody tr').length;
+                if (l == 1) {
+                    alert('You can\'t delete the last one');
+                    calculateTotals();
+                } else {
+                    $(this).closest('tr').remove();
                     calculateTotals();
                 }
-                else{
-                    $(this).parent().parent().remove();
-                }
-
             });
 
             // Populate Customer Information
@@ -364,19 +359,91 @@
             $('#hidden_other').val($('#other').val() || 0);
             $('#hidden_grand_total').val($('#grand_total').val() || 0);
 
-            // --- check if discount needs approval ---
+            // Check if any discount exists
             const hasPerItemDiscount = $('.dis').toArray().some(inp => parseFloat($(inp).val()) > 0);
             const overallDiscount = parseFloat($('#discount').val()) || 0;
 
             if (hasPerItemDiscount || overallDiscount > 0) {
-                formPendingSubmit = this;
+                formPendingSubmit = this; // store form for later submission
                 $("#adminPassword").val("");
                 $("#passwordError").addClass("d-none");
-                 $('#discountApprovalModal').show();
+                discountModal.show(); // <-- show modal here
             } else {
-                this.submit(); // no discount → just submit
+                this.submit(); // no discount → submit immediately
             }
         });
+
+        $('#discount_type').trigger('change');
+
+            let discountApprovalCount = 0;
+            let pendingDiscountInput = null;
+
+            var discountModal = new bootstrap.Modal(document.getElementById('discountApprovalModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            $(document).on("input", ".dis, #discount", function() {
+                var val = parseFloat($(this).val()) || 0;
+
+                if (val > 0) {
+                    if (discountApprovalCount < 3) {
+                        pendingDiscountInput = $(this); // remember which input triggered
+                        if ($('#discountApprovalModal').is(':hidden')) { // only show if hidden
+                            discountModal.show(); // <-- updated
+                        }
+                    } else {
+                        alert("Maximum of 3 discount approvals reached.");
+                        $(this).val(0);
+                        calculateTotals();
+                    }
+                }
+            });
+
+            $('#approveDiscount').on('click', function () {
+                let password = $('#adminPassword').val().trim();
+
+                if (password === '') {
+                    $('#passwordError').text('Password is required.').removeClass('d-none');
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('validate.admin.password') }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        password: password
+                    },
+                    success: function (response) {
+                        if(response.success){
+                            $('#discount_approved').val(1);
+                            discountModal.hide(); // hide modal
+                            if(formPendingSubmit){ 
+                                formPendingSubmit.submit(); 
+                                formPendingSubmit = null; 
+                            }
+                        } else {
+                            $('#passwordError').text('Invalid password.').removeClass('d-none');
+                        }
+                    },
+                    error: function () {
+                        $('#passwordError').text('Invalid password. Try again.').removeClass('d-none');
+                    }
+                });
+            });
+
+            // Cancel / close modal
+            $('#closeModal, #cancelModal').click(function() {
+                if (formPendingSubmit) {
+                    // reset discount if modal canceled
+                    $('.dis').val(0);
+                    $('#discount').val(0);
+                    calculateTotals();
+                    formPendingSubmit = null;
+                }
+                discountModal.hide();
+            });
 
         //Populate Product details
         $(document).on('change', 'select[name="supplier_id"]', function () {
@@ -407,60 +474,6 @@
             } else {
                 $('.productname').empty().append('<option value="">Select Product</option>');
             }
-
-            $('#discount_type').trigger('change');
-
-           let discountApprovalCount = 0;
-            let pendingDiscountInput = null;
-
-            function showModal() {
-                $('#discountApprovalModal').show();
-            }
-
-            function hideModal() {
-                $('#discountApprovalModal').hide();
-            }
-
-            $(document).on("input", ".dis, #discount", function() {
-                var val = parseFloat($(this).val()) || 0;
-
-                if (val > 0) {
-                    if (discountApprovalCount < 3) {
-                        pendingDiscountInput = $(this); // remember which input triggered
-                        if ($('#discountApprovalModal').is(':hidden')) { // only show if hidden
-                            $('#discountApprovalModal').show();
-                        }
-                    } else {
-                        alert("Maximum of 3 discount approvals reached.");
-                        $(this).val(0);
-                        calculateTotals();
-                    }
-                }
-            });
-
-            // Approve button
-            $("#approveDiscount").click(function() {
-                discountApprovalCount++;
-                $('#discount_approved').val(1); 
-                hideModal();
-                if (pendingDiscountInput) pendingDiscountInput = null;
-                calculateTotals();
-
-                // Optionally, submit the form if it was pending
-                if (formPendingSubmit) {
-                    formPendingSubmit.submit();
-                    formPendingSubmit = null;
-                }
-            });
-
-           // Cancel / close modal
-            $('#closeModal, #cancelModal').click(function() {
-                if (pendingDiscountInput) {
-                    pendingDiscountInput.val(0); // reset discount if not approved
-                    calculateTotals();
-                    pendingDiscountInput = null;
-                }
-            });
         });
 
         function calculateTotals() {

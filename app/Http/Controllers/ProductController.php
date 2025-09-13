@@ -296,4 +296,15 @@ class ProductController extends Controller
 
         return redirect()->back()->with('message', 'Product and its suppliers deleted successfully.');
     }
+
+    public function search(Request $request)
+    {
+        $term = $request->get('term');
+        $products = Product::where('product_name', 'like', "%{$term}%")
+                    ->orWhere('product_code', 'like', "%{$term}%")
+                    ->limit(10)
+                    ->get();
+
+        return response()->json($products);
+    }
 }
