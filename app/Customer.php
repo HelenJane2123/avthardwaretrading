@@ -6,7 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
-    public function invoice(){
-        return $this->hasMany('App\Invoice');
+    protected $table = 'customers';
+
+    protected $fillable = [
+        'id',
+        'customer_code',
+        'name',
+        'address',
+        'mobile',
+        'email'
+    ];
+
+    public function invoice()
+    {
+        return $this->hasMany(Invoice::class);
     }
 }

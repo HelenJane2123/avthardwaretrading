@@ -64,8 +64,11 @@ Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
 
-//get supplier items
+//get supplier information and items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
+
+//get customer information
+Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation']);
 
 //get purchase details
 Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
@@ -77,3 +80,6 @@ Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::cl
 
 //Print pdf receipt
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
+
+Route::post('/discount/validate', [App\Http\Controllers\InvoiceController::class, 'validateAdminPassword'])
+    ->name('discount.validate');

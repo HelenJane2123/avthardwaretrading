@@ -6,18 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
-
-    public function sale(){
-        return $this->hasMany('App\Sales');
+    // Relationship with Sales
+    public function sale()
+    {
+        return $this->hasMany(Sales::class); // Make sure Sales model exists
     }
 
-    public function customer(){
-        return $this->belongsTo('App\Customer');
+    // Relationship with Customer
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class); // Customer model is in App namespace
     }
-
-
-
-
-
-
 }
