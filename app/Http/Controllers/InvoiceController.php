@@ -86,7 +86,7 @@ class InvoiceController extends Controller
                 'grand_total'    => 0,
                 'remarks'        => $request->remarks,
                 'status'         => 'Pending',
-                'discount_approved' => $request->discount_approved;
+                'discount_approved' => $request->discount_approved
             ]);
 
             $products   = $request->product_id;
@@ -226,14 +226,13 @@ class InvoiceController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-
-        'customer_id' => 'required',
-        'product_id' => 'required',
-        'qty' => 'required',
-        'price' => 'required',
-        'dis' => 'required',
-        'amount' => 'required',
-    ]);
+            'customer_id' => 'required',
+            'product_id' => 'required',
+            'qty' => 'required',
+            'price' => 'required',
+            'dis' => 'required',
+            'amount' => 'required',
+        ]);
 
         $invoice = Invoice::findOrFail($id);
         $invoice->customer_id = $request->customer_id;
@@ -274,5 +273,18 @@ class InvoiceController extends Controller
         $invoice->delete();
         return redirect()->back();
 
+    }
+
+    public function getInvoiceDetails($id)
+    {
+        $invoice = Invoice::with('customer')->findOrFail($id);
+
+        return response()->json([
+            'invoice_number' => $invoice->invoice_number,
+            'grand_total'    => $invoice->grand_total,
+            'customer_name'  => $invoice->customer->name,
+            'customer_email' => $invoice->customer->email ?? '',
+            'customer_phone' => $invoice->customer->phone ?? '',
+        ]);
     }
 }

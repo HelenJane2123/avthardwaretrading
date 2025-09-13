@@ -62,13 +62,20 @@
             </ul>
         </li>
 
-        <li>
-            <a class="app-menu__item" href="/">
-                <i class="app-menu__icon fa fa-credit-card"></i><span class="app-menu__label">Collection</span>
+        {{-- Collection --}}
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('collection*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-money"></i>
+                <span class="app-menu__label">Collection</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('collection.create') }}"><i class="icon fa fa-plus"></i> Create Collection</a></li>
+                <li><a class="treeview-item" href="{{ route('collection.index') }}"><i class="icon fa fa-edit"></i> Manage Collection</a></li>
+            </ul>
         </li>
 
-        {{-- 👥 Contacts --}}
+        {{-- Contacts --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Contacts —</li>
 
         {{-- Supplier --}}
