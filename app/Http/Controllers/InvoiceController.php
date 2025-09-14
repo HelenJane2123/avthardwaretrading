@@ -88,6 +88,7 @@ class InvoiceController extends Controller
                 'customer_id'      => 'required|exists:customers,id',
                 'payment_mode_id'  => 'required|exists:mode_of_payment,id',
                 'invoice_date'     => 'required|date',
+                'due_date'         => 'required|date',
                 'product_id'       => 'required|array|min:1',
                 'qty'              => 'required|array|min:1',
                 'price'            => 'required|array|min:1',
@@ -100,7 +101,8 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'invoice_number'    => $request->invoice_number,
                 'customer_id'       => $request->customer_id,
-                'invoice_date'      => $request->invoice_date, // FIXED (was $request->date)
+                'invoice_date'      => $request->invoice_date, 
+                'due_date'          => $request->due_date, 
                 'payment_mode_id'   => $request->payment_mode_id,
                 'discount_type'     => $request->discount_type,
                 'discount_value'    => $request->discount_value ?? 0,
@@ -109,7 +111,7 @@ class InvoiceController extends Controller
                 'other_charges'     => $request->other_charges ?? 0,
                 'grand_total'       => 0,
                 'remarks'           => $request->remarks,
-                'status'            => 'pending',
+                'invoice_status'    => 'pending',
                 'discount_approved' => $request->discount_approved ?? 0
             ]);
 
@@ -214,8 +216,6 @@ class InvoiceController extends Controller
         }
     }
 
-
-
     public function validateAdminPassword(Request $request)
     {
         $request->validate(['password' => 'required']);
@@ -242,10 +242,8 @@ class InvoiceController extends Controller
      */
     public function show($id)
     {
-        $invoice = Invoice::findOrFail($id);
-        $sales = Sale::where('invoice_id', $id)->get();
-        return view('invoice.show', compact('invoice','sales'));
-
+        $invoice = Invoice::with('customer')->findOrFail($id);
+        return view('invoice.modal', compact('invoice'));
     }
 
     /**
@@ -256,11 +254,13 @@ class InvoiceController extends Controller
      */
     public function edit($id)
     {
+        $invoice = Invoice::with('items')->findOrFail($id);
         $customers = Customer::all();
-        $products = Product::orderBy('id', 'DESC')->get();
-        $invoice = Invoice::findOrFail($id);
-        $sales = Sale::where('invoice_id', $id)->get();
-        return view('invoice.edit', compact('customers','products','invoice','sales'));
+        $products = Product::all();
+        $units = Unit::all();
+        $paymentModes = ModeofPayment::all();
+
+        return view('invoice.edit', compact('invoice','customers','products','units','paymentModes'));
     }
 
     /**
@@ -272,38 +272,43 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'customer_id' => 'required',
-            'product_id' => 'required',
-            'qty' => 'required',
-            'price' => 'required',
-            'dis' => 'required',
-            'amount' => 'required',
-        ]);
+        DB::transaction(function() use ($request, $id) {
+            $invoice = Invoice::findOrFail($id);
 
-        $invoice = Invoice::findOrFail($id);
-        $invoice->customer_id = $request->customer_id;
-        $invoice->total = 1000;
-        $invoice->save();
+            $invoice->update([
+                'customer_id'    => $request->customer_id,
+                'invoice_number' => $request->invoice_number,
+                'invoice_date'   => $request->invoice_date,
+                'due_date'       => $request->due_date,
+                'payment_mode_id'=> $request->payment_mode_id,
+                'discount_type'  => $request->discount_type,
+                'discount_value' => $request->discount_value ?? 0,
+                'shipping_fee'   => $request->shipping_fee ?? 0,
+                'other_charges'  => $request->other_charges ?? 0,
+                'subtotal'       => $request->subtotal ?? 0,
+                'grand_total'    => $request->grand_total ?? 0,
+                'remarks'        => $request->remarks,
+            ]);
 
-        Sale::where('invoice_id', $id)->delete();
+            // Remove old items first
+            $invoice->items()->delete();
 
-        foreach ( $request->product_id as $key => $product_id){
-            $sale = new Sale();
-            $sale->qty = $request->qty[$key];
-            $sale->price = $request->price[$key];
-            $sale->dis = $request->dis[$key];
-            $sale->amount = $request->amount[$key];
-            $sale->product_id = $request->product_id[$key];
-            $sale->invoice_id = $invoice->id;
-            $sale->save();
+            // Re-insert updated items
+            foreach ($request->product_id as $key => $productId) {
+                InvoiceItem::create([
+                    'invoice_id'   => $invoice->id,
+                    'product_id'   => $productId,
+                    'product_code' => $request->product_code[$key] ?? '',
+                    'unit_id'      => $request->unit[$key] ?? null,
+                    'qty'          => $request->qty[$key] ?? 0,
+                    'price'        => $request->price[$key] ?? 0,
+                    'discount'     => $request->dis[$key] ?? 0,
+                    'amount'       => $request->amount[$key] ?? 0,
+                ]);
+            }
+        });
 
-
-        }
-
-         return redirect('invoice/'.$invoice->id)->with('message','invoice created Successfully');
-
-
+        return redirect()->route('invoice.index')->with('message','Invoice updated successfully.');
     }
 
     /**
@@ -315,23 +320,47 @@ class InvoiceController extends Controller
 
     public function destroy($id)
     {
-        Sales::where('invoice_id', $id)->delete();
         $invoice = Invoice::findOrFail($id);
         $invoice->delete();
-        return redirect()->back();
 
+        return redirect()->route('invoice.index')->with('message','Invoice deleted successfully.');
     }
 
-    public function getInvoiceDetails($id)
+    public function details($id)
     {
         $invoice = Invoice::with('customer')->findOrFail($id);
+
+        // Total paid so far
+        $paid = Collection::where('invoice_id', $invoice->id)->sum('amount_paid');
+        $balance = $invoice->grand_total - $paid;
 
         return response()->json([
             'invoice_number' => $invoice->invoice_number,
             'grand_total'    => $invoice->grand_total,
-            'customer_name'  => $invoice->customer->name,
-            'customer_email' => $invoice->customer->email ?? '',
-            'customer_phone' => $invoice->customer->phone ?? '',
+            'balance'        => $balance,
+            'customer'       => [
+                'id'      => $invoice->customer->id,
+                'name'    => $invoice->customer->name,
+                'email'   => $invoice->customer->email,
+                'phone'   => $invoice->customer->phone,
+                'address' => $invoice->customer->address,
+            ]
         ]);
+    }
+
+    //Update invoice status
+    public function updateStatus(Request $request, $id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        $invoice->status = $request->status;
+        $invoice->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function print($id)
+    {
+        $invoice = Invoice::with(['sales.product', 'customer'])->findOrFail($id);
+        return view('invoice.print', compact('invoice'));
     }
 }

@@ -77,8 +77,9 @@ Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation
 Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
 
 //get invoice details
-Route::get('/invoices/{id}/details', [InvoiceController::class, 'getInvoiceDetails'])
-    ->name('invoices.details');
+Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->name('invoice.details');
+Route::patch('/invoice/{id}/status', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
+Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('invoice.print');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

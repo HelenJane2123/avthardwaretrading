@@ -50,19 +50,23 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Invoice Date</label>
+                                <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
                                 <input type="date" name="invoice_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Invoice Due Date <span class="text-danger">*</span></label>
+                                <input type="date" name="due_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Number</label>
                                 <input type="text" name="invoice_number" id="invoice_number" class="form-control" readonly>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
                                 <select name="payment_mode_id" id="payment_id" class="form-control" required>
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
-                                        <option value="{{ $mode->id }}">
+                                        <option value="{{ $mode->id }}" data-term="{{ $mode->term }}">
                                             {{ $mode->name }} 
                                             @if($mode->term) ({{ $mode->term }} days) @endif
                                         </option>
@@ -320,8 +324,31 @@
 
                 // store original stock in input
                 $row.find('.qty').data('original-stock', stock);
+                var productSelected = $(this).val();
+                if (productSelected) {
+                    // enable discount field only if a product is chosen
+                    $row.find('.dis').prop('disabled', false);
+                } else {
+                    // disable again if product removed
+                    $row.find('.dis').prop('disabled', true).val(0);
+                    calculateTotals();
+                }
             });
 
+            // Auto-compute due date based on mode of payment
+            $('#payment_id').on('change', function () {
+                let selected = $(this).find(':selected');
+                let term = parseInt(selected.data('term')) || 0; // get days from option
+                let invoiceDate = $('input[name="invoice_date"]').val();
+
+                if (invoiceDate) {
+                    let d = new Date(invoiceDate);
+                    d.setDate(d.getDate() + term); // add term days
+                    let dueDate = d.toISOString().split('T')[0]; // format yyyy-mm-dd
+                    $('input[name="due_date"]').val(dueDate);
+                }
+            });
+            
             // Validate qty on input
             $(document).on('input', '.qty', function () {
                 var $row = $(this).closest('tr');
@@ -372,6 +399,9 @@
                 this.submit(); // no discount → submit immediately
             }
         });
+
+        // Disable all discount fields by default
+        $('.dis, #discount').prop('disabled', true);
 
         $('#discount_type').trigger('change');
 

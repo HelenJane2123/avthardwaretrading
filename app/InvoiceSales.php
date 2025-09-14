@@ -15,4 +15,20 @@ class InvoiceSales extends Model
         'dis',
         'amount',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
+    
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
 }
