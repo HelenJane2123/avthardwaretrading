@@ -21,7 +21,9 @@ class Invoice extends Model
         'shipping_fee',
         'other_charges',
         'grand_total',
+        'outstanding_balance',
         'invoice_status',
+        'payment_status',
         'remarks',
         'discount_approved'
     ];
@@ -40,5 +42,15 @@ class Invoice extends Model
     public function paymentMode()
     {
         return $this->belongsTo(ModeofPayment::class, 'payment_mode_id');
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'invoice_id');
+    }
+
+    public function collections()
+    {
+        return $this->hasMany(Collection::class);
     }
 }

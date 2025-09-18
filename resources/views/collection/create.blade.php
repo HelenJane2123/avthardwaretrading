@@ -42,33 +42,61 @@
                         <form action="{{ route('collection.store') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label>Select Invoice</label>
-                                <select name="invoice_id" id="invoiceSelect" class="form-control" required>
-                                    <option value="">-- Select invoice --</option>
-                                    @foreach($invoices as $inv)
-                                        <option value="{{ $inv->id }}">
-                                            {{ $inv->invoice_number }} — {{ $inv->customer->name }} — ₱{{ number_format($inv->grand_total, 2) }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <label for="invoiceSearch">Select Invoice</label>
+                                <div class="input-group">
+                                    <input type="text" id="invoiceSearch" class="form-control" placeholder="Search Invoice..." readonly>
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#invoiceModal">
+                                    Search Invoice
+                                    </button>
+                                </div>
+                                <input type="hidden" name="invoice_id" id="invoiceId">
+                                <input type="hidden" name="customer_id" id="customerId">
                             </div>
-                            <input type="hidden" name="customer_id" id="customerId">
 
-                            <div id="invoiceDetails" class="mb-3" style="display:none;">
+                            <div id="invoiceDetails" class="mt-3" style="display:none;">
                                 <h5>Invoice Details</h5>
-                                <p><strong>Invoice #:</strong>
-                                    <a id="detailInvoiceLink" href="#" target="_blank">
-                                        <span id="detailInvoiceNumber"></span>
-                                    </a>
-                                </p>
-                                <p><strong>Total Amount:</strong> ₱<span id="detailGrandTotal"></span></p>
-                                <p><strong>Balance:</strong> ₱<span id="detailBalance"></span></p>
+                                <table class="table table-bordered table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th width="30%">Invoice #</th>
+                                            <td id="detailInvoiceNumber"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total Amount</th>
+                                            <td>₱<span id="detailGrandTotal"></span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Balance</th>
+                                            <td>₱<span id="detailBalance"></span></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Mode:</th>
+                                            <td id="ModeofPayment"></td>
+                                        </tr>                              
+                                    </tbody>
+                                </table>
 
                                 <h5>Customer Details</h5>
-                                <p><strong>Name:</strong> <span id="detailCustomerName"></span></p>
-                                <p><strong>Email:</strong> <span id="detailCustomerEmail"></span></p>
-                                <p><strong>Phone:</strong> <span id="detailCustomerPhone"></span></p>
-                                <p><strong>Address:</strong> <span id="detailCustomerAddress"></span></p>
+                                <table class="table table-bordered table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th width="30%">Name</th>
+                                            <td id="detailCustomerName"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td id="detailCustomerEmail"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone</th>
+                                            <td id="detailCustomerPhone"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Address</th>
+                                            <td id="detailCustomerAddress"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
                             <div class="mb-3">
@@ -110,44 +138,106 @@
         </div>
     </div>
 </main>
+<!-- Invoice Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Invoice</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table id="invoiceTable" class="table table-bordered table-striped table-hover w-100">
+          <thead>
+            <tr>
+              <th>Invoice #</th>
+              <th>Customer</th>
+              <th>Total</th>
+              <th>Balance</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 @endsection
 
-@section('scripts')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
+@push('js')
+<script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
+<script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
-    $(document).ready(function(){
-        document.getElementById('invoiceSelect').addEventListener('change', function () {
-            let invoiceId = this.value;
-
-            if (invoiceId) {
-                fetch(`/invoices/${invoiceId}/details`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data);
-                        document.getElementById('invoiceDetails').style.display = 'block';
-
-                        // Fill Invoice Info
-                        document.getElementById('detailInvoiceNumber').textContent = data.invoice_number;
-                        document.getElementById('detailGrandTotal').textContent = parseFloat(data.grand_total).toFixed(2);
-                        document.getElementById('detailBalance').textContent = parseFloat(data.balance).toFixed(2);
-
-                        // Fill Customer Info
-                        document.getElementById('detailCustomerName').textContent = data.customer.name;
-                        document.getElementById('detailCustomerEmail').textContent = data.customer.email ?? 'N/A';
-                        document.getElementById('detailCustomerPhone').textContent = data.customer.phone ?? 'N/A';
-                        document.getElementById('detailCustomerAddress').textContent = data.customer.address ?? 'N/A';
-
-                        // Hidden input for customer_id
-                        document.getElementById('customerId').value = data.customer.id;
-
-                        // Invoice link
-                        let link = document.getElementById('detailInvoiceLink');
-                        link.href = `/invoice/${invoiceId}`;
-                    });
-            } else {
-                document.getElementById('invoiceDetails').style.display = 'none';
+    $(document).ready(function () {
+    let table = $('#invoiceTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: "{{ route('invoices.search') }}",
+            dataSrc: ""
+        },
+        columns: [
+            { data: "invoice_number" },
+            { data: "customer.name", defaultContent: "" },
+            { data: "grand_total", render: data => `₱${parseFloat(data).toFixed(2)}` },
+            { data: "balance", render: data => `₱${parseFloat(data).toFixed(2)}` },
+            {
+                data: null,
+                render: function (data) {
+                    return `<button class="btn btn-sm btn-primary select-invoice"
+                                data-id="${data.id}" 
+                                data-number="${data.invoice_number}"
+                                data-total="${data.grand_total}"
+                                data-balance="${data.balance}"
+                                data-customer="${data.customer?.id ?? ''}"
+                                data-name="${data.customer?.name ?? ''}"
+                                data-email="${data.customer?.email ?? ''}"
+                                data-phone="${data.customer?.mobile ?? ''}"
+                                data-modeofpayment="${data.payment_mode?.name ?? ''}"
+                                data-address="${data.customer?.address ?? ''}">
+                                Select
+                            </button>`;
+                }
             }
-        });
+        ],
+        autoWidth: false,
+        responsive: true,
+        dom: 'frtip'
     });
+
+    // Reload invoices when modal opens
+    $('#invoiceModal').on('shown.bs.modal', function () {
+        table.ajax.reload();
+    });
+
+    // Handle Select button
+    $(document).on('click', '.select-invoice', function () {
+        $('#invoiceId').val($(this).data('id'));
+        $('#customerId').val($(this).data('customer'));
+        $('#invoiceSearch').val($(this).data('number'));
+
+        // Show details in table format
+        $("#invoiceDetails").show();
+        $("#detailInvoiceNumber").text($(this).data("number"));
+        $("#detailGrandTotal").text(parseFloat($(this).data("total")).toFixed(2));
+        $("#detailBalance").text(parseFloat($(this).data("balance")).toFixed(2));
+        $("#detailCustomerName").text($(this).data("name"));
+        $("#detailCustomerEmail").text($(this).data("email") || "N/A");
+        $("#detailCustomerPhone").text($(this).data("phone") || "N/A");
+        $("#detailCustomerAddress").text($(this).data("address") || "N/A");
+        $("#ModeofPayment").text($(this).data("modeofpayment") || "N/A");
+
+
+        // Close modal safely
+        $('#invoiceModal').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+    });
+});
+
 </script>
-@endsection
+@endpush

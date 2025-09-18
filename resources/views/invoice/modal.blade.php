@@ -120,7 +120,7 @@
             <select name="invoice_status" class="form-control">
                 <option value="pending" {{ $invoice->invoice_status == 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="approved" {{ $invoice->invoice_status == 'approved' ? 'selected' : '' }}>Approved</option>
-                <option value="canceled" {{ $invoice->invoice_status == 'canceled' ? 'selected' : '' }}>Canceled</option>
+                <option value="canceled" {{ $invoice->invoice_status == 'cancelled' ? 'selected' : '' }}>Canceled</option>
             </select>
         </div>
 

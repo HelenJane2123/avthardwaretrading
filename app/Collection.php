@@ -1,21 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace App;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Collection extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'invoice_id',
         'customer_id',
         'payment_date',
         'amount_paid',
-        'balance',
-        'payment_status',
         'remarks',
     ];
 
@@ -29,5 +24,9 @@ class Collection extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function paymentMethod() {
+        return $this->belongsTo(PaymentMethod::class, 'payment_mode_id');
     }
 }

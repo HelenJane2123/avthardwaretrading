@@ -14,6 +14,7 @@ use App\ModeOfPayment;
 use App\Customer;
 use App\Category;
 use App\User;
+use App\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
@@ -83,7 +84,6 @@ class InvoiceController extends Controller
     {
         DB::beginTransaction();
         try {
-            // ✅ Step 1: Validate request
             $request->validate([
                 'customer_id'      => 'required|exists:customers,id',
                 'payment_mode_id'  => 'required|exists:mode_of_payment,id',
@@ -97,7 +97,6 @@ class InvoiceController extends Controller
             // ✅ Debug: check incoming request
             \Log::info('Invoice request data', $request->all());
 
-            // ✅ Step 2: Create invoice header
             $invoice = Invoice::create([
                 'invoice_number'    => $request->invoice_number,
                 'customer_id'       => $request->customer_id,
@@ -112,6 +111,7 @@ class InvoiceController extends Controller
                 'grand_total'       => 0,
                 'remarks'           => $request->remarks,
                 'invoice_status'    => 'pending',
+                'payment_status'    => 'pending',
                 'discount_approved' => $request->discount_approved ?? 0
             ]);
 
@@ -124,7 +124,6 @@ class InvoiceController extends Controller
 
             $subtotal = 0;
 
-            // ✅ Step 3: Insert invoice line items
             foreach ($products as $index => $productId) {
                 $qty   = $qtys[$index] ?? 0;
                 $price = $prices[$index] ?? 0;
@@ -132,7 +131,6 @@ class InvoiceController extends Controller
 
                 $lineTotal = $price * $qty;
 
-                // Apply per-item discount
                 if ($request->discount_type === 'per_item' && $dis > 0) {
                     $lineTotal -= ($lineTotal * $dis / 100);
                 }
@@ -150,7 +148,6 @@ class InvoiceController extends Controller
 
                 $subtotal += $lineTotal;
 
-                // ✅ Step 4: Update product stock
                 $product = Product::find($productId);
                 if ($product) {
                     $product->remaining_stock -= $qty;
@@ -173,20 +170,16 @@ class InvoiceController extends Controller
                 }
             }
 
-            // ✅ Step 5: Apply overall discount
             $overallDiscount = 0;
             if ($request->discount_type === 'overall' && $request->discount_value > 0) {
                 $overallDiscount = $subtotal * ($request->discount_value / 100);
             }
 
             $afterDiscount = $subtotal - $overallDiscount;
-
-            // ✅ Step 6: Add shipping + other charges
             $shipping   = $request->shipping_fee ?? 0;
             $other      = $request->other_charges ?? 0;
             $grandTotal = $afterDiscount + $shipping + $other;
 
-            // ✅ Step 7: Update totals
             $invoice->update([
                 'subtotal'    => $subtotal,
                 'grand_total' => $grandTotal,
@@ -295,7 +288,7 @@ class InvoiceController extends Controller
 
             // Re-insert updated items
             foreach ($request->product_id as $key => $productId) {
-                InvoiceItem::create([
+                InvoiceSales::create([
                     'invoice_id'   => $invoice->id,
                     'product_id'   => $productId,
                     'product_code' => $request->product_code[$key] ?? '',
@@ -351,16 +344,65 @@ class InvoiceController extends Controller
     //Update invoice status
     public function updateStatus(Request $request, $id)
     {
+        $request->validate([
+            'invoice_status' => 'required|in:pending,approved,canceled',
+        ]);
+
         $invoice = Invoice::findOrFail($id);
-        $invoice->status = $request->status;
+        $invoice->invoice_status = $request->invoice_status; 
         $invoice->save();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'invoice' => $invoice
+        ]);
     }
 
     public function print($id)
     {
         $invoice = Invoice::with(['sales.product', 'customer'])->findOrFail($id);
         return view('invoice.print', compact('invoice'));
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+
+        $invoices = Invoice::with(['customer', 'paymentMode'])
+            ->withSum('collections as paid_total', 'amount_paid') // total payments
+            ->where('invoice_status', 'approved') // only approved invoices
+            ->when($query, function ($q) use ($query) {
+                $q->where('invoice_number', 'like', "%{$query}%")
+                ->orWhereHas('customer', function ($sub) use ($query) {
+                    $sub->where('name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('mobile', 'like', "%{$query}%");
+                });
+            })
+            ->get()
+            ->map(function ($invoice) {
+                $paid = $invoice->paid_total ?? 0;
+                $invoice->balance = $invoice->grand_total - $paid;
+
+                // Add payment mode
+                $invoice->payment_mode = $invoice->paymentMode->name ?? null;
+
+                // Compute dynamic payment status
+                if ($invoice->balance <= 0) {
+                    $invoice->payment_status = 'paid';
+                } elseif ($paid > 0) {
+                    $invoice->payment_status = 'partial';
+                } else {
+                    $invoice->payment_status = 'pending';
+                }
+
+                if ($invoice->due_date && now()->gt($invoice->due_date) && $invoice->balance > 0) {
+                    $invoice->payment_status = 'overdue';
+                }
+
+                return $invoice;
+            });
+
+        return response()->json($invoices);
     }
 }

@@ -11,7 +11,11 @@ class CollectionController extends Controller
 {
     public function index()
     {
-        $collections = Collection::with('invoice.customer')->latest()->get();
+        $collections = Collection::with([
+            'invoice.customer',      // load customer details through invoice
+            'invoice.paymentMode'    // load payment method through invoice
+        ])->latest()->get();
+
         return view('collection.index', compact('collections'));
     }
 
@@ -24,34 +28,57 @@ class CollectionController extends Controller
 
     public function store(Request $request)
     {
-        $invoice = Invoice::findOrFail($request->invoice_id);
+        $invoice = Invoice::with('paymentMode')->findOrFail($request->invoice_id);
 
-        // Compute remaining balance
-        $totalPaid = Collection::where('invoice_id', $invoice->id)->sum('amount_paid') + $request->amount_paid;
-        $balance = $invoice->grand_total - $totalPaid;
+        $grandTotal   = $invoice->grand_total;
+        $existingPaid = Collection::where('invoice_id', $invoice->id)->sum('amount_paid');
+        $newTotalPaid = $existingPaid + $request->amount_paid;
+        $balance      = $grandTotal - $newTotalPaid;
 
         // Determine payment status
+        $paymentStatus = 'pending';
+
         if ($balance <= 0) {
-            $status = 'paid';
+            $paymentStatus = 'paid';
             $balance = 0;
-        } elseif ($totalPaid > 0) {
-            $status = 'partial';
-        } else {
-            $status = 'pending';
+        } elseif ($newTotalPaid > 0 && $balance > 0) {
+            $paymentStatus = 'partial';
         }
 
+        if ($balance > 0 && now()->greaterThan($invoice->due_date)) {
+            $paymentStatus = 'overdue';
+        }
+
+        // Save collection
         Collection::create([
             'invoice_id'     => $invoice->id,
             'customer_id'    => $invoice->customer_id,
             'payment_date'   => $request->payment_date,
             'amount_paid'    => $request->amount_paid,
-            'balance'        => $balance,
-            'payment_status' => $status,
             'remarks'        => $request->remarks,
         ]);
 
-        return redirect()->route('collection.index')->with('message', 'Collection saved successfully.');
+        // Determine invoice status separately
+        $invoiceStatus = $invoice->invoice_status; // keep current status by default
+
+        // If non-cash payment, auto-approve invoice
+        $paymentMode = strtolower($invoice->paymentMode->name);
+        if ($paymentMode !== 'cash' && $invoiceStatus === 'pending') {
+            $invoiceStatus = 'approved';
+        }
+
+        // Update invoice
+        $invoice->update([
+            'outstanding_balance' => $balance,
+            'invoice_status'      => $invoiceStatus,
+            'payment_status'      => $paymentStatus,
+        ]);
+
+        return redirect()
+            ->route('collection.index')
+            ->with('message', 'Collection saved successfully.');
     }
+
 
     public function edit(Collection $collection)
     {

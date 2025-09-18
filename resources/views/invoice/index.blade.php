@@ -136,14 +136,5 @@
                 }
             })
         }
-
-        // Show modal with invoice details
-        $(document).on('click', '.view-invoice', function () {
-            let id = $(this).data('id');
-            $.get("{{ url('invoice') }}/" + id, function (data) {
-                $('#invoiceDetails').html(data);
-                $('#invoiceModal').modal('show');
-            });
-        });
     </script>
 @endpush

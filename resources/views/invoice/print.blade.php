@@ -24,9 +24,9 @@
             <img src="{{ asset('images/logo.png') }}" alt="Company Logo" class="logo">
         </div>
         <div class="text-end">
-            <h4><strong>CROWN HARDWARE</strong></h4>
+            <h4><strong>AVT HARDWARE</strong></h4>
             <p>
-                San Vicente Mahaplag, Leyte <br>
+                Test Address <br>
                 VAT Reg. TIN: 255-670-536-000 <br>
                 Contact: (053) 123-4567
             </p>
