@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Collection extends Model
 {
     protected $fillable = [
+        'collection_number',
         'invoice_id',
         'customer_id',
         'payment_date',

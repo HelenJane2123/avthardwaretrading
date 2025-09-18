@@ -33,6 +33,7 @@
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead>
                                 <tr>
+                                    <th>Collection #</th>
                                     <th>Invoice #</th>
                                     <th>Customer</th>
                                     <th>Payment Date</th>
@@ -46,6 +47,7 @@
                             <tbody>
                                 @foreach($collections as $collection)
                                     <tr>
+                                        <td>{{ $collection->collection_number }}</td>
                                         <td>{{ $collection->invoice->invoice_number }}</td>
                                         <td>{{ $collection->invoice->customer->name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</td>

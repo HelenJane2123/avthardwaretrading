@@ -65,6 +65,7 @@ class CollectionController extends Controller
 
         // Create collection record
         Collection::create([
+            'collection_number' => $request->collection_number,
             'invoice_id'   => $invoice->id,
             'customer_id'  => $invoice->customer_id,
             'payment_date' => $request->payment_date,

@@ -98,7 +98,10 @@
                                     </tbody>
                                 </table>
                             </div>
-
+                            <div class="mb-3">
+                                <label>Collection Number</label>
+                                <input type="text" name="collection_number" class="form-control" id="collectionNumber" readonly>
+                            </div>
                             <div class="mb-3">
                                 <label>Payment Date</label>
                                 <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
@@ -238,6 +241,20 @@
         $('body').removeClass('modal-open');
     });
 });
+function generateCollectionNumber() {
+    // Format: COL-YYYYMMDD-RANDOM
+    const date = new Date();
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+    return `COL-${y}${m}${d}-${random}`;
+}
 
+// Set number when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const collectionNumberField = document.getElementById('collectionNumber');
+    collectionNumberField.value = generateCollectionNumber();
+});
 </script>
 @endpush
