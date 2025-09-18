@@ -83,7 +83,8 @@ Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('in
 Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
 
 //collection details
-Route::get('/collection/{invoice}/details', [CollectionController::class, 'showDetails']);
+Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails']);
+Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceipt'])->name('collection.receipt');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

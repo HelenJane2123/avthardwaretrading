@@ -371,14 +371,6 @@ class InvoiceController extends Controller
         $invoices = Invoice::with(['customer', 'paymentMode'])
             ->withSum('collections as paid_total', 'amount_paid') // total payments
             ->where('invoice_status', 'approved') // only approved invoices
-            ->when($query, function ($q) use ($query) {
-                $q->where('invoice_number', 'like', "%{$query}%")
-                ->orWhereHas('customer', function ($sub) use ($query) {
-                    $sub->where('name', 'like', "%{$query}%")
-                        ->orWhere('email', 'like', "%{$query}%")
-                        ->orWhere('mobile', 'like', "%{$query}%");
-                });
-            })
             ->get()
             ->map(function ($invoice) {
                 $paid = $invoice->paid_total ?? 0;
@@ -401,8 +393,24 @@ class InvoiceController extends Controller
                 }
 
                 return $invoice;
-            });
+            })
+            // Exclude fully paid invoices
+            ->reject(function ($invoice) {
+                return $invoice->payment_status === 'paid';
+            })
+            ->values(); // Reindex collection
+
+        // Filter by search query after rejecting fully paid invoices
+        if ($query) {
+            $invoices = $invoices->filter(function ($invoice) use ($query) {
+                return str_contains(strtolower($invoice->invoice_number), strtolower($query)) ||
+                    str_contains(strtolower($invoice->customer->name), strtolower($query)) ||
+                    str_contains(strtolower($invoice->customer->email), strtolower($query)) ||
+                    str_contains(strtolower($invoice->customer->mobile), strtolower($query));
+            })->values();
+        }
 
         return response()->json($invoices);
     }
+
 }

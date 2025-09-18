@@ -18,7 +18,14 @@
         <div class="">
             <a class="btn btn-primary" href="{{route('collection.create')}}"><i class="fa fa-plus"></i> Create New Collection</a>
         </div>
-
+        @if(session()->has('message'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
@@ -44,7 +51,7 @@
                                         <td>{{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</td>
                                         <td>{{ number_format($collection->invoice->grand_total, 2) }}</td>
                                         <td>{{ number_format($collection->amount_paid, 2) }}</td>
-                                        <td>{{ number_format($collection->invoice->grand_total - $collection->amount, 2) }}</td>
+                                        <td>{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
                                         <td>
                                             <span class="badge 
                                                 @if($collection->invoice->payment_status == 'paid') bg-success
@@ -55,14 +62,14 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $collection->invoice->id }}">
+                                            <button class="btn btn-primary btn-sm view-collection" data-id="{{ $collection->invoice->id }}">
                                                 <i class="fa fa-eye"></i>
                                             </button>
                                             <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $collection->invoice->id) }}">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             @if($collection->invoice->invoice_status == 'approved')
-                                                <a class="btn btn-secondary btn-sm" href="{{ route('invoice.print', $collection->invoice->id) }}" target="_blank">
+                                               <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
                                                     <i class="fa fa-print"></i>
                                                 </a>
                                             @endif
@@ -83,7 +90,7 @@
             <div class="modal-content">
                 <!-- Modal Header -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="invoiceModalLabel">Invoice Details</h5>
+                    <h5 class="modal-title" id="invoiceModalLabel">Collection Details</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -105,7 +112,7 @@
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $('.view-invoice').on('click', function() {
+            $('.view-collection').on('click', function() {
                 var invoiceId = $(this).data('id');
                 
                 $.ajax({
