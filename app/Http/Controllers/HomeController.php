@@ -7,6 +7,8 @@ use App\Sale;
 use App\Product;
 use App\Supplier;
 use App\Invoice;
+use App\Collection;
+use App\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,72 +38,115 @@ class HomeController extends Controller
     // }
 
     public function index()
-{
-    $totalProducts = Product::count();
-    $totalSales = Sale::count();
-    $totalSuppliers = Supplier::count();
-    $totalInvoices = Invoice::count();
+    {
+        // Totals
+        $totalProducts  = Product::count();
+        $totalSuppliers = Supplier::count();
+        $totalInvoices  = Invoice::count();
+        $totalCollections = Collection::count();
+        $totalCustomer = Customer::count();
+        $totalSales = Invoice::sum('grand_total');
+        $latestSales = Invoice::with('customer')
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+        $recentProducts = Product::latest()
+                ->take(5)
+                ->get();
 
-    // Fetch monthly sales data from the sales table
-    $monthlySales = Sale::selectRaw('SUM(amount) as total_amount, MONTH(created_at) as month')
-        ->groupBy(DB::raw('MONTH(created_at)'))
-        ->get();
+        // Monthly sales from invoices
+        $monthlySales = Invoice::selectRaw('SUM(grand_total) as total_amount, MONTH(created_at) as month')
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->get();
 
-
-    $formattedMonthlySales = [];
-    foreach ($monthlySales as $sale) {
-        $formattedMonthlySales[] = [
-            'month' => \DateTime::createFromFormat('!m', $sale->month)->format('F'), // Format month name
-            'total_amount' => (int) $sale->total_amount // Ensure the amount is an integer
-        ];
-    }
-
-    $topSales = Sale::select('product_id', DB::raw('SUM(amount) as total_sales'))
-        ->groupBy('product_id')
-        ->orderByDesc('total_sales')
-        ->take(5)
-        ->get();
-
-    $formattedTopSales = [];
-    foreach ($topSales as $sale) {
-        $product = Product::find($sale->product_id);
-        if ($product) {
-            $formattedTopSales[] = [
-                'productName' => $product->name,
-                'totalSales' => $sale->total_sales,
+        $formattedMonthlySales = [];
+        foreach ($monthlySales as $sale) {
+            $formattedMonthlySales[] = [
+                'month' => \DateTime::createFromFormat('!m', $sale->month)->format('F'),
+                'total_amount' => (int) $sale->total_amount
             ];
         }
+
+        // Top 5 products sold (from invoice_items)
+        $topProducts = DB::table('invoice_sales')
+            ->select('product_id', DB::raw('SUM(qty) as total_qty'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(5)
+            ->get();
+
+        $formattedTopSales = [];
+        foreach ($topProducts as $item) {
+            $product = Product::find($item->product_id);
+            if ($product) {
+                $formattedTopSales[] = [
+                    'productName' => $product->name,
+                    'totalSales'  => $item->total_qty,
+                ];
+            }
+        }
+
+        // Today vs Yesterday Sales (from invoices)
+        $today       = Carbon::today();
+        $yesterday   = Carbon::yesterday();
+
+        $todaySales     = Invoice::whereDate('created_at', $today)->sum('grand_total');
+        $yesterdaySales = Invoice::whereDate('created_at', $yesterday)->sum('grand_total');
+
+        // Weekly sales (invoices)
+        $thisWeekSales = Invoice::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->sum('grand_total');
+
+        $lastWeekSales = Invoice::whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()])
+            ->sum('grand_total');
+
+        // Total collected payments
+        $totalCollected = Collection::sum('amount_paid');
+
+        $highestSelling = DB::table('invoice_sales')
+            ->select('product_id', 
+                    DB::raw('SUM(qty) as total_qty'),
+                    DB::raw('SUM(amount) as total_sales'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->take(5)
+            ->get();
+            
+
+        // Attach product names instead of IDs
+        $highestSelling = $highestSelling->map(function($item) {
+            $product = Product::find($item->product_id);
+            $item->product_name = $product ? $product->product_name : 'Unknown';
+            return $item;
+        });
+
+        // Latest 5 collections (payments made)
+        $recentCollections = Collection::with('invoice.customer') // eager load relationships
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('home', [
+            'monthlySales'     => $formattedMonthlySales,
+            'formattedTopSales'=> $formattedTopSales,
+            'totalProducts'    => $totalProducts,
+            'totalSuppliers'   => $totalSuppliers,
+            'totalInvoices'    => $totalInvoices,
+            'totalCollections' => $totalCollections,
+            'totalCustomer'    => $totalCustomer,
+            'todaySales'       => $todaySales,
+            'yesterdaySales'   => $yesterdaySales,
+            'thisWeekSales'    => $thisWeekSales,
+            'lastWeekSales'    => $lastWeekSales,
+            'totalCollected'   => $totalCollected,
+            'totalSales'       => $totalSales, 
+            'highestSelling'   => $highestSelling,
+            'latestSales'      => $latestSales,
+            'recentProducts'   => $recentProducts,
+            'recentCollections' => $recentCollections
+        ]);
     }
 
-    // Get today's date and yesterday's date
-    $today = Carbon::today()->toDateString();
-    $yesterday = Carbon::yesterday()->toDateString();
-
-    // Query sales data for today and yesterday
-    $todaySales = Sale::whereDate('created_at', $today)->sum('amount');
-    $yesterdaySales = Sale::whereDate('created_at', $yesterday)->sum('amount');
-
-    // Fetch this week's sales
-    $thisWeekSales = Sale::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
-                        ->sum('amount');
-
-    // Fetch last week's sales
-    $lastWeekSales = Sale::whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()])
-                        ->sum('amount');
-    
-    return view('home', [
-        'monthlySales' => $formattedMonthlySales,
-        'formattedTopSales'=> $formattedTopSales,
-        'totalProducts' => $totalProducts,
-        'totalSales' => $totalSales,
-        'totalSuppliers' => $totalSuppliers,
-        'totalInvoices' => $totalInvoices,
-        'todaySales' => $todaySales, 
-        'yesterdaySales' => $yesterdaySales,
-        'thisWeekSales' =>$thisWeekSales,
-         'lastWeekSales' =>$lastWeekSales,
-    ]);
-}
 
     public function edit_profile(){
          return view('profile.edit_profile');
