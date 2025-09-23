@@ -15,13 +15,14 @@
             <i class="fa fa-plus"></i> Add New Purchase
         </a>
     </div>
-
+    <div class="">
+        <a class="btn btn-primary" href="{{route('purchase.create')}}"><i class="fa fa-plus"></i> Create New Purchase</a>
+    </div>
     {{-- Success Message --}}
     @if(session()->has('message'))
         <div class="alert alert-success">{{ session()->get('message') }}</div>
     @endif
-
-    <div class="row">
+    <div class="row mt-2">
         <div class="col-md-12">
             <div class="tile shadow-sm">
                 <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Purchase Records</h3>
@@ -41,7 +42,7 @@
                         <tbody>
                             @foreach($purchases as $purchase)
                                 <tr>
-                                    <td><strong>{{ $purchase->po_number }}</strong></td>
+                                    <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
                                     <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
                                     <td>{{ $purchase->salesman ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>

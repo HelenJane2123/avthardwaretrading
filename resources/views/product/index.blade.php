@@ -55,7 +55,7 @@
                             <tbody>
                                 @foreach($additional as $add)
                                     <tr>
-                                        <td>{{ $add->product->product_code }}</td>
+                                        <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
                                         <td>{{ $add->product->product_name }}</td>
                                         <td>{{ $add->product->quantity }}</td>
                                         <td>{{ $add->product->supplier_product_code }}</td>

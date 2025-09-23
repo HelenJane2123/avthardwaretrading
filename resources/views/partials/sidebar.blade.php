@@ -1,9 +1,17 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
     <div class="app-sidebar__user">
-        <img width="40px" class="app-sidebar__user-avatar" src="{{ asset('images/user/'.Auth::user()->image) }}" alt="User Image">
+        @php
+            $user = Auth::user();
+            $userImage = $user && $user->image 
+                ? asset('images/user/' . $user->image) 
+                : asset('images/default-avatar.png'); // fallback image
+        @endphp
+
+        <img width="40px" class="app-sidebar__user-avatar" src="{{ $userImage }}" alt="User Image">
+
         <div>
-            <p class="app-sidebar__user-name">{{ Auth::user()->fullname }}</p>
+            <p class="app-sidebar__user-name">{{ $user ? $user->fullname : 'Guest' }}</p>
         </div>
     </div>
 
@@ -156,7 +164,7 @@
         {{-- Mode of Payment --}}
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('modeofpayment*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-bars"></i><span class="app-menu__label">Mode of Payment</span>
+                <i class="app-menu__icon fa fa-credit-card"></i><span class="app-menu__label">Mode of Payment</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">

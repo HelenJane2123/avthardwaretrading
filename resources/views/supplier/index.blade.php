@@ -40,6 +40,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="tile shadow-sm">
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Supplier Records</h3>
                     <div class="tile-body">
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-striped" id="sampleTable">

@@ -8,6 +8,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Invoices Table</h1>
+                <p class="text-muted mb-0">View, update, or delete existing invoices.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -22,16 +23,17 @@
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
+                <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Invoice Records</h3>
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                                 <tr>
                                     <th>Invoice #</th>
                                     <th>Customer</th>
                                     <th>Invoice Date</th>
                                     <th>Due Date</th>
                                     <th>Subtotal</th>
-                                    <th>Discount</th>
+                                    <th>Discount Type</th>
                                     <th>Grand Total</th>
                                     <th>Status</th>
                                     <th>Action</th>
@@ -40,16 +42,22 @@
                             <tbody>
                                 @foreach($invoices as $invoice)
                                     <tr>
-                                        <td>{{ $invoice->invoice_number }}</td>
+                                        <td><span class="badge badge-info">{{ $invoice->invoice_number }}</span></td>
                                         <td>{{ $invoice->customer->name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
                                         <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
                                         <td>{{ number_format($invoice->subtotal, 2) }}</td>
                                         <td>
-                                            @if($invoice->discount_value > 0)
-                                                {{ $invoice->discount_value }} {{ $invoice->discount_type == 'percent' ? '%' : '₱' }}
+                                           @if($invoice->discount_type == 'per_item')
+                                                <span class="badge badge-success">Per Item</span>
+                                            @elseif($invoice->discount_value > 0)
+                                                <span class="badge badge-primary">
+                                                    {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
+                                                </span>
                                             @else
-                                                -
+                                                <span class="badge badge-warning">
+                                                   No Discount
+                                                </span>
                                             @endif
                                         </td>
                                         <td>{{ number_format($invoice->grand_total, 2) }}</td>

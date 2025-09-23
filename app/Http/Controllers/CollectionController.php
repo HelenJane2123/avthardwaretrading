@@ -104,16 +104,34 @@ class CollectionController extends Controller
     public function update(Request $request, Collection $collection)
     {
         $request->validate([
-            'amount_paid' => 'required|numeric|min:0',
+            'amount_paid'   => 'required|numeric|min:0',
+            'payment_date'  => 'required|date',
+            'payment_status'=> 'required|string',
         ]);
 
+        // Update collection
         $collection->update([
-            'amount_paid'  => $request->amount_paid,
-            'remarks'      => $request->remarks,
-            'payment_date' => now(),
+            'amount_paid'   => $request->amount_paid,
+            'remarks'       => $request->remarks,
+            'payment_date'  => $request->payment_date,
         ]);
 
-        return redirect()->route('collection.index')->with('message', 'Collection updated successfully!');
+        // Update linked invoice payment status + balance
+        $invoice = $collection->invoice;
+        if ($invoice) {
+            $invoice->payment_status = $request->payment_status;
+
+            // Optionally recalc balance:
+            $invoice->outstanding_balance = max(
+                $invoice->grand_total - $collection->amount_paid, 
+                0
+            );
+
+            $invoice->save();
+        }
+
+        return redirect()->route('collection.index')
+            ->with('message', 'Collection updated successfully!');
     }
 
     public function destroy(Collection $collection)

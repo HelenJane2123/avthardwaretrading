@@ -8,6 +8,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Collection Table</h1>
+                <p class="text-muted mb-0">View, update, or delete existing collection.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -29,6 +30,7 @@
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Collection Records</h3>
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead>
@@ -47,7 +49,7 @@
                             <tbody>
                                 @foreach($collections as $collection)
                                     <tr>
-                                        <td>{{ $collection->collection_number }}</td>
+                                        <td><span class="badge badge-info">{{ $collection->collection_number }}</span></td>
                                         <td>{{ $collection->invoice->invoice_number }}</td>
                                         <td>{{ $collection->invoice->customer->name }}</td>
                                         <td>{{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</td>
@@ -67,14 +69,23 @@
                                             <button class="btn btn-primary btn-sm view-collection" data-id="{{ $collection->invoice->id }}">
                                                 <i class="fa fa-eye"></i>
                                             </button>
-                                            <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $collection->invoice->id) }}">
+                                            <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             @if($collection->invoice->invoice_status == 'approved')
-                                               <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
+                                                <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
                                                     <i class="fa fa-print"></i>
                                                 </a>
                                             @endif
+
+                                            <!-- Delete Button -->
+                                            <form action="{{ route('collection.destroy', $collection->id) }}" method="POST" class="d-inline delete-form">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -126,6 +137,26 @@
                     },
                     error: function(xhr) {
                         alert('Unable to fetch details.');
+                    }
+                });
+            });
+
+             // Delete confirmation
+            $('.btn-delete').on('click', function(e) {
+                e.preventDefault();
+                var form = $(this).closest('form');
+                
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone.",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.value) {
+                        form.submit();
                     }
                 });
             });

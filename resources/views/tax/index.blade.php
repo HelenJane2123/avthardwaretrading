@@ -11,6 +11,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Manage Tax</h1>
+                <p class="text-muted mb-0">View, update, or delete existing discounts.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -27,7 +28,7 @@
                 <div class="tile">
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                             <tr>
                                 <th>Tax </th>
                                 <th>Status</th>

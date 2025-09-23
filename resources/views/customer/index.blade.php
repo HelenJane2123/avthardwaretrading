@@ -37,6 +37,7 @@
         @endif
 
         <div class="tile shadow-sm rounded">
+            <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Customer Records</h3>
             <div class="tile-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered text-center align-middle" id="sampleTable">
@@ -49,7 +50,6 @@
                                 <th>Email</th>
                                 <th>Tax No.</th>
                                 <th>Details</th>
-                                <th>Credit Balance</th>
                                 <th>Created At</th>
                                 <th>Updated At</th>
                                 <th>Action</th>
@@ -58,14 +58,13 @@
                         <tbody>
                         @foreach($customers as $customer)
                             <tr>
-                                <td>{{ $customer->customer_code }}</td>
+                                <td><span class="badge badge-info">{{ $customer->customer_code }}</span></td>
                                 <td>{{ $customer->name }}</td>
                                 <td>{{ $customer->address }}</td>
                                 <td>{{ $customer->mobile }}</td>
                                 <td>{{ $customer->email }}</td>
                                 <td>{{ $customer->tax }}</td>
                                 <td>{{ $customer->details }}</td>
-                                <td>{{ number_format($customer->previous_balance, 2) }}</td>
                                 <td>{{ \Carbon\Carbon::parse($customer->created_at)->format('M d, Y') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($customer->updated_at)->format('M d, Y') }}</td>
                                 <td>
