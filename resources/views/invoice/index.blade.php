@@ -16,8 +16,11 @@
                 <li class="breadcrumb-item active"><a href="#">Invoice Table</a></li>
             </ul>
         </div>
-        <div class="">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <a class="btn btn-primary" href="{{route('invoice.create')}}"><i class="fa fa-plus"></i> Create New Invoice</a>
+            <a class="btn btn-success shadow-sm" href="{{ route('export.invoices') }}">
+                <i class="fa fa-file-excel-o"></i> Export to Excel
+            </a>
         </div>
 
         <div class="row mt-2">

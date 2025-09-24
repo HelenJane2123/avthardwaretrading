@@ -25,7 +25,7 @@
                 <i class="fa fa-plus"></i> Add Product
             </a>
             <a href="{{ route('export.products') }}" class="btn btn-success">
-                <i class="fa fa-download"></i> Export to Excel
+                <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
 

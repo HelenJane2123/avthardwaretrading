@@ -16,6 +16,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ModeofPaymentController;
 use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\ReportController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -91,10 +92,21 @@ Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceip
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
+Route::get('/export/invoices', [ExportController::class, 'exportInvoices'])->name('export.invoices');
+Route::get('/export/purchase', [ExportController::class, 'exportPurchases'])->name('export.purchase');
+Route::get('/export/collection', [ExportController::class, 'exportCollections'])->name('export.collections');
 
 //Print pdf receipt
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
 
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
+
+
+Route::prefix('reports')->group(function () {
+    // AR Aging Report (view in Blade)
+    Route::get('ar_aging_report', [ReportController::class, 'ar_aging'])->name('reports.ar_aging_report');
+    // AR Aging Report (export to Excel)
+    Route::get('ar_aging/export', [ReportController::class, 'exportARAging'])->name('reports.ar_aging_export');
+});
 
 

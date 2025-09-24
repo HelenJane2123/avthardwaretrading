@@ -182,7 +182,7 @@
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
                 <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
                 <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
                 <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>

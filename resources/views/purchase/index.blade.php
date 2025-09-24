@@ -15,8 +15,11 @@
             <i class="fa fa-plus"></i> Add New Purchase
         </a>
     </div>
-    <div class="">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <a class="btn btn-primary" href="{{route('purchase.create')}}"><i class="fa fa-plus"></i> Create New Purchase</a>
+        <a class="btn btn-success shadow-sm" href="{{ route('export.purchase') }}">
+            <i class="fa fa-file-excel-o"></i> Export to Excel
+        </a>
     </div>
     {{-- Success Message --}}
     @if(session()->has('message'))

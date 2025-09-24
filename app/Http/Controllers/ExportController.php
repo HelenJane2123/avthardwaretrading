@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 use App\Customer;
 use App\Product;
 use App\ProductSupplier;
+use App\Invoice;
+use App\Collection;
+use App\Purchase;
+use App\PurchaseItem;
+use App\ModeofPayment;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
@@ -20,26 +25,7 @@ class ExportController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Insert logo (placed on the left)
-        $drawing = new Drawing();
-        $drawing->setName('Logo');
-        $drawing->setDescription('Company Logo');
-        $drawing->setPath(public_path('images/avt_logo.png')); // Adjust path if needed
-        $drawing->setHeight(60); // Logo size
-        $drawing->setCoordinates('A1'); // Set logo to A1
-        $drawing->setOffsetX(5);
-        $drawing->setOffsetY(5);
-        $drawing->setWorksheet($sheet);
-
-        // Merge for company name, address, and subtitle
-        $sheet->mergeCells('B1:F1');
-        $sheet->mergeCells('B2:F2');
-        $sheet->mergeCells('B3:F3');
-
-        // Set cell values
-        $sheet->setCellValue('B1', 'AVT Hardware Trading');
-        $sheet->setCellValue('B2', '123 Main St., Calamba, Laguna');
-        $sheet->setCellValue('B3', 'Customer List');
+        $this->addHeader($sheet, 'Customer List');
 
         // Style: Company name
         $sheet->getStyle('B1')->applyFromArray([
@@ -63,7 +49,7 @@ class ExportController extends Controller
         $headerRow = 5;
 
         // Column headers
-        $headers = ['Customer Code','Customer', 'Address', 'Contact', 'Email', 'Tax No.', 'Details', 'Credit Balance', 'Date Created', 'Date Updated'];
+        $headers = ['Customer Code','Customer', 'Address', 'Contact', 'Email', 'Tax No.', 'Details'];
         $sheet->fromArray($headers, null, 'A' . $headerRow);
 
         // Style header row
@@ -86,13 +72,10 @@ class ExportController extends Controller
             $sheet->setCellValue('E' . $row, $customer->email);
             $sheet->setCellValue('F' . $row, $customer->tax);
             $sheet->setCellValue('G' . $row, $customer->details);
-            $sheet->setCellValue('H' . $row, $customer->previous_balance);
-            $sheet->setCellValue('I' . $row, $customer->created_at);
-            $sheet->setCellValue('J' . $row, $customer->updated_at);
             $sheet->getStyle('G' . $row)->getNumberFormat()
                 ->setFormatCode('#,##0.00');
             // Apply borders to each row
-            $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
+            $sheet->getStyle('A' . $row . ':G' . $row)->applyFromArray([
                 'borders' => [
                     'allBorders' => ['borderStyle' => Border::BORDER_THIN],
                 ],
@@ -145,22 +128,8 @@ class ExportController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Logo and title
-        $drawing = new Drawing();
-        $drawing->setName('Logo');
-        $drawing->setPath(public_path('images/avt_logo.png'));
-        $drawing->setHeight(80);
-        $drawing->setCoordinates('A1');
-        $drawing->setWorksheet($sheet);
-
-        $sheet->setCellValue('C1', 'AVT Hardware Trading');
-        $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
-
-        $sheet->setCellValue('C2', '123 Main St., Calamba, Laguna');
-        $sheet->getStyle('C2')->getFont()->setSize(12);
-
-        $sheet->setCellValue('C3', 'Product List Grouped by Category');
-        $sheet->getStyle('C3')->getFont()->setBold(true)->setSize(14);
+        // Add header / logo (if exists)
+        $this->addHeader($sheet, 'Product List');
 
         $row = 5;
 
@@ -241,6 +210,200 @@ class ExportController extends Controller
         $writer->save('php://output');
         exit;
     }
+
+    //Export Invoice
+    public function exportInvoices()
+    {
+        // eager load relations - adjust relation names to your app (customer, items.product)
+        $invoices = Invoice::with(['customer', 'items.product'])->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Add header / logo (if exists)
+        $this->addHeader($sheet, 'Invoice List with Details');
+
+        $row = 6; // start row
+
+        foreach ($invoices as $invoice) {
+            // Invoice header block
+            $sheet->setCellValue('A' . $row, 'Invoice #: ' . ($invoice->invoice_number ?? $invoice->id));
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->setCellValue('C' . $row, 'Customer: ' . ($invoice->customer->name ?? 'N/A'));
+            $sheet->setCellValue('E' . $row, 'Date: ' . ($invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : ($invoice->created_at ? $invoice->created_at->format('Y-m-d') : '')));
+            $row++;
+
+            $sheet->setCellValue('A' . $row, 'Status: ' . ($invoice->invoice_status ?? ''));
+            $sheet->setCellValue('C' . $row, 'Grand Total: ' . number_format($invoice->grand_total ?? 0, 2));
+            $row += 1;
+
+            // Items header
+            $sheet->setCellValue('A' . $row, 'Product');
+            $sheet->setCellValue('B' . $row, 'Qty');
+            $sheet->setCellValue('C' . $row, 'Unit Price');
+            $sheet->setCellValue('D' . $row, 'Discount');
+            $sheet->setCellValue('E' . $row, 'Amount');
+            // bold header row
+            $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
+            $row++;
+
+            // Invoice items (guard if relation missing)
+            $items = $invoice->items ?? collect();
+            if ($items->isEmpty()) {
+                $sheet->setCellValue('A' . $row, '(no items)');
+                $row++;
+            } else {
+                foreach ($items as $item) {
+                    // Adjust property names to your invoice item model (product->product_name or product->name)
+                    $productName = $item->product->product_name ?? $item->product->name ?? 'Unknown Product';
+                    $qty = $item->qty ?? $item->quantity ?? ($item->quantity_sold ?? 0);
+                    $unitPrice = $item->price ?? $item->unit_price ?? 0;
+                    $discount = $item->discount ?? 0;
+                    $amount = $item->amount ?? ($qty * $unitPrice) - $discount;
+
+                    $sheet->setCellValue('A' . $row, $productName);
+                    $sheet->setCellValue('B' . $row, $qty);
+                    $sheet->setCellValue('C' . $row, $unitPrice);
+                    $sheet->setCellValue('D' . $row, $discount);
+                    $sheet->setCellValue('E' . $row, $amount);
+                    $row++;
+                }
+            }
+
+            // space before next invoice
+            $row += 2;
+        }
+
+        // Auto-size some columns
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Write file to temp and return download
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'invoices_export_' . now()->format('Ymd_His') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'invoices_export_') . '.xlsx'; // ensure .xlsx
+        $writer->save($tempFile);
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+     /**
+     * Export purchase orders.
+     */
+    public function exportPurchases()
+    {
+        $purchases = Purchase::with(['supplier', 'items.supplierItem'])->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $this->addHeader($sheet, 'Purchases Export');
+
+        // Table headers
+        $sheet->setCellValue('A6', 'PO #');
+        $sheet->setCellValue('B6', 'Supplier');
+        $sheet->setCellValue('C6', 'Date');
+        $sheet->setCellValue('D6', 'Product Code');
+        $sheet->setCellValue('E6', 'Product');
+        $sheet->setCellValue('F6', 'Quantity');
+        $sheet->setCellValue('G6', 'Price');
+        $sheet->setCellValue('H6', 'Amount');
+        $row = 7;
+
+        foreach ($purchases as $purchase) {
+            foreach ($purchase->items as $item) {
+                $sheet->setCellValue("A{$row}", $purchase->po_number);
+                $sheet->setCellValue("B{$row}", $purchase->supplier->name ?? 'N/A');
+                $sheet->setCellValue("C{$row}", $purchase->created_at->format('Y-m-d'));
+                $sheet->setCellValue("D{$row}", $item->product_code ?? 'N/A');
+                $sheet->setCellValue("E{$row}", $item->supplierItem->item_description ?? 'N/A');
+                $sheet->setCellValue("F{$row}", $item->qty);
+                $sheet->setCellValue("G{$row}", number_format($item->unit_price, 2));
+                $sheet->setCellValue("H{$row}", number_format($item->total, 2));
+                $row++;
+            }
+        }
+
+        // Write file to temp and return download
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'purchases_export_' . now()->format('Ymd_His') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'purchase_export_') . '.xlsx'; // ensure .xlsx
+        $writer->save($tempFile);
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Export payment collections.
+     */
+    public function exportCollections()
+    {
+        $collections = Collection::with(['invoice.customer', 'invoice.collections','invoice.paymentMode'])->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $this->addHeader($sheet, 'Collections');
+
+        // Table headers (Row 6)
+        $sheet->setCellValue('A6', 'Collection ID');
+        $sheet->setCellValue('B6', 'Customer');
+        $sheet->setCellValue('C6', 'Invoice #');
+        $sheet->setCellValue('D6', 'Mode of Payment');
+        $sheet->setCellValue('E6', 'Amount Paid');
+        $sheet->setCellValue('F6', 'Outstanding Balance');
+        $sheet->setCellValue('G6', 'Collection Date');
+
+        $row = 7;
+
+        foreach ($collections as $col) {
+            $outstandingBalance = 0;
+            if ($col->invoice) {
+                $outstandingBalance = ($col->invoice->grand_total ?? 0) - ($col->invoice->collections->sum('amount_paid') ?? 0);
+            }
+
+            $sheet->setCellValue("A{$row}", $col->collection_number ?? $col->id);
+            $sheet->setCellValue("B{$row}", $col->invoice->customer->name ?? 'N/A');
+            $sheet->setCellValue("C{$row}", $col->invoice->invoice_number ?? 'N/A');
+            $sheet->setCellValue("D{$row}", $col->invoice->paymentMode->name ?? 'N/A');
+            $sheet->setCellValue("E{$row}", number_format($col->amount_paid, 2));
+            $sheet->setCellValue("F{$row}", number_format($outstandingBalance, 2));
+            $sheet->setCellValue("G{$row}", $col->created_at->format('Y-m-d'));
+
+            $row++;
+        }
+
+        // Write file to temp and return download
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'collection_export_' . now()->format('Ymd_His') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'collection_export_') . '.xlsx'; // ensure .xlsx
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Helper: add logo and header
+     */
+    private function addHeader($sheet, $title)
+    {
+        $logoPath = public_path('images/avt_logo.png');
+        if (file_exists($logoPath)) {
+            $drawing = new Drawing();
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(60);
+            $drawing->setCoordinates('A1');
+            $drawing->setWorksheet($sheet);
+        }
+
+        $sheet->setCellValue('C1', 'AVT Hardware Trading');
+        $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
+        $sheet->setCellValue('C2', '123 Main St., Calamba, Laguna');
+        $sheet->getStyle('C2')->getFont()->setSize(12);
+
+        $sheet->setCellValue('C3', $title);
+        $sheet->getStyle('C3')->getFont()->setBold(true)->setSize(14);
+    }
+
 
 
     // Shared function

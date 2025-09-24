@@ -28,6 +28,6 @@ class Collection extends Model
     }
 
     public function paymentMethod() {
-        return $this->belongsTo(PaymentMethod::class, 'payment_mode_id');
+        return $this->belongsTo(ModeofPayment::class, 'payment_mode_id');
     }
 }
