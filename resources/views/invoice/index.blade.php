@@ -39,6 +39,7 @@
                                     <th>Discount Type</th>
                                     <th>Grand Total</th>
                                     <th>Status</th>
+                                    <th>Payment Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -55,7 +56,7 @@
                                                 <span class="badge badge-success">Per Item</span>
                                             @elseif($invoice->discount_value > 0)
                                                 <span class="badge badge-primary">
-                                                    {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
+                                                    Overall - {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
                                                 </span>
                                             @else
                                                 <span class="badge badge-warning">
@@ -71,6 +72,16 @@
                                                 @elseif($invoice->invoice_status == 'canceled') bg-danger
                                                 @endif">
                                                 {{ ucfirst($invoice->invoice_status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                @if($invoice->payment_status == 'paid') bg-success
+                                                @elseif($invoice->payment_status == 'pending') bg-warning
+                                                @elseif($invoice->payment_status == 'overdue') bg-danger
+                                                @elseif($invoice->payment_status == 'partial') bg-info
+                                                @endif">
+                                                {{ ucfirst($invoice->payment_status) }}
                                             </span>
                                         </td>
                                         <td>

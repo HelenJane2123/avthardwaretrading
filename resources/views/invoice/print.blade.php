@@ -13,6 +13,14 @@
         .text-right { text-align: right; }
         .btn-print { margin: 20px 0; }
         .logo { max-height: 100px; }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+        @page {
+            margin: 20mm; /* adjust as needed */
+        }
     </style>
 </head>
 <body>
@@ -21,7 +29,7 @@
     <!-- Header with Logo -->
     <div class="d-flex justify-content-between mb-4 align-items-center">
         <div>
-            <img src="{{ asset('images/logo.png') }}" alt="Company Logo" class="logo">
+            <img src="{{ asset('images/avt_logo.png') }}" alt="Company Logo" class="logo">
         </div>
         <div class="text-end">
             <h4><strong>AVT HARDWARE</strong></h4>
@@ -73,7 +81,7 @@
             <tr>
                 <td>{{ $item->qty }}</td>
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
-                <td>{{ $item->product->product_name ?? 'N/A' }}</td>
+                <td>{{ $item->product->product_code . ' - ' . $item->product->product_name ?? 'N/A' }}</td>
                 <td>
                     @if($item->dis > 0)
                         {{ $item->dis }}%
@@ -101,7 +109,7 @@
         @if($invoice->discount_type === 'overall' && $invoice->discount_value > 0)
         <tr>
             <td class="no-border text-end"><strong>Overall Discount:</strong></td>
-            <td class="text-end">-{{ $invoice->discount_value }}%</td>
+            <td class="text-end">{{ $invoice->discount_value }}%</td>
         </tr>
         @endif
         @if($invoice->shipping_fee > 0)
@@ -128,7 +136,7 @@
     @endif
 
     <!-- Print Button -->
-    <div class="text-center">
+    <div class="text-center no-print">
         <button onclick="window.print()" class="btn btn-primary btn-print">
             <i class="fa fa-print"></i> Print Invoice
         </button>

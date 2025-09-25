@@ -7,12 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Sale extends Model
 {
     public function invoice(){
-        return $this->belongsTo('App\Invoice');
+        return $this->belongsTo(Invoice::class);
     }
 
     public function product(){
-        return $this->belongsTo('App\Product');
+        return $this->belongsTo(Product::class);
     }
-
-
 }

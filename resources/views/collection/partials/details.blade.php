@@ -44,10 +44,15 @@
         <th>Amount Paid</th>
         <td>{{ number_format($collection->amount_paid, 2) }}</td>
     </tr>
-     <tr>
-        <th>Outstanding Balance</th>
-        <td>{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
-    </tr>
+
+    {{-- Show Outstanding Balance only if greater than 0 --}}
+    @if($collection->invoice->outstanding_balance > 0)
+        <tr>
+            <th>Outstanding Balance</th>
+            <td>{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
+        </tr>
+    @endif
+
     <tr>
         <th>Payment Status</th>
         <td>{{ ucfirst($collection->invoice->payment_status) }}</td>

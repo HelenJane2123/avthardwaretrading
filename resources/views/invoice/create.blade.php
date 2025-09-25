@@ -127,8 +127,9 @@
                                                 @foreach($products as $product)
                                                     <option value="{{ $product->id }}"
                                                         data-code="{{ $product->product_code }}"
-                                                        data-price="{{ $product->price }}"
-                                                        data-stock="{{ $product->remaining_stock }}">
+                                                        data-price="{{ $product->sales_price }}"
+                                                        data-stock="{{ $product->remaining_stock }}"
+                                                        data-unit="{{ $product->unit_id }}">
                                                         {{ $product->product_name }}
                                                     </option>
                                                 @endforeach
@@ -238,8 +239,9 @@
                 @foreach($products as $product)
                     options += `<option value="{{ $product->id }}" 
                                     data-code="{{ $product->product_code }}" 
-                                    data-price="{{ $product->price }}" 
-                                    data-stock="{{ $product->remaining_stock }}">
+                                    data-price="{{ $product->sales_price }}" 
+                                    data-stock="{{ $product->remaining_stock }}"
+                                    data-unit="{{ $product->unit_id }}">
                                     {{ $product->product_name }}
                                 </option>`;
                 @endforeach
@@ -316,20 +318,26 @@
                 var selected = $(this).find(':selected');
 
                 var stock = selected.data('stock') || 0;
+                var unitId = selected.data('unit') || '';
 
+                // Populate fields
                 $row.find('.code').val(selected.data('code') || '');
                 $row.find('.price').val(selected.data('price') || '');
                 $row.find('.qty').val('');
                 $row.find('.available-stock').text("Available: " + stock);
 
-                // store original stock in input
+                // set unit dropdown automatically
+                if (unitId) {
+                    $row.find('.unit').val(unitId);
+                }
+
+                // store original stock
                 $row.find('.qty').data('original-stock', stock);
+
                 var productSelected = $(this).val();
                 if (productSelected) {
-                    // enable discount field only if a product is chosen
                     $row.find('.dis').prop('disabled', false);
                 } else {
-                    // disable again if product removed
                     $row.find('.dis').prop('disabled', true).val(0);
                     calculateTotals();
                 }

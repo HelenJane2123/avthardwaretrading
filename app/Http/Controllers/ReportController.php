@@ -510,7 +510,7 @@ class ReportController extends Controller
 
         $sheet->setCellValue('C1', 'AVT Hardware Trading');
         $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
-        $sheet->setCellValue('C2', '123 Main St., Calamba, Laguna');
+        $sheet->setCellValue('C2', '123 Main St., Test, City');
         $sheet->getStyle('C2')->getFont()->setSize(12);
 
         $sheet->setCellValue('C3', $title);

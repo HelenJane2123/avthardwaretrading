@@ -165,8 +165,9 @@
                                                 @foreach($products as $p)
                                                     <option value="{{ $p->id }}"
                                                         data-code="{{ $p->product_code }}"
-                                                        data-price="{{ $p->price }}"
+                                                        data-price="{{ $p->sales_price }}"
                                                         data-stock="{{ $p->remaining_stock }}"
+                                                        data-unit="{{ $p->unit_id }}"
                                                         {{ $item->product_id == $p->id ? 'selected' : '' }}>
                                                         {{ $p->product_name }}
                                                     </option>
@@ -234,6 +235,26 @@
             </div>
         </div>
     </div>
+    {{-- Discount Approval Modal --}}
+    <div id="discountApprovalModalUpdate" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Discount Approval Required</h5>
+                    <button type="button" class="close" id="closeModal" data-bs-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>This discount requires admin approval. Please enter the admin password:</p>
+                    <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password">
+                    <small class="text-danger d-none" id="passwordError">Invalid password. Try again.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelModal" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="approveDiscount">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 @endsection
 
@@ -256,8 +277,9 @@
                 @foreach($products as $product)
                     options += `<option value="{{ $product->id }}" 
                                     data-code="{{ $product->product_code }}" 
-                                    data-price="{{ $product->price }}" 
-                                    data-stock="{{ $product->remaining_stock }}">
+                                    data-price="{{ $product->sales_price }}" 
+                                    data-stock="{{ $product->remaining_stock }}"
+                                    data-unit="{{ $product->unit_id }}">
                                     {{ $product->product_name }}
                                 </option>`;
                 @endforeach
@@ -284,7 +306,7 @@
                     <td><input type="text" name="price[]" class="form-control price"></td>
                     <td><input type="text" name="dis[]" class="form-control dis"></td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
-                    <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
+                    <td><a class="btn btn-danger remove"><i class="fa fa-trash"></i></a></td>
                 </tr>`;
 
                 $('#po-body').append(newRow);
@@ -334,12 +356,17 @@
                 var selected = $(this).find(':selected');
 
                 var stock = selected.data('stock') || 0;
+                var unitId = selected.data('unit') || '';
 
                 $row.find('.code').val(selected.data('code') || '');
                 $row.find('.price').val(selected.data('price') || '');
                 $row.find('.qty').val('');
                 $row.find('.available-stock').text("Available: " + stock);
 
+                // set unit dropdown automatically
+                if (unitId) {
+                    $row.find('.unit').val(unitId);
+                }
                 // store original stock in input
                 $row.find('.qty').data('original-stock', stock);
                 var productSelected = $(this).val();
@@ -426,7 +453,7 @@
             let discountApprovalCount = 0;
             let pendingDiscountInput = null;
 
-            var discountModal = new bootstrap.Modal(document.getElementById('discountApprovalModal'), {
+            var discountModal = new bootstrap.Modal(document.getElementById('discountApprovalModalUpdate'), {
                 backdrop: 'static',
                 keyboard: false
             });
@@ -437,7 +464,7 @@
                 if (val > 0) {
                     if (discountApprovalCount < 3) {
                         pendingDiscountInput = $(this); // remember which input triggered
-                        if ($('#discountApprovalModal').is(':hidden')) { // only show if hidden
+                        if ($('#discountApprovalModalUpdate').is(':hidden')) { // only show if hidden
                             discountModal.show(); // <-- updated
                         }
                     } else {

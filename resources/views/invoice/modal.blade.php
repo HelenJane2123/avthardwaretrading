@@ -18,7 +18,7 @@
                     </tr>
                     <tr>
                         <th>Contact</th>
-                        <td>{{ $invoice->customer->phone ?? '-' }}</td>
+                        <td>{{ $invoice->customer->mobile ?? '-' }}</td>
                     </tr>
                 </table>
             </div>
@@ -91,7 +91,7 @@
                 <th>Discount</th>
                 <td>
                     @if($invoice->discount_value > 0)
-                        {{ $invoice->discount_value }} {{ $invoice->discount_type == 'percent' ? '%' : '₱' }}
+                        {{ $invoice->discount_value }} {{ $invoice->discount_type == 'percent' ? '%' : '' }}
                     @else
                         -
                     @endif

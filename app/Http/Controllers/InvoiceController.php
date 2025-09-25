@@ -360,7 +360,9 @@ class InvoiceController extends Controller
 
     public function print($id)
     {
-        $invoice = Invoice::with(['sales.product', 'customer'])->findOrFail($id);
+        $invoice = Invoice::with(['sales.product', 'sales.unit', 'customer'])
+            ->findOrFail($id);
+
         return view('invoice.print', compact('invoice'));
     }
 
@@ -379,18 +381,18 @@ class InvoiceController extends Controller
                 // Add payment mode
                 $invoice->payment_mode = $invoice->paymentMode->name ?? null;
 
-                // Compute dynamic payment status
-                if ($invoice->balance <= 0) {
-                    $invoice->payment_status = 'paid';
-                } elseif ($paid > 0) {
-                    $invoice->payment_status = 'partial';
-                } else {
-                    $invoice->payment_status = 'pending';
-                }
+                // // Compute dynamic payment status
+                // if ($invoice->balance <= 0) {
+                //     $invoice->payment_status = 'paid';
+                // } elseif ($paid > 0) {
+                //     $invoice->payment_status = 'partial';
+                // } else {
+                //     $invoice->payment_status = 'pending';
+                // }
 
-                if ($invoice->due_date && now()->gt($invoice->due_date) && $invoice->balance > 0) {
-                    $invoice->payment_status = 'overdue';
-                }
+                // if ($invoice->due_date && now()->gt($invoice->due_date) && $invoice->balance > 0) {
+                //     $invoice->payment_status = 'overdue';
+                // }
 
                 return $invoice;
             })
@@ -400,7 +402,7 @@ class InvoiceController extends Controller
             })
             ->values(); // Reindex collection
 
-        // Filter by search query after rejecting fully paid invoices
+        
         if ($query) {
             $invoices = $invoices->filter(function ($invoice) use ($query) {
                 return str_contains(strtolower($invoice->invoice_number), strtolower($query)) ||

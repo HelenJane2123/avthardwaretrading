@@ -44,13 +44,13 @@ class Invoice extends Model
         return $this->belongsTo(ModeofPayment::class, 'payment_mode_id');
     }
 
-    public function sales()
-    {
-        return $this->hasMany(Sale::class, 'invoice_id');
-    }
-
     public function collections()
     {
         return $this->hasMany(Collection::class);
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(InvoiceSales::class, 'invoice_id');
     }
 }

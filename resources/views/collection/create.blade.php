@@ -112,7 +112,7 @@
                                 <input type="number" step="0.01" name="amount_paid" class="form-control" required>
                             </div>
 
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <label>Balance</label>
                                 <input type="number" step="0.01" name="balance" id="balanceField" class="form-control" readonly>
                             </div>
@@ -126,7 +126,7 @@
                                     <option value="overdue">Overdue</option>
                                     <option value="approved">Approved</option>
                                 </select>
-                            </div>
+                            </div> -->
 
                             <div class="mb-3">
                                 <label>Remarks</label>
@@ -176,41 +176,41 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
     $(document).ready(function () {
-    let table = $('#invoiceTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: "{{ route('invoices.search') }}",
-            dataSrc: ""
-        },
-        columns: [
-            { data: "invoice_number" },
-            { data: "customer.name", defaultContent: "" },
-            { data: "grand_total", render: data => `₱${parseFloat(data).toFixed(2)}` },
-            { data: "balance", render: data => `₱${parseFloat(data).toFixed(2)}` },
-            {
-                data: null,
-                render: function (data) {
-                    return `<button class="btn btn-sm btn-primary select-invoice"
-                                data-id="${data.id}" 
-                                data-number="${data.invoice_number}"
-                                data-total="${data.grand_total}"
-                                data-balance="${data.balance}"
-                                data-customer="${data.customer?.id ?? ''}"
-                                data-name="${data.customer?.name ?? ''}"
-                                data-email="${data.customer?.email ?? ''}"
-                                data-phone="${data.customer?.mobile ?? ''}"
-                                data-modeofpayment="${data.payment_mode?.name ?? ''}"
-                                data-address="${data.customer?.address ?? ''}">
-                                Select
-                            </button>`;
+        let table = $('#invoiceTable').DataTable({
+            processing: true,
+            serverSide: false,
+            ajax: {
+                url: "{{ route('invoices.search') }}",
+                dataSrc: ""
+            },
+            columns: [
+                { data: "invoice_number" },
+                { data: "customer.name", defaultContent: "" },
+                { data: "grand_total", render: data => `₱${parseFloat(data).toFixed(2)}` },
+                { data: "balance", render: data => `₱${parseFloat(data).toFixed(2)}` },
+                {
+                    data: null,
+                    render: function (data) {
+                        return `<button class="btn btn-sm btn-primary select-invoice"
+                                    data-id="${data.id}" 
+                                    data-number="${data.invoice_number}"
+                                    data-total="${data.grand_total}"
+                                    data-balance="${data.balance}"
+                                    data-customer="${data.customer?.id ?? ''}"
+                                    data-name="${data.customer?.name ?? ''}"
+                                    data-email="${data.customer?.email ?? ''}"
+                                    data-phone="${data.customer?.mobile ?? ''}"
+                                    data-modeofpayment="${data.payment_mode?.name ?? ''}"
+                                    data-address="${data.customer?.address ?? ''}">
+                                    Select
+                                </button>`;
+                    }
                 }
-            }
-        ],
-        autoWidth: false,
-        responsive: true,
-        dom: 'frtip'
-    });
+            ],
+            autoWidth: false,
+            responsive: true,
+            dom: 'frtip'
+        });
 
     // Reload invoices when modal opens
     $('#invoiceModal').on('shown.bs.modal', function () {

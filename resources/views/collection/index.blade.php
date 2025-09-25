@@ -51,6 +51,10 @@
                             </thead>
                             <tbody>
                                 @foreach($collections as $collection)
+                                    @php
+                                        $latestPayment = $collection->invoice->collections->sortByDesc('payment_date')->first();
+                                        $isLatest = $collection->id === $latestPayment->id;
+                                    @endphp
                                     <tr>
                                         <td><span class="badge badge-info">{{ $collection->collection_number }}</span></td>
                                         <td>{{ $collection->invoice->invoice_number }}</td>
@@ -64,21 +68,34 @@
                                                 @if($collection->invoice->payment_status == 'paid') bg-success
                                                 @elseif($collection->invoice->payment_status == 'partial') bg-warning
                                                 @elseif($collection->invoice->payment_status == 'pending') bg-info
+                                                @elseif($collection->invoice->payment_status == 'overdue') bg-danger
                                                 @endif">
                                                 {{ ucfirst($collection->invoice->payment_status) }}
                                             </span>
+
+                                            {{-- If invoice is fully paid but this is not the latest payment --}}
+                                            @if($collection->invoice->payment_status == 'paid' && !$isLatest)
+                                                <span class="text-danger small d-block mt-1">
+                                                    Covered by later receipt
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm view-collection" data-id="{{ $collection->invoice->id }}">
+                                            <button class="btn btn-primary btn-sm view-collection" 
+                                                    data-url="{{ route('collection.details', $collection->id) }}">
                                                 <i class="fa fa-eye"></i>
                                             </button>
                                             <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
                                                 <i class="fa fa-edit"></i>
                                             </a>
+
                                             @if($collection->invoice->invoice_status == 'approved')
-                                                <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
-                                                    <i class="fa fa-print"></i>
-                                                </a>
+                                                {{-- Only allow print if partial OR this is the latest payment when fully paid --}}
+                                                @if($collection->invoice->payment_status != 'paid' || $isLatest)
+                                                    <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
+                                                        <i class="fa fa-print"></i>
+                                                    </a>
+                                                @endif
                                             @endif
 
                                             <!-- Delete Button -->
@@ -94,6 +111,7 @@
                                 @endforeach
                             </tbody>
                         </table>
+
                     </div>
                 </div>
             </div>
@@ -129,10 +147,10 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('.view-collection').on('click', function() {
-                var invoiceId = $(this).data('id');
+                var url = $(this).data('url'); // Directly use data-url
                 
                 $.ajax({
-                    url: '/collection/' + invoiceId + '/details', // Route to get details
+                    url: url,
                     type: 'GET',
                     success: function(data) {
                         $('#invoiceDetails').html(data);

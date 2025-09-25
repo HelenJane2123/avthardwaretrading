@@ -78,14 +78,15 @@
     <div class="container">
         <a href="javascript:void(0)" class="print-btn" onclick="window.print()">Print Receipt</a>
 
-        <div class="header">
-            <h2>My Company Name</h2>
+       <div class="header">
+            <img src="{{ public_path('images/avt_logo.png') }}" alt="Company Logo" style="max-height: 80px; margin-bottom: 10px;">
+            <h2>AVT Hardware</h2>
             <p>Company ID: 123456789</p>
             <p>Address: 123 Business St., City, Country</p>
             <hr style="margin: 10px 0; border: 0; border-top: 1px solid #004085;">
             <h3>Collection Receipt</h3>
-            <p>Receipt #: {{ $collection->id }}</p>
-            <p>Date: {{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</p>
+            <p>Receipt #: {{ $collection->collection_number }}</p>
+            <p>Payment Date: {{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</p>
         </div>
 
         <table class="details">
@@ -103,22 +104,32 @@
             </tr>
         </table>
 
+        <h3>Payment History</h3>
         <table class="items">
             <tr>
-                <th>Description</th>
+                <th>Payment Date</th>
                 <th>Amount Paid</th>
+                <th>Remarks</th>
             </tr>
-            <tr>
-                <td>Payment for Invoice #{{ $collection->invoice->invoice_number }}</td>
-                <td>{{ number_format($collection->amount_paid, 2) }}</td>
-            </tr>
+            @foreach($allPayments as $payment)
+                @if($payment->payment_date <= $collection->payment_date)
+                <tr @if($payment->id === $collection->id) style="background-color:#d4edda;" @endif>
+                    <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') }}</td>
+                    <td>{{ number_format($payment->amount_paid, 2) }}</td>
+                    <td>{{ $payment->remarks ?? '-' }}</td>
+                </tr>
+                @endif
+            @endforeach
         </table>
 
-        <div class="total">
-            <p><strong>Outstanding Balance:</strong> {{ number_format($collection->invoice->outstanding_balance, 2) }}</p>
-            <p><strong>Payment Status:</strong> {{ ucfirst($collection->invoice->payment_status) }}</p>
+       <div class="total">
+            <p><strong>Invoice Total:</strong> {{ number_format($invoice->grand_total, 2) }}</p>
+            <p><strong>Total Paid So Far:</strong> 
+            {{ number_format($allPayments->where('payment_date', '<=', $collection->payment_date)->sum('amount_paid'), 2) }}
+            </p>
+            <p><strong>Outstanding Balance:</strong> {{ number_format($balance, 2) }}</p>
+            <p><strong>Payment Status:</strong> {{ ucfirst($invoice->payment_status) }}</p>
         </div>
-
         <p>Thank you for your payment!</p>
     </div>
 </body>
