@@ -308,8 +308,6 @@ class PurchaseController extends Controller
         return redirect()->route('purchase.index')->with('message', 'Purchase updated successfully.');
     }
 
-
-
     public function getLatestPoNumber()
     {
         $latest = Purchase::orderBy('id', 'desc')->first();

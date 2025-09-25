@@ -39,12 +39,25 @@
                                 <th>Date Purchased</th>
                                 <th>Discount Type</th>
                                 <th>Total Purchased</th>
+                                <th>Payment Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($purchases as $purchase)
                                 <tr>
+                                    @php
+                                        $totalPaid = $purchase->payments->sum('amount_paid');
+                                        $outstanding = $purchase->grand_total - $totalPaid;
+
+                                        if ($totalPaid == 0) {
+                                            $status = 'none'; // No payment yet
+                                        } elseif ($totalPaid < $purchase->grand_total) {
+                                            $status = 'partial';
+                                        } else {
+                                            $status = 'paid';
+                                        }
+                                    @endphp
                                     <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
                                     <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
                                     <td>{{ $purchase->salesman ?? '-' }}</td>
@@ -59,6 +72,20 @@
                                         @endif
                                     </td>
                                     <td>₱ {{ number_format($purchase->grand_total, 2) }}</td>
+                                    <td>
+                                        @if($status === 'paid')
+                                            {{-- Fully paid, show info instead of Make Payment button --}}
+                                            <span class="badge bg-success ms-2">Paid</span>
+                                            <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
+                                            <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
+                                        @elseif($status === 'partial')
+                                            <span class="badge bg-warning ms-2">Partial Payment</span>
+                                            <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
+                                            <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
+                                        @else
+                                            <span class="badge bg-info ms-2">No Payment yet</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
                                             {{-- View Details --}}
@@ -86,6 +113,13 @@
                                                     title="Delete">
                                                 <i class="fa fa-trash"></i>
                                             </button>
+                                        
+                                            @if($status !== 'paid')
+                                                {{-- Not fully paid, show Make Payment button --}}
+                                                <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
+                                                    <i class="fa fa-credit-card"></i> Make Payment
+                                                </button>
+                                            @endif
                                         </div>
 
                                         {{-- Hidden Delete Form --}}
@@ -116,6 +150,50 @@
                 <div class="modal-body" id="purchase-details">
                     {{-- Filled dynamically --}}
                 </div>
+            </div>
+        </div>
+    </div>
+    {{-- Make Payment Modal --}}
+    <div class="modal fade" id="makePaymentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fa fa-credit-card"></i> Make Payment</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="make-payment-form" method="POST">
+                    @csrf
+                    <input type="hidden" name="purchase_id" id="payment-purchase-id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="po_number" class="form-label">PO Number</label>
+                            <input type="text" class="form-control" id="po_number" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="outstanding_balance" class="form-label">Outstanding Balance</label>
+                            <input type="text" class="form-control" id="outstanding_balance" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_status" class="form-label">Payment Status</label>
+                            <select class="form-control" id="payment_status" name="payment_status" required>
+                                <option value="partial">Partial</option>
+                                <option value="paid">Paid</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="amount_paid" class="form-label">Amount Paid</label>
+                            <input type="number" step="0.01" class="form-control" id="amount_paid" name="amount_paid" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_date" class="form-label">Payment Date</label>
+                            <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Submit Payment</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -154,6 +232,27 @@
         $.get("purchase/" + id + "/details", function (data) {
             $("#purchase-details").html(data);
             $("#viewPurchaseModal").modal("show");
+        });
+    });
+    
+    // Open Make Payment Modal
+    $(document).on("click", ".payment-btn", function () {
+        let purchaseId = $(this).data("id");
+
+        // Set hidden input
+        $("#payment-purchase-id").val(purchaseId);
+        $("#amount_paid").val(''); // clear previous input
+
+        // Set the form action dynamically
+        $("#make-payment-form").attr("action", "/purchase/" + purchaseId + "/payment-store");
+
+        // Fetch purchase details via AJAX
+        $.get('/purchase/' + purchaseId + '/payment-info', function (data) {
+            $("#po_number").val(data.po_number);
+            $("#outstanding_balance").val(data.outstanding_balance);
+            // Pre-select status
+            $("#payment_status").val(data.payment_status);
+            $("#makePaymentModal").modal("show");
         });
     });
 </script>

@@ -17,6 +17,7 @@ use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ModeofPaymentController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PurchasePaymentController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -98,6 +99,8 @@ Route::get('/export/collection', [ExportController::class, 'exportCollections'])
 
 //Print pdf receipt
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
+Route::get('purchase/{purchase}/payment-info', [PurchasePaymentController::class, 'paymentInfo'])->name('purchase.payment.info');
+Route::post('purchase/{purchase}/payment-store', [PurchasePaymentController::class, 'store'])->name('purchase.payment.store');
 
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
 
@@ -107,6 +110,15 @@ Route::prefix('reports')->group(function () {
     Route::get('ar_aging_report', [ReportController::class, 'ar_aging'])->name('reports.ar_aging_report');
     // AR Aging Report (export to Excel)
     Route::get('ar_aging/export', [ReportController::class, 'exportARAging'])->name('reports.ar_aging_export');
+    // Show AP Aging report
+    Route::get('ap_aging_report', [ReportController::class, 'ap_aging'])->name('reports.ap_aging_report');
+    // Export to Excel
+    Route::get('/reports/ap-aging/export', [ReportController::class, 'exportAPAging'])->name('reports.ap_aging_export');
+    //Inventory Report
+    Route::get('inventory_report', [ReportController::class, 'inventory_report'])->name('reports.inventory_report');
+    // Export to Excel
+    Route::get('/reports/inventory/export', [ReportController::class, 'exportInventory'])->name('reports.inventory_report_export');
+
 });
 
 
