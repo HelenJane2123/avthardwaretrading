@@ -8,6 +8,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-edit"></i> Edit Tax</h1>
+                <p class="text-muted mb-0">Update existing tax/discount details to keep your billing accurate.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>

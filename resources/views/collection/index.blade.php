@@ -36,7 +36,7 @@
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Collection Records</h3>
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                                 <tr>
                                     <th>Collection #</th>
                                     <th>Invoice #</th>

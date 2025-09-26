@@ -11,7 +11,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Manage Unit</h1>
-                <p class="text-muted mb-0">View, update, or delete existing unit.</p>
+                <p class="text-muted mb-0">View, update, or delete existing units to keep your inventory organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -27,6 +27,7 @@
             <div class="col-md-12">
                 <div class="tile">
                     <div class="tile-body">
+                        <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Unit Records</h3>
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead class="thead-dark">
                             <tr>

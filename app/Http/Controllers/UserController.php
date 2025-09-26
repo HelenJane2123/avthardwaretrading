@@ -102,7 +102,6 @@ class UserController extends Controller
             'l_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:users,l_name,' . $user->id,
             'email' => 'required|email|unique:users,email,' . $user->id,
             'contact' => 'required|digits:11',
-            'password' => 'required|min:6',
             'user_role' => 'required|in:user,admin,super_admin,staff',
             'user_status' => 'required|in:active,inactive',
         ]);
@@ -112,7 +111,6 @@ class UserController extends Controller
         $user->l_name = $request->l_name;
         $user->email = $request->email;
         $user->contact = $request->contact;
-        $user->password = bcrypt($request->password);
         $user->user_role = $request->user_role;
         $user->user_status = $request->user_status;
         $user->save();
@@ -133,6 +131,26 @@ class UserController extends Controller
         $user = User::find($id);
         $user->delete();
         return redirect()->back();
+    }
 
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = auth()->user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
+    public function showResetForm(Request $request, $token = null)
+    {
+        return view('auth.passwords.reset')->with([
+            'token' => $token,
+            'email' => $request->email,
+        ]);
     }
 }

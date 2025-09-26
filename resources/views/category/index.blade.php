@@ -11,7 +11,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Category List</h1>
-                <p class="text-muted mb-0">View, update, or delete existing category.</p>
+                <p class="text-muted mb-0">View, update, or delete existing categories to keep your system organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>

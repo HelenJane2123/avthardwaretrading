@@ -7,8 +7,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-edit"></i>Add New Product</h1>
-                <p class="text-muted mb-0">Create a new product for inventory.</p>
+                <h1><i class="fa fa-plus"></i> Add New Product</h1>
+                <p class="text-muted mb-0">Create a new product and manage its details in your inventory.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -174,7 +174,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group col-md-4">
+                                        <!-- <div class="form-group col-md-4">
                                             <label class="control-label">Discount</label>
                                             <select name="tax_id" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -187,7 +187,7 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
-                                        </div>
+                                        </div> -->
                                     </div>
                                 </div>
                             </div>

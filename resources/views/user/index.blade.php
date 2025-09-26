@@ -9,6 +9,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Manage User</h1>
+                <p class="text-muted mb-0">View, edit, or remove users with system access.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -27,8 +28,9 @@
                             {{ session()->get('message') }}
                         </div>
                     @endif
+                        <h3 class="tile-title mb-3"><i class="fa fa-table"></i> User Records</h3>
                         <table class="table table-hover table-bordered" id="userTable">
-                            <thead>
+                            <thead class="thead-dark">
                             <tr>
                                 <th> First Name </th>
                                 <th> Last Name </th>
