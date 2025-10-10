@@ -118,7 +118,18 @@ Route::prefix('reports')->group(function () {
     Route::get('inventory_report', [ReportController::class, 'inventory_report'])->name('reports.inventory_report');
     // Export to Excel
     Route::get('/reports/inventory/export', [ReportController::class, 'exportInventory'])->name('reports.inventory_report_export');
-
+    //Sales Report
+    Route::get('sales_report', [ReportController::class, 'sales_report'])->name('reports.sales_report');
+    // Export to Excel
+    Route::get('/reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales_report_export');
+    //Customer Report
+    Route::get('customer_report', [ReportController::class, 'customer_report'])->name('reports.customer_report');
+    // Export to Excel
+    Route::get('/reports/customer/export', [ReportController::class, 'exportCustomer'])->name('reports.customer_report_export');
+    //Supplier Report
+    Route::get('supplier_report', [ReportController::class, 'supplier_report'])->name('reports.supplier_report');
+    // Export to Excel
+    Route::get('/reports/supplier/export', [ReportController::class, 'exportSupplier'])->name('reports.supplier_report_export');
 });
 
 

@@ -49,7 +49,9 @@
                                 <label for="term">Payment Term</label>
                                 <select name="term" id="term" class="form-control col-md-20">
                                     <option value="30">30 days</option>
+                                    <option value="45">45 days</option>
                                     <option value="90">90 days</option>
+                                    <option value="60">60 days</option>
                                     <option value="120">120 days</option>
                                 </select>
                             </div>

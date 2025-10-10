@@ -205,8 +205,8 @@
                     <td>{{ number_format($purchase->subtotal, 2) }}</td>
                 </tr>
                 <tr>
-                    <td><strong>TAX</strong></td>
-                    <td>{{$purchase->overall_discount }}</td>
+                    <td><strong>DISCOUNT</strong></td>
+                    <td>{{$purchase->discount_value }}</td>
                 </tr>
                 <tr>
                     <td><strong>SHIPPING</strong></td>

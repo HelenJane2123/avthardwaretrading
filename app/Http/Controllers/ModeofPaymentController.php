@@ -45,11 +45,11 @@ class ModeofPaymentController extends Controller
 
         $modeofpayment = new ModeofPayment();
         $modeofpayment->name = $request->name;
+        $modeofpayment->term = $request->term;
         $modeofpayment->description = $request->description;
         $modeofpayment->is_active = 1; // default to active
         $modeofpayment->save();
-
-        return redirect()->back()->with('message', 'Mode of payment added successfully');
+        return redirect()->route('modeofpayment.index')->with('message', 'Mode of payment added successfully!');
     }
 
 
@@ -93,10 +93,11 @@ class ModeofPaymentController extends Controller
         ]);
 
         $modeofpayment->name = $request->name;
+        $modeofpayment->term = $request->term;
         $modeofpayment->description = $request->description;
         $modeofpayment->save();
 
-        return redirect()->route('modeofpayment.index')->with('message', 'Mode of Payment updated successfully');
+        return redirect()->route('modeofpayment.index')->with('message', 'Mode of payment updated successfully!');
     }
 
 

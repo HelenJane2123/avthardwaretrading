@@ -49,7 +49,7 @@ class TaxController extends Controller
         $tax->status = 1;
         $tax->save();
 
-        return redirect()->back()->with('message', 'Tax Created Successfully');
+        return redirect()->route('tax.index')->with('message', 'Tax/Discount added successfully');
     }
 
     /**
@@ -93,7 +93,7 @@ class TaxController extends Controller
         $tax->slug = Str::slug($request->name);
         $tax->save();
 
-        return redirect()->back()->with('message', 'Tax Updated Successfully');
+        return redirect()->route('tax.index')->with('message', 'Tax/Discount updated successfully');
     }
 
     /**

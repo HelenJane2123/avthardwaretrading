@@ -161,7 +161,7 @@
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Tax/Discount</th>
-                                        <td colspan="2"><input type="text" class="form-control" name="discount_value" id="discount" value="{{ $purchase->overall_discount }}"></td>
+                                        <td colspan="2"><input type="text" class="form-control" name="discount_value" id="discount" value="{{ $purchase->discount_value }}"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Shipping</th>

@@ -36,7 +36,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">Name</label>
-                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="{{ old('name') }}" class="form-control" required>
+                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="<?php echo  e(old('name', $modeofpayment->name)); ?>" class="form-control" required>
                                 @error('name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -45,9 +45,11 @@
                             <div id="term-container" style="display: none;">
                                 <label for="term">Payment Term</label>
                                 <select name="term" id="term" class="form-control col-md-20">
-                                    <option value="30">30 days</option>
-                                    <option value="90">90 days</option>
-                                    <option value="120">120 days</option>
+                                    <option value="30" {{ old('term', $modeofpayment->term) == '30' ? 'selected' : '' }}>30 days</option>
+                                    <option value="45" {{ old('term', $modeofpayment->term) == '45' ? 'selected' : '' }}>45 days</option>
+                                    <option value="60" {{ old('term', $modeofpayment->term) == '60' ? 'selected' : '' }}>60 days</option>
+                                    <option value="90" {{ old('term', $modeofpayment->term) == '90' ? 'selected' : '' }}>90 days</option>
+                                    <option value="120" {{ old('term', $modeofpayment->term) == '120' ? 'selected' : '' }}>120 days</option>
                                 </select>
                             </div>
 

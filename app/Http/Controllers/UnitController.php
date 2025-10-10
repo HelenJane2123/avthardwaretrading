@@ -48,8 +48,7 @@ class UnitController extends Controller
         $unit->slug = Str::slug($request->name);
         $unit->status = 1;
         $unit->save();
-
-        return redirect()->back()->with('message', 'Unite Created Successfully');
+        return redirect()->route('unit.index')->with('message', 'Unit Created Successfully');
     }
 
     /**
@@ -93,7 +92,7 @@ class UnitController extends Controller
         $unit->slug = Str::slug($request->name);
         $unit->save();
 
-        return redirect()->back()->with('message', 'Unit Updated Successfully');
+        return redirect()->route('unit.index')->with('message', 'Unit Updated Successfully');
     }
 
     /**

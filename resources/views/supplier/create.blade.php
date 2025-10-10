@@ -102,7 +102,7 @@
                                     <label class="control-label">Address</label>
                                     <textarea name="address" 
                                               class="form-control @error('address') is-invalid @enderror" 
-                                              placeholder="Enter Supplier Address"></textarea>
+                                              placeholder="Street, Barangay, City, Province"></textarea>
                                     @error('address')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror

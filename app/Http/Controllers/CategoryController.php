@@ -55,7 +55,7 @@ class CategoryController extends Controller
         $category->status = 1;
         $category->save();
 
-        return redirect()->back()->with('message', 'New category has been added successfully!');
+        return redirect()->route('category.index')->with('message', 'New category has been added successfully!');
     }
 
     /**
@@ -99,7 +99,7 @@ class CategoryController extends Controller
         $category->slug = Str::slug($request->name);
         $category->save();
 
-        return redirect()->back()->with('message', 'Category updated successfully!');
+        return redirect()->route('category.index')->with('message', 'Category updated successfully!');
     }
 
     /**

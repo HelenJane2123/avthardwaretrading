@@ -22,7 +22,11 @@
         <div class="">
             <a class="btn btn-primary" href="{{route('tax.create')}}"><i class="fa fa-plus"> </i> Add New Tax</a>
         </div>
-
+        @if(session()->has('message'))
+            <div class="alert alert-success mt-2">
+                {{ session()->get('message') }}
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">

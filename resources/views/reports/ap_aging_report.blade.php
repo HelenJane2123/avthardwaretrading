@@ -79,8 +79,6 @@
                                             <th>Supplier</th>
                                             <th>Purchase #</th>
                                             <th>Purchase Date</th>
-                                            <th>Purchase Amount</th>
-                                            <th>Outstanding Balance</th>
                                             <th>Amount Paid</th>
                                             <th>Payment Date</th>
                                             <th>Payment Method</th>
@@ -97,8 +95,6 @@
                                                 <td>{{ $row->supplier_name }}</td>
                                                 <td>{{ $row->purchase_number }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($row->purchase_date)->format('Y-m-d') }}</td>
-                                                <td>{{ number_format($row->purchase_amount, 2) }}</td>
-                                                <td>{{ number_format($row->outstanding_balance, 2) }}</td>
                                                 <td>{{ number_format($row->amount_paid ?? 0, 2) }}</td>
                                                 <td>{{ $row->payment_date ? \Carbon\Carbon::parse($row->payment_date)->format('Y-m-d') : '-' }}</td>
                                                 <td>{{ $row->payment_method ?? '-' }}</td>
