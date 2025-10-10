@@ -80,7 +80,7 @@ class HomeController extends Controller
             $product = Product::find($item->product_id);
             if ($product) {
                 $formattedTopSales[] = [
-                    'productName' => $product->name,
+                    'productName' => $product->product_name,
                     'totalSales'  => $item->total_qty,
                 ];
             }
