@@ -7,7 +7,8 @@
 <main class="app-content">
     <div class="app-title">
         <div>
-            <h1><i class="fa fa-edit"></i> Add New User</h1>
+            <h1><i class="fa fa-user-plus"></i> Create User</h1>
+            <p class="text-muted mb-0">Create a new user for system access.</p>
         </div>
         <ul class="app-breadcrumb breadcrumb">
             <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -22,8 +23,6 @@
         </a>
     </div>
     
-
-
     <div class="row mt-3">
         <div class="col-md-12">
             <div class="tile">
@@ -39,7 +38,7 @@
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label class="control-label">Last Name</label>
-                                <input name="l_name" class="form-control @error('f_name') is-invalid @enderror" type="text" placeholder="Enter First Name">
+                                <input name="l_name" class="form-control @error('f_name') is-invalid @enderror" type="text" placeholder="Enter Last Name">
                                 @error('l_name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -66,27 +65,30 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group col-md-6">
+                           <div class="form-group col-md-6">
                                 <label class="control-label">Password</label>
-                                <input name="password" class="form-control" type="text" placeholder="Enter New Password" id="passwordField">
-                                @error('paasword')
-                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                <div class="input-group">
+                                    <input name="password" id="passwordField" class="form-control password-field"
+                                        type="password" placeholder="Enter New Password">
+
+                                    <div class="input-group-append">
+                                    <!-- toggle button references the input with data-target -->
+                                    <button class="btn btn-outline-secondary btn-toggle-password" type="button" data-target="#passwordField" aria-label="Toggle password">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+
+                                    <!-- optional generate button (fills and shows the password) -->
+                                    <button class="btn btn-outline-success" type="button" id="generatePassword" data-target="#passwordField">
+                                        <i class="fa fa-refresh"></i> Generate
+                                    </button>
+                                    </div>
+                                </div>
+
+                                @error('password')
+                                    <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
-                            </div>
+                                </div>
 
-                            <script>
-                                // This script will run once the page is loaded
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Get the input field by its ID
-                                    const passwordInput = document.getElementById('passwordField');
-
-                                    // Check if the input field exists before trying to set its value
-                                    if (passwordInput) {
-                                        // Set the value of the input field
-                                        passwordInput.value = 'MyTestPassword123'; // Replace with your desired test password
-                                    }
-                                });
-                            </script>
 
                             <div class="form-group col-md-3">
                                 <label class="control-label" for="role">Role</label>
@@ -125,3 +127,71 @@
     </div>
 </main>
 @endsection
+@push('js')
+<script>
+    $(function () {
+        // Toggle password visibility (delegated handler)
+        $(document).on('click', '.btn-toggle-password', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var targetSelector = $btn.data('target');
+            var $input = $(targetSelector);
+
+            if (!$input.length) {
+            console.warn('Password toggle: target not found for', targetSelector);
+            return;
+            }
+
+            var inputEl = $input.get(0);
+            if (inputEl.type === 'password') {
+            inputEl.type = 'text';
+            $btn.find('i').removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+            inputEl.type = 'password';
+            $btn.find('i').removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // Generate password and show it
+        $(document).on('click', '#generatePassword', function (e) {
+            e.preventDefault();
+            var length = 12;
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var pass = "";
+            for (var i = 0; i < length; i++) {
+            pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            var targetSelector = $(this).data('target') || '#passwordField';
+            var $input = $(targetSelector);
+            if (!$input.length) {
+            console.warn('Generate password: target not found for', targetSelector);
+            return;
+            }
+
+            $input.val(pass);
+            // show the generated password immediately
+            $input.attr('type', 'text');
+
+            // update toggle icon if there is a toggle for this input
+            $('.btn-toggle-password[data-target="' + targetSelector + '"]').find('i')
+            .removeClass('fa-eye').addClass('fa-eye-slash');
+        });
+        });
+
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        let passwordField = document.getElementById('passwordField');
+        let icon = this.querySelector('i');
+
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+</script>
+@endpush

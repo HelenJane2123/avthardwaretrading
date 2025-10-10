@@ -4,138 +4,116 @@
 @section('content')
     @include('partials.header')
     @include('partials.sidebar')
+
     <main class="app-content">
-        <div class="app-title">
+        <div class="app-title d-flex justify-content-between align-items-center">
             <div>
-                <h1><i class="fa fa-edit"></i> Add Purchase</h1>
+                <h1><i class="fa fa-shopping-cart"></i> Add Purchase</h1>
+                <p class="text-muted mb-0">Create a new purchase order and add supplier items.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
                 <li class="breadcrumb-item">Purchase</li>
-                <li class="breadcrumb-item"><a href="#">Add Purchase</a></li>
+                <li class="breadcrumb-item active">Add Purchase</li>
             </ul>
         </div>
-        <div class="">
-            <a class="btn btn-primary" href="{{ route('purchase.index') }}">
-                <i class="fa fa-edit"> </i> Manage Purchase
+
+        <div class="mb-3">
+            <a class="btn btn-outline-primary" href="{{ route('purchase.index') }}">
+                <i class="fa fa-list"></i> Manage Purchases
             </a>
         </div>
 
+        {{-- Success Message --}}
         @if(session()->has('message'))
             <div class="alert alert-success">
                 {{ session()->get('message') }}
             </div>
         @endif
 
-        <div class="row mt-3">
-            <div class="clearix"></div>
+        <div class="row">
             <div class="col-md-12">
-                <div class="tile">
-                    <h3 class="tile-title">Purchase Order</h3>
-                    <div class="tile-body">
-                        <!-- <div class="d-flex justify-content-end mb-3">
-                            <button type="button" class="btn btn-primary mb-3" onclick="printPurchaseOrder()">
-                                <i class="fa fa-print"></i> Print Purchase Order
-                            </button>
-                        </div> -->
-                        <form method="POST" action="{{ route('purchase.store') }}">
-                            @csrf
-                            <div class="row mb-4">
-                                {{-- Supplier --}}
-                                <div class="col-md-4 form-group">
-                                    <label>Supplier</label>
-                                    <select name="supplier_id" id="supplierSelect" class="form-control" required>
-                                        <option value="">Select Supplier</option>
-                                        @foreach($suppliers as $supplier)
-                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                <div class="tile shadow-sm">
+                    <h3 class="tile-title mb-4"><i class="fa fa-file-text"></i> Purchase Order</h3>
 
-                                {{-- Purchase Date --}}
-                                <div class="col-md-3 form-group">
-                                    <label>Purchase Date</label>
-                                    <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                                </div>
-
-                                {{-- PO Number --}}
-                                <div class="col-md-3 form-group">
-                                    <label for="po_number">PO Number</label>
-                                    <input type="text" name="po_number" id="po_number" class="form-control" readonly>
-                                </div>
-
-                                {{-- Salesman --}}
-                                <div class="col-md-4 form-group">
-                                    <label for="salesman">Salesman</label>
-                                    <input type="text" name="salesman" id="salesman" class="form-control" placeholder="Enter salesman's name">
-                                </div>
-
-                                {{-- Payment Term --}}
-                                <div class="form-group">
-                                    <label for="payment_id">Mode of Payment</label>
-                                    <select name="payment_id" id="payment_id" class="form-control" required>
-                                        <option value="">-- Select Payment Mode --</option>
-                                        @foreach($paymentModes as $mode)
-                                            <option value="{{ $mode->id }}">
-                                                {{ $mode->name }} 
-                                                @if($mode->term) ({{ $mode->term }} days) @endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                    <form method="POST" action="{{ route('purchase.store') }}">
+                        @csrf
+                        {{-- Supplier & Order Details --}}
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                                <select name="supplier_id" id="supplierSelect" class="form-control" required>
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <div id="supplier-info" class="table-responsive mb-4" style="display: none;">
-                                <table class="table table-bordered table-striped shadow-sm">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th colspan="2" class="bg-primary text-white">
-                                                <i class="fa fa-building"></i> Supplier Information
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <th>Supplier Code</th>
-                                            <td id="info-supplier-code"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Name</th>
-                                            <td id="info-name"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Phone</th>
-                                            <td id="info-phone"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Email</th>
-                                            <td id="info-email"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Address</th>
-                                            <td id="info-address"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="col-md-3">
+                                <label class="form-label">Purchase Date</label>
+                                <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
-                            <table class="table table-bordered table-striped">
-                                <thead class="thead-dark">
+                            <div class="col-md-3">
+                                <label class="form-label">PO Number</label>
+                                <input type="text" name="po_number" id="po_number" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Salesman</label>
+                                <input type="text" name="salesman" id="salesman" class="form-control" placeholder="Enter salesman's name">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
+                                <select name="payment_id" id="payment_id" class="form-control" required>
+                                    <option value="">-- Select Payment Mode --</option>
+                                    @foreach($paymentModes as $mode)
+                                        <option value="{{ $mode->id }}">
+                                            {{ $mode->name }} 
+                                            @if($mode->term) ({{ $mode->term }} days) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Supplier Info --}}
+                        <div id="supplier-info" class="table-responsive mb-4 d-none">
+                            <table class="table table-bordered">
+                                <thead class="bg-primary text-white">
+                                    <tr><th colspan="2"><i class="fa fa-building"></i> Supplier Information</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><th>Supplier Code</th><td id="info-supplier-code"></td></tr>
+                                    <tr><th>Name</th><td id="info-name"></td></tr>
+                                    <tr><th>Phone</th><td id="info-phone"></td></tr>
+                                    <tr><th>Email</th><td id="info-email"></td></tr>
+                                    <tr><th>Address</th><td id="info-address"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Product List --}}
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered align-middle">
+                                <thead class="bg-dark text-white">
                                     <tr>
                                         <th>Product Code</th>
                                         <th>Product</th>
                                         <th>Unit</th>
-                                        <th>Quantity Ordered</th>
+                                        <th>Qty Ordered</th>
                                         <th>Unit Price</th>
                                         <th>Discount (%)</th>
                                         <th>Amount</th>
-                                        <th><a class="btn btn-success btn-sm addRow"><i class="fa fa-plus"></i></a></th>
+                                        <th class="text-center">
+                                            <button type="button" class="btn btn-success btn-sm addRow">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="po-body">
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                                        <td>
-                                            <select name="product_id[]" class="form-control productname"></select>
-                                        </td>
+                                        <td><select name="product_id[]" class="form-control productname"></select></td>
                                         <td>
                                             <select name="unit[]" class="form-control unit">
                                                 <option value="">Select Unit</option>
@@ -144,70 +122,67 @@
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td>
-                                            <input type="number" name="qty[]" class="form-control qty">
-                                            <!-- <small class="text-muted stock-info"></small> -->
-                                        </td>
+                                        <td><input type="number" name="qty[]" class="form-control qty"></td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
-                                        <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td> <!-- Tax will go here -->
+                                        <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td>
                                         <td><input type="number" step="0.01" name="amount[]" class="form-control amount" readonly></td>
-                                        <td><a class="btn btn-danger btn-sm remove"><i class="fa fa-remove"></i></a></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
+                                        </td>
                                     </tr>
                                 </tbody>
-                                <tfoot>
+                                <tfoot class="bg-light">
                                     <tr>
-                                        <input type="hidden" name="discount_type" id="hidden_discount_type">
-                                        <input type="hidden" name="overall_discount" id="hidden_overall_discount">
-                                        <input type="hidden" name="subtotal_value" id="hidden_subtotal">
-                                        <input type="hidden" name="discount_value" id="hidden_discount_value">
-                                        <input type="hidden" name="shipping_value" id="hidden_shipping">
-                                        <input type="hidden" name="other_value" id="hidden_other">
-                                        <input type="hidden" name="grand_total_value" id="hidden_grand_total">
-                                        <th colspan="5" class="text-right">Discount Type</th>
-                                        <th colspan="2">
+                                        <th colspan="5" class="text-end">Discount Type</th>
+                                        <td colspan="3">
                                             <select id="discount_type" name="discount_type" class="form-control">
                                                 <option value="per_item" selected>Per Item</option>
                                                 <option value="overall">Overall</option>
                                             </select>
-                                        </th>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-right">Tax/Discount</th>
-                                        <td colspan="2"><input type="text" name="discount_value" class="form-control" id="discount"></td>
+                                        <th colspan="5" class="text-end">Tax / Discount</th>
+                                        <td colspan="3"><input type="text" id="discount" name="discount_value" class="form-control"></td>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-right">Shipping</th>
-                                        <td colspan="2"><input type="number" name="shipping" class="form-control" id="shipping" value="0"></td>
+                                        <th colspan="5" class="text-end">Shipping</th>
+                                        <td colspan="3"><input type="number" id="shipping" name="shipping" class="form-control" value="0"></td>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-right">Other Charges</th>
-                                        <td colspan="2"><input type="number" name="other_charges" class="form-control" id="other" value="0"></td>
+                                        <th colspan="5" class="text-end">Other Charges</th>
+                                        <td colspan="3"><input type="number" id="other" name="other_charges" class="form-control" value="0"></td>
                                     </tr>
-                                    <tr>
-                                        <th colspan="5" class="text-right">Subtotal</th>
-                                        <td colspan="2"><input type="text" name="subtotal" class="form-control" id="subtotal" readonly></td>
+                                    <tr class="fw-bold">
+                                        <th colspan="5" class="text-end">Subtotal</th>
+                                        <td colspan="3"><input type="text" id="subtotal" name="subtotal" class="form-control" readonly></td>
                                     </tr>
-                                    <tr>
-                                        <th colspan="5" class="text-right">Grand Total</th>
-                                        <td colspan="2"><input type="text" name="grand_total" class="form-control" id="grand_total" readonly></td>
+                                    <tr class="fw-bold bg-secondary text-white">
+                                        <th colspan="5" class="text-end">Grand Total</th>
+                                        <td colspan="3"><input type="text" id="grand_total" name="grand_total" class="form-control" readonly></td>
                                     </tr>
                                 </tfoot>
                             </table>
+                        </div>
 
-                            <div class="form-group mt-3">
-                                <label>Comments or Special Instructions</label>
-                                <textarea name="remarks" rows="4" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
-                            </div>
+                        {{-- Remarks --}}
+                        <div class="form-group mb-4">
+                            <label class="form-label">Comments / Special Instructions</label>
+                            <textarea name="remarks" rows="3" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
+                        </div>
 
-                            <button type="submit" class="btn btn-primary mt-3">Submit Purchase Order</button>
-                        </form>
-                    </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-paper-plane"></i> Submit Purchase Order
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </main>
-
 @endsection
+
 @push('js')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>

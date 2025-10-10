@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('titel', 'Supplier Products | ')
+@section('titel', 'Print Purchase | ')
 
 @section('content')
 @include('partials.header')
@@ -71,8 +71,8 @@
             <td class="right">{{ number_format($purchase->subtotal, 2) }}</td>
         </tr>
         <tr>
-            <td class="right bold">TAX:</td>
-            <td class="right">{{ number_format($purchase->tax, 2) }}</td>
+            <td class="right bold">DISCOUNT:</td>
+            <td class="right">{{ number_format($purchase->discount_value ?? 0, 2) }}</td>
         </tr>
         <tr>
             <td class="right bold">SHIPPING:</td>
@@ -84,7 +84,7 @@
         </tr>
         <tr>
             <td class="right bold">TOTAL:</td>
-            <td class="right"><strong>{{ number_format($purchase->total, 2) }}</strong></td>
+            <td class="right"><strong>{{ number_format($purchase->grand_total, 2) }}</strong></td>
         </tr>
     </table>
 

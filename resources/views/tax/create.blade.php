@@ -7,7 +7,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-edit"></i>Add Tax</h1>
+                <h1><i class="fa fa-plus"></i> Add Tax/Discount</h1>
+                <p class="text-muted mb-0">Define additional tax rates or discounts to apply on invoices.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>

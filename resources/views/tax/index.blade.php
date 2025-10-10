@@ -10,7 +10,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-th-list"></i> Manage Tax</h1>
+                <h1><i class="fa fa-th-list"></i> Manage Ta/Discount</h1>
+                <p class="text-muted mb-0">View, update, or delete existing discounts.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -21,13 +22,18 @@
         <div class="">
             <a class="btn btn-primary" href="{{route('tax.create')}}"><i class="fa fa-plus"> </i> Add New Tax</a>
         </div>
-
+        @if(session()->has('message'))
+            <div class="alert alert-success mt-2">
+                {{ session()->get('message') }}
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
                     <div class="tile-body">
+                        <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Discount Records</h3>
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                             <tr>
                                 <th>Tax </th>
                                 <th>Status</th>

@@ -1,0 +1,141 @@
+@extends('layouts.master')
+
+@section('title', 'Edit Collection | ')
+@section('content')
+    @include('partials.header')
+    @include('partials.sidebar')
+
+<main class="app-content">
+    <div class="app-title d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fa fa-money"></i> Edit Collection</h1>
+            <p class="text-muted mb-0">Update collection details for the selected invoice.</p>
+        </div>
+        <ul class="app-breadcrumb breadcrumb">
+            <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
+            <li class="breadcrumb-item">Collection</li>
+            <li class="breadcrumb-item active">Edit Collection</li>
+        </ul>
+    </div>
+
+    <div class="mb-3">
+        <a class="btn btn-outline-primary" href="{{ route('collection.index') }}">
+            <i class="fa fa-list"></i> Manage Collections
+        </a>
+    </div>
+
+    @if(session()->has('message'))
+        <div class="alert alert-success">
+            {{ session()->get('message') }}
+        </div>
+    @endif
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tile shadow-sm">
+                <h3 class="tile-title mb-4"><i class="fa fa-money"></i> Edit Collection</h3>
+                <div class="container">
+                    <form action="{{ route('collection.update', $collection->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        {{-- Invoice Details --}}
+                        <div class="mb-3">
+                            <h5>Invoice Details</h5>
+                            <table class="table table-bordered table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th width="30%">Invoice #</th>
+                                        <td>{{ $collection->invoice->invoice_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Amount</th>
+                                        <td>₱{{ number_format($collection->invoice->grand_total, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Balance</th>
+                                        <td>₱{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Mode</th>
+                                        <td>{{ $collection->invoice->payment_mode->name ?? 'N/A' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Customer Details --}}
+                        <div class="mb-3">
+                            <h5>Customer Details</h5>
+                            <table class="table table-bordered table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th width="30%">Name</th>
+                                        <td>{{ $collection->invoice->customer->name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td>{{ $collection->invoice->customer->email ?? 'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone</th>
+                                        <td>{{ $collection->invoice->customer->mobile ?? 'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Address</th>
+                                        <td>{{ $collection->invoice->customer->address ?? 'N/A' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- Editable Fields --}}
+                        <div class="mb-3">
+                            <label>Collection Number</label>
+                            <input type="text" name="collection_number" class="form-control" 
+                                   value="{{ $collection->collection_number }}" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Payment Date</label>
+                            <input type="date" name="payment_date" class="form-control" 
+                                   value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Amount Paid</label>
+                            <input type="number" step="0.01" name="amount_paid" class="form-control" 
+                                   value="{{ $collection->amount_paid }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Balance</label>
+                            <input type="number" step="0.01" name="balance" 
+                                   class="form-control" 
+                                   value="{{ $collection->invoice->outstanding_balance }}" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Payment Status</label>
+                            <select name="payment_status" class="form-control" required>
+                                <option value="pending" {{ $collection->invoice->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="partial" {{ $collection->invoice->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
+                                <option value="paid" {{ $collection->invoice->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
+                                <option value="overdue" {{ $collection->invoice->payment_status == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                <option value="approved" {{ $collection->invoice->payment_status == 'approved' ? 'selected' : '' }}>Approved</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="2">{{ $collection->remarks }}</textarea>
+                        </div>
+
+                        <button class="btn btn-success"><i class="fa fa-save"></i> Update Collection</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+@endsection

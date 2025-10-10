@@ -15,6 +15,9 @@ use App\Http\Controllers\ExportSupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ModeofPaymentController;
+use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PurchasePaymentController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -47,6 +50,7 @@ Route::resource('invoice', InvoiceController::class);
 Route::resource('purchase', PurchaseController::class);
 Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
+Route::resource('collection', CollectionController::class);
 
 
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
@@ -63,17 +67,69 @@ Route::get('/products/suggest', [ProductController::class, 'suggest'])->name('pr
 Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name('products.suppliers');
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
-//get supplier items
+//get supplier information and items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
+
+//get customer information
+Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation']);
 
 //get purchase details
 Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
+
+//get invoice details
+Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->name('invoice.details');
+Route::patch('/invoice/{id}/status', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
+Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('invoice.print');
+Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
+
+//collection details
+Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])
+    ->name('collection.details');
+Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceipt'])->name('collection.receipt');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
+Route::get('/export/invoices', [ExportController::class, 'exportInvoices'])->name('export.invoices');
+Route::get('/export/purchase', [ExportController::class, 'exportPurchases'])->name('export.purchase');
+Route::get('/export/collection', [ExportController::class, 'exportCollections'])->name('export.collections');
 
 //Print pdf receipt
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
+Route::get('purchase/{purchase}/payment-info', [PurchasePaymentController::class, 'paymentInfo'])->name('purchase.payment.info');
+Route::post('purchase/{purchase}/payment-store', [PurchasePaymentController::class, 'store'])->name('purchase.payment.store');
+
+Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
+
+
+Route::prefix('reports')->group(function () {
+    // AR Aging Report (view in Blade)
+    Route::get('ar_aging_report', [ReportController::class, 'ar_aging'])->name('reports.ar_aging_report');
+    // AR Aging Report (export to Excel)
+    Route::get('ar_aging/export', [ReportController::class, 'exportARAging'])->name('reports.ar_aging_export');
+    // Show AP Aging report
+    Route::get('ap_aging_report', [ReportController::class, 'ap_aging'])->name('reports.ap_aging_report');
+    // Export to Excel
+    Route::get('/reports/ap-aging/export', [ReportController::class, 'exportAPAging'])->name('reports.ap_aging_export');
+    //Inventory Report
+    Route::get('inventory_report', [ReportController::class, 'inventory_report'])->name('reports.inventory_report');
+    // Export to Excel
+    Route::get('/reports/inventory/export', [ReportController::class, 'exportInventory'])->name('reports.inventory_report_export');
+    //Sales Report
+    Route::get('sales_report', [ReportController::class, 'sales_report'])->name('reports.sales_report');
+    // Export to Excel
+    Route::get('/reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales_report_export');
+    //Customer Report
+    Route::get('customer_report', [ReportController::class, 'customer_report'])->name('reports.customer_report');
+    // Export to Excel
+    Route::get('/reports/customer/export', [ReportController::class, 'exportCustomer'])->name('reports.customer_report_export');
+    //Supplier Report
+    Route::get('supplier_report', [ReportController::class, 'supplier_report'])->name('reports.supplier_report');
+    // Export to Excel
+    Route::get('/reports/supplier/export', [ReportController::class, 'exportSupplier'])->name('reports.supplier_report_export');
+});
+
+

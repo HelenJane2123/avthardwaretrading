@@ -26,10 +26,10 @@
                                     <p><span class="badge badge-dark">{{ Auth::user()->fullname }}</span></p>
                                   </div>
                              </div>
-                             <form method="POST" action="{{ route('password.update') }}">
+                             <form method="POST" action="{{ route('update_password') }}">
                                  @csrf
 
-                                 <input type="hidden" name="token" value="{{ $token }}">
+                                 <!-- <input type="hidden" name="token" value="{{ $token }}"> -->
 
                                  <div class="form-group row">
                                      <label for="email" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>

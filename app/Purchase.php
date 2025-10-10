@@ -53,5 +53,10 @@ class Purchase extends Model
     {
         return $this->belongsTo(ModeOfPayment::class, 'payment_id');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(PurchasePayment::class, 'purchase_id', 'id');
+    }
 }
 

@@ -7,7 +7,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-edit"></i> Edit Category</h1>
+                 <h1><i class="fa fa-edit"></i> Edit Category</h1>
+                <p class="text-muted">Update the details of an existing category to keep your items organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>

@@ -1,5 +1,3 @@
-
-
 @extends('layouts.master')
 
 @section('titel', 'Product | ')
@@ -8,9 +6,11 @@
     @include('partials.sidebar')
 
     <main class="app-content">
+        <!-- Page Title -->
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-th-list"></i> Product Table</h1>
+                <h1><i class="fa fa-cubes"></i> Manage Products</h1>
+                <p class="text-muted mb-0">View, add, update, or delete products to keep your inventory organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -18,11 +18,19 @@
                 <li class="breadcrumb-item active"><a href="#">Product Table</a></li>
             </ul>
         </div>
-        <div class="">
-            <a class="btn btn-primary" href="{{route('product.create')}}"><i class="fa fa-plus"></i> Add Product</a>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a class="btn btn-primary" href="{{route('product.create')}}">
+                <i class="fa fa-plus"></i> Add Product
+            </a>
+            <a href="{{ route('export.products') }}" class="btn btn-success">
+                <i class="fa fa-file-excel-o"></i> Export to Excel
+            </a>
         </div>
 
-        <div class="row mt-2">
+        <!-- Product Table -->
+        <div class="row">
             <div class="col-md-12">
                 <div class="tile">
                     @if(session()->has('message'))
@@ -30,14 +38,10 @@
                             {{ session()->get('message') }}
                         </div>
                     @endif
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Product List Records</h3>
                     <div class="tile-body">
-                        <div class="d-flex justify-content-end mb-3">
-                            <a href="{{ route('export.products') }}" class="btn btn-success mb-2">
-                                <i class="fa fa-download"></i> Export to Excel
-                            </a>
-                        </div>  
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                                 <tr>
                                     <th>Product Code</th>
                                     <th>Product</th>
@@ -46,13 +50,13 @@
                                     <th>Supplier</th>
                                     <th>Threshold</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($additional as $add)
                                     <tr>
-                                        <td>{{ $add->product->product_code }}</td>
+                                        <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
                                         <td>{{ $add->product->product_name }}</td>
                                         <td>{{ $add->product->quantity }}</td>
                                         <td>{{ $add->product->supplier_product_code }}</td>
@@ -67,29 +71,34 @@
                                                 <span class="badge badge-danger">{{ $add->product->status }}</span>
                                             @endif
                                         </td>
-                                        <td>
-                                            <!-- View Button to Open Modal -->
-                                            <button class="btn btn-info btn-sm view-btn"
-                                                    data-toggle="modal"
-                                                    data-target="#viewProductModal"
-                                                    data-id="{{ $add->product->id }}">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <!-- View Button to Open Modal -->
+                                                <button class="btn btn-info btn-sm view-btn"
+                                                        data-toggle="modal"
+                                                        data-target="#viewProductModal"
+                                                        data-id="{{ $add->product->id }}">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
 
-                                            <!-- Edit & Delete -->
-                                            <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                            <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                            <!-- Hidden Delete Form -->
-                                            <form id="delete-form-{{ $add->product->id }}" 
-                                                action="{{ route('product.destroy', $add->product->id) }}" 
-                                                method="POST" style="display:none;">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
+                                                <!-- Edit -->
+                                                <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+
+                                                <!-- Delete -->
+                                                <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+
+                                                <!-- Hidden Delete Form -->
+                                                <form id="delete-form-{{ $add->product->id }}" 
+                                                    action="{{ route('product.destroy', $add->product->id) }}" 
+                                                    method="POST" style="display:none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -99,15 +108,15 @@
                 </div>
             </div>
         </div>
+
         <!-- Product Details Modal -->
-        <!-- View Product Modal -->
         <div class="modal fade" id="viewProductModal" tabindex="-1" role="dialog" aria-labelledby="viewProductLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title" id="viewProductLabel">Product Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
@@ -123,13 +132,13 @@
 @push('js')
     <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
-    <script type="text/javascript">$('#sampleTable').DataTable();</script>
-    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-    <script type="text/javascript">
+    <script>
+        $('#sampleTable').DataTable();
+
         function deleteTag(id) {
             swal({
                 title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                text: "This action cannot be undone!",
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -144,24 +153,16 @@
                 if (result.value) {
                     event.preventDefault();
                     document.getElementById('delete-form-'+id).submit();
-                } else if (
-                    // Read more about handling dismissals
-                    result.dismiss === swal.DismissReason.cancel
-                ) {
-                    swal(
-                        'Cancelled',
-                        'Your data is safe :)',
-                        'error'
-                    )
+                } else if (result.dismiss === swal.DismissReason.cancel) {
+                    swal('Cancelled','Your data is safe :)','error');
                 }
             })
         }
         
         $(document).on("click", ".view-btn", function () {
             let productId = $(this).data("id");
-
             $.ajax({
-                url: "/product/" + productId, // Create route to fetch product
+                url: "/product/" + productId,
                 method: "GET",
                 success: function (data) {
                     $("#product-details").html(data);

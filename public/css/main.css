@@ -15269,3 +15269,11 @@ be a descendant of the grid when it is being dragged.
 #supplier-info table {
     font-size: 15px;
 }
+
+/* Make DataTable header black with white text */
+#supplierEditTable thead th {
+    background-color: #000 !important;
+    color: #fff !important;
+    text-align: center;
+    vertical-align: middle;
+}

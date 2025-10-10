@@ -1,9 +1,17 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
     <div class="app-sidebar__user">
-        <img width="40px" class="app-sidebar__user-avatar" src="{{ asset('images/user/'.Auth::user()->image) }}" alt="User Image">
+        @php
+            $user = Auth::user();
+            $userImage = $user && $user->image 
+                ? asset('images/user/' . $user->image) 
+                : asset('images/default-avatar.png'); // fallback image
+        @endphp
+
+        <img width="40px" class="app-sidebar__user-avatar" src="{{ $userImage }}" alt="User Image">
+
         <div>
-            <p class="app-sidebar__user-name">{{ Auth::user()->fullname }}</p>
+            <p class="app-sidebar__user-name">{{ $user ? $user->fullname : 'Guest' }}</p>
         </div>
     </div>
 
@@ -62,13 +70,20 @@
             </ul>
         </li>
 
-        <li>
-            <a class="app-menu__item" href="/">
-                <i class="app-menu__icon fa fa-credit-card"></i><span class="app-menu__label">Collection</span>
+        {{-- Collection --}}
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('collection*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-money"></i>
+                <span class="app-menu__label">Collection</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('collection.create') }}"><i class="icon fa fa-plus"></i> Create Collection</a></li>
+                <li><a class="treeview-item" href="{{ route('collection.index') }}"><i class="icon fa fa-edit"></i> Manage Collection</a></li>
+            </ul>
         </li>
 
-        {{-- 👥 Contacts --}}
+        {{-- Contacts --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Contacts —</li>
 
         {{-- Supplier --}}
@@ -149,7 +164,7 @@
         {{-- Mode of Payment --}}
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('modeofpayment*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-bars"></i><span class="app-menu__label">Mode of Payment</span>
+                <i class="app-menu__icon fa fa-credit-card"></i><span class="app-menu__label">Mode of Payment</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
@@ -167,11 +182,12 @@
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
-                <li><a class="treeview-item" href="#"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.ap_aging_report') }}"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.inventory_report') }}"><i class="icon fa fa-circle-o"></i> Inventory Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
             </ul>
         </li>
     </ul>

@@ -9,6 +9,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-edit"></i> Edit User</h1>
+                <p class="text-muted mb-0">Update user information and system access details.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -63,16 +64,13 @@
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-
-                            
-                            <div class="form-group col-md-6">
+                            <!-- <div class="form-group col-md-6">
                                 <label class="control-label">Password</label>
                                 <input name="password" class="form-control @error('password') is-invalid @enderror" type="text" placeholder="Enter New Password" id="passwordField">
                                 @error('password')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
-                            </div>
-
+                            </div> -->
                             <div class="form-group col-md-3">
                                 <label class="control-label" for="role">Role</label>
                                 <select name="user_role" id="role" class="form-control @error('user_role') is-invalid @enderror">

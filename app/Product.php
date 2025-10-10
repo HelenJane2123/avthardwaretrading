@@ -49,4 +49,11 @@ class Product extends Model
     {
         return $this->hasMany(ProductSupplier::class, 'product_id');
     }
+
+    public function invoices()
+    {
+        return $this->belongsToMany(Invoice::class, 'invoice_items')
+                    ->withPivot('quantity', 'price', 'discount')
+                    ->withTimestamps();
+    }
 }

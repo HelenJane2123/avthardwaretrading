@@ -9,6 +9,7 @@
     <div class="app-title">
         <div>
             <h1><i class="fa fa-edit"></i> Edit Purchase</h1>
+            <p class="text-muted mb-0">Update supplier details or modify items in the purchase order.</p>
         </div>
         <ul class="app-breadcrumb breadcrumb">
             <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -78,117 +79,118 @@
                         </div>
 
                         {{-- Supplier Info --}}
-                        <div id="supplier-info" class="table-responsive mb-4" style="display: block;">
-                            <table class="table table-bordered table-striped shadow-sm">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th colspan="2" class="bg-primary text-white">
-                                            <i class="fa fa-building"></i> Supplier Information
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><th>Supplier Code</th><td>{{ $purchase->supplier->supplier_code }}</td></tr>
-                                    <tr><th>Name</th><td>{{ $purchase->supplier->name }}</td></tr>
-                                    <tr><th>Phone</th><td>{{ $purchase->supplier->mobile }}</td></tr>
-                                    <tr><th>Email</th><td>{{ $purchase->supplier->email }}</td></tr>
-                                    <tr><th>Address</th><td>{{ $purchase->supplier->address }}</td></tr>
-                                </tbody>
-                            </table>
+                        <div id="supplier-info" class="tile mt-3">
+                            <h4 class="tile-title"><i class="fa fa-building"></i> Supplier Information</h4>
+                            <div class="tile-body table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <tbody>
+                                        <tr><th>Supplier Code</th><td>{{ $purchase->supplier->supplier_code }}</td></tr>
+                                        <tr><th>Name</th><td>{{ $purchase->supplier->name }}</td></tr>
+                                        <tr><th>Phone</th><td>{{ $purchase->supplier->mobile }}</td></tr>
+                                        <tr><th>Email</th><td>{{ $purchase->supplier->email }}</td></tr>
+                                        <tr><th>Address</th><td>{{ $purchase->supplier->address }}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {{-- Items --}}
-                        <table class="table table-bordered table-striped">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Product Code</th>
-                                    <th>Product</th>
-                                    <th>Unit</th>
-                                    <th>Quantity Ordered</th>
-                                    <th>Unit Price</th>
-                                    <th>Discount (%)</th>
-                                    <th>Amount</th>
-                                    <th><a class="btn btn-success btn-sm addRow"><i class="fa fa-plus"></i></a></th>
-                                </tr>
-                            </thead>
-                            <tbody id="po-body">
-                                @foreach($purchase->items as $item)
-                                <tr>
-                                    <td>
-                                        <input type="text" name="product_code[]" class="form-control code" 
-                                            value="{{ $item->supplierItem->item_code }}" readonly>
-                                    </td>
-                                    <td>
-                                        <select name="product_id[]" class="form-control productname">
-                                            <option value="">Select Product</option>
-                                            @foreach($supplierItems as $supplierItem)
-                                                <option value="{{ $supplierItem->id }}" 
-                                                    data-code="{{ $supplierItem->item_code }}"
-                                                    data-price="{{ $supplierItem->item_price }}"
-                                                    {{ $supplierItem->id == $item->supplier_item_id ? 'selected' : '' }}>
-                                                    {{ $supplierItem->item_description }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="unit[]" class="form-control unit">
-                                            @foreach($units as $unit)
-                                                <option value="{{ $unit->id }}" 
-                                                    {{ $unit->id == $item->unit ? 'selected' : '' }}>
-                                                    {{ $unit->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
-                                    <td><input type="text" name="price[]" class="form-control price" value="{{ $item->unit_price }}"></td>
-                                    <td><input type="text" name="dis[]" class="form-control dis" value="{{ $item->discount }}"></td>
-                                    <td><input type="text" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
-                                    <td><a class="btn btn-danger btn-sm remove"><i class="fa fa-remove"></i></a></td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot>
-                                {{-- same as your create.blade.php --}}
-                                <tr>
-                                    <th colspan="5" class="text-right">Discount Type</th>
-                                    <th colspan="2">
-                                        <select id="discount_type" name="discount_type" class="form-control">
-                                            <option value="per_item" {{ $purchase->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
-                                            <option value="overall" {{ $purchase->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
-                                        </select>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-right">Tax/Discount</th>
-                                    <td colspan="2"><input type="text" class="form-control" name="discount_value" id="discount" value="{{ $purchase->overall_discount }}"></td>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-right">Shipping</th>
-                                    <td colspan="2"><input type="number" class="form-control" name="shipping" id="shipping" value="{{ $purchase->shipping }}"></td>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-right">Other Charges</th>
-                                    <td colspan="2"><input type="number" class="form-control" name="other_charges" id="other" value="{{ $purchase->other_charges }}"></td>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-right">Subtotal</th>
-                                    <td colspan="2"><input type="text" class="form-control" name="subtotal" id="subtotal" value="{{ $purchase->subtotal }}" readonly></td>
-                                </tr>
-                                <tr>
-                                    <th colspan="5" class="text-right">Grand Total</th>
-                                    <td colspan="2"><input type="text" class="form-control" name="grand_total" id="grand_total" value="{{ $purchase->grand_total }}" readonly></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-
-                        <div class="form-group mt-3">
-                            <label>Comments or Special Instructions</label>
-                            <textarea name="remarks" rows="4" class="form-control">{{ $purchase->remarks }}</textarea>
+                        <div class="tile mt-4">
+                            <h4 class="tile-title"><i class="fa fa-list"></i> Purchased Items</h4>
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>Product Code</th>
+                                        <th>Product</th>
+                                        <th>Unit</th>
+                                        <th>Quantity Ordered</th>
+                                        <th>Unit Price</th>
+                                        <th>Discount (%)</th>
+                                        <th>Amount</th>
+                                        <th><a class="btn btn-success btn-sm addRow"><i class="fa fa-plus"></i></a></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="po-body">
+                                    @foreach($purchase->items as $item)
+                                    <tr>
+                                        <td>
+                                            <input type="text" name="product_code[]" class="form-control code" 
+                                                value="{{ $item->supplierItem->item_code }}" readonly>
+                                        </td>
+                                        <td>
+                                            <select name="product_id[]" class="form-control productname">
+                                                <option value="">Select Product</option>
+                                                @foreach($supplierItems as $supplierItem)
+                                                    <option value="{{ $supplierItem->id }}" 
+                                                        data-code="{{ $supplierItem->item_code }}"
+                                                        data-price="{{ $supplierItem->item_price }}"
+                                                        {{ $supplierItem->id == $item->supplier_item_id ? 'selected' : '' }}>
+                                                        {{ $supplierItem->item_description }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="unit[]" class="form-control unit">
+                                                @foreach($units as $unit)
+                                                    <option value="{{ $unit->id }}" 
+                                                        {{ $unit->id == $item->unit ? 'selected' : '' }}>
+                                                        {{ $unit->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
+                                        <td><input type="text" name="price[]" class="form-control price" value="{{ $item->unit_price }}"></td>
+                                        <td><input type="text" name="dis[]" class="form-control dis" value="{{ $item->discount }}"></td>
+                                        <td><input type="text" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
+                                        <td><a class="btn btn-danger btn-sm remove"><i class="fa fa-remove"></i></a></td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                                <tfoot class="bg-light">
+                                    {{-- same as your create.blade.php --}}
+                                    <tr>
+                                        <th colspan="5" class="text-end">Discount Type</th>
+                                        <th colspan="2">
+                                            <select id="discount_type" name="discount_type" class="form-control">
+                                                <option value="per_item" {{ $purchase->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
+                                                <option value="overall" {{ $purchase->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
+                                            </select>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="5" class="text-end">Tax/Discount</th>
+                                        <td colspan="2"><input type="text" class="form-control" name="discount_value" id="discount" value="{{ $purchase->discount_value }}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="5" class="text-end">Shipping</th>
+                                        <td colspan="2"><input type="number" class="form-control" name="shipping" id="shipping" value="{{ $purchase->shipping }}"></td>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="5" class="text-end">Other Charges</th>
+                                        <td colspan="2"><input type="number" class="form-control" name="other_charges" id="other" value="{{ $purchase->other_charges }}"></td>
+                                    </tr>
+                                    <tr class="fw-bold">
+                                        <th colspan="5" class="text-end">Subtotal</th>
+                                        <td colspan="2"><input type="text" class="form-control" name="subtotal" id="subtotal" value="{{ $purchase->subtotal }}" readonly></td>
+                                    </tr>
+                                    <tr class="fw-bold bg-secondary text-white">
+                                        <th colspan="5" class="text-end">Grand Total</th>
+                                        <td colspan="2"><input type="text" class="form-control" name="grand_total" id="grand_total" value="{{ $purchase->grand_total }}" readonly></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
 
-                        <button type="submit" class="btn btn-primary mt-3">Update Purchase Order</button>
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fa fa-save"></i> Update Purchase Order
+                            </button>
+                            <a href="{{ route('purchase.index') }}" class="btn btn-secondary">
+                                <i class="fa fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>

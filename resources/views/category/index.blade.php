@@ -11,6 +11,7 @@
         <div class="app-title">
             <div>
                 <h1><i class="fa fa-th-list"></i> Category List</h1>
+                <p class="text-muted mb-0">View, update, or delete existing categories to keep your system organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -21,13 +22,18 @@
         <div class="">
             <a class="btn btn-primary" href="{{route('category.create')}}"><i class="fa fa-plus"></i> Add New Category</a>
         </div>
-
+        @if(session()->has('message'))
+            <div class="alert alert-success mt-2">
+                {{ session()->get('message') }}
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Category Records</h3>
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead>
+                            <thead class="thead-dark">
                             <tr>
                                 <th>Category</th>
                                 <th>Status</th>

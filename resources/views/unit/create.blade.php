@@ -7,7 +7,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-edit"></i>Unit</h1>
+                <h1><i class="fa fa-plus"></i> Unit</h1>
+                <p class="text-muted">Add a new unit to categorize your items accurately.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>

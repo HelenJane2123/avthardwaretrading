@@ -68,7 +68,7 @@
                 </tr>
                 <tr>
                     <td><strong>TAX/DISCOUNT: </strong></td>
-                    <td>{{$purchase->overall_discount }}</td>
+                    <td>{{$purchase->discount_value }}</td>
                 </tr>
                 <tr>
                     <td><strong>SHIPPING: </strong></td>

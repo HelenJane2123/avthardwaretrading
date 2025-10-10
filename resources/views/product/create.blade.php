@@ -7,7 +7,8 @@
     <main class="app-content">
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-edit"></i>Add New Product</h1>
+                <h1><i class="fa fa-plus"></i> Add New Product</h1>
+                <p class="text-muted mb-0">Create a new product and manage its details in your inventory.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb">
                 <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
@@ -16,14 +17,27 @@
             </ul>
         </div>
 
-        @if(session()->has('message'))
-            <div class="alert alert-success">
-                {{ session()->get('message') }}
+         @if(session()->has('message'))
+            <div class="alert alert-success shadow-sm">
+                <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger shadow-sm">
+                <strong>Whoops!</strong> There were some problems with your input.
+                <ul class="mb-0 mt-2">
+                    @foreach ($errors->all() as $error)
+                        <li>- {{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
-        <div class="">
-            <a class="btn btn-primary" href="{{route('product.index')}}"><i class="fa fa-edit"></i> Manage Product</a>
+       
+        <div class="mb-3">
+            <a class="btn btn-outline-primary" href="{{route('product.index')}}">
+                <i class="fa fa-list"></i> Manage Products
+            </a>
         </div>
         <div class="row mt-2">
 
@@ -160,7 +174,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group col-md-4">
+                                        <!-- <div class="form-group col-md-4">
                                             <label class="control-label">Discount</label>
                                             <select name="tax_id" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -173,29 +187,39 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
+                                        </div> -->
+                                    </div>
+                                </div>
+                            </div>
+                           {{-- Supplier Section --}}
+                            <div class="card mt-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="example-2" class="content">
+                                        <div class="group row g-3 align-items-end">
+                                            <div class="col-md-6">
+                                                <label for="supplier_name" class="form-label">Supplier</label>
+                                                <input type="text" id="supplier_name" name="supplier_name" 
+                                                    class="form-control" autocomplete="off">
+                                                <div id="supplierSuggestions" class="list-group shadow-sm"></div>
+                                                <input type="hidden" id="supplier_id" name="supplier_id[]">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="supplier_price" class="form-label">Supplier Item Price</label>
+                                                <input type="number" id="supplier_price" name="supplier_price[]" 
+                                                    class="form-control" placeholder="Purchase Price">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="tile">
-                                <h5 class="text-center mb-3">Supplier Details</h5>
-                                <div id="example-2" class="content">
-                                    <div class="group row justify-content-center">
-                                        <div class="form-group col-md-5">
-                                            <label for="supplier_name">Supplier</label>
-                                            <input type="text" id="supplier_name" name="supplier_name" class="form-control" autocomplete="off">
-                                            <div id="supplierSuggestions" class="list-group"></div>
-                                            <input type="hidden" id="supplier_id" name="supplier_id[]">
-                                        </div>
-                                        <div class="form-group col-md-5">
-                                            <label for="supplier_price">Supplier Item Price</label>
-                                            <input type="number" id="supplier_price" name="supplier_price[]" class="form-control" placeholder="Purchase Price">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group col-md-4 align-self-end">
+                            <div class="form-group col-md-4 mt-4 align-self-end">
                                 <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
+                                <a href="{{ route('product.index') }}" class="btn btn-secondary px-4">
+                                    <i class="fa fa-times"></i> Cancel
+                                </a>
                             </div>
 
                         </form>
@@ -279,50 +303,6 @@
                 }
             });
 
-            // When suggestion is clicked
-            // $(document).on("click", ".product-suggestion", function (e) {
-            //     e.preventDefault();
-
-            //     let code = $(this).data("code");
-            //     let name = $(this).data("name");
-
-            //     // Fill product input
-            //     $("#product_name").val(name);
-            //     $("#supplier_product_code").val(code);
-
-            //     // Hide suggestions
-            //     $("#productSuggestions").hide();
-
-            //     // 🔹 Fetch suppliers for the selected product
-            //     $.ajax({
-            //         url: "{{ route('products.suppliers') }}", // make sure route name matches!
-            //         type: "GET",
-            //         data: { item_code: code },
-            //         success: function (data) {
-            //             let options = '<option value="">-- Select Supplier --</option>';
-            //             if (Array.isArray(data) && data.length > 0) {
-            //                 data.forEach(function (supplier) {
-            //                     options += `<option value="${supplier.id}" data-price="${supplier.supplier_price}">
-            //                                     ${supplier.name}
-            //                                 </option>`;
-            //                 });
-            //             } else {
-            //                 options += '<option disabled>No suppliers found</option>';
-            //             }
-
-            //             // populate the supplier dropdown directly
-            //             $("#supplier_id").html(options);
-            //         },
-            //         error: function (xhr) {
-            //             console.error("Supplier AJAX Error:", xhr.responseText);
-            //         }
-            //     });
-            // });
-            // // When supplier is chosen, set purchase price
-            // $(document).on("change", ".supplier-select", function () {
-            //     let price = $(this).find(":selected").data("price") || "";
-            //     $(this).closest("tr").find(".supplier-price").val(price);
-            // });
             $(document).on("click", ".product-suggestion", function (e) {
                 e.preventDefault();
 

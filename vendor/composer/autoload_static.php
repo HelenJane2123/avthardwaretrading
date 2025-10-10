@@ -559,7 +559,6 @@ class ComposerStaticInitd4599f3a1101e56a79671658713db01b
     public static $classMap = array (
         'App\\Category' => __DIR__ . '/../..' . '/app/Category.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
-        'App\\Customer' => __DIR__ . '/../..' . '/app/Customer.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Http\\Controllers\\Auth\\ForgotPasswordController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/ForgotPasswordController.php',
         'App\\Http\\Controllers\\Auth\\LoginController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/LoginController.php',
@@ -600,6 +599,7 @@ class ComposerStaticInitd4599f3a1101e56a79671658713db01b
         'App\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/app/Providers/EventServiceProvider.php',
         'App\\Providers\\RouteServiceProvider' => __DIR__ . '/../..' . '/app/Providers/RouteServiceProvider.php',
         'App\\Purchase' => __DIR__ . '/../..' . '/app/Purchase.php',
+        'App\\PurchaseItem' => __DIR__ . '/../..' . '/app/PurchaseItem.php',
         'App\\Sale' => __DIR__ . '/../..' . '/app/Sale.php',
         'App\\Sales' => __DIR__ . '/../..' . '/app/Sales.php',
         'App\\Supplier' => __DIR__ . '/../..' . '/app/Supplier.php',
