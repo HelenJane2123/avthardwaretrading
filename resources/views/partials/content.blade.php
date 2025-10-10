@@ -164,26 +164,32 @@
 
   {{-- Tables and Lists --}}
   <div class="row">
-    <div class="col-lg-6 fade-in">
-        <div class="section-container">
-            <div class="section-header"><i class="fa fa-cube"></i> Recently Added Products</div>
-            <ul class="product-list">
-                @foreach($recentProducts as $rp)
-                <li class="product-list-item">
-                <i class="fa fa-cube product-icon"></i>
-                <div class="product-details">
-                    <div class="product-name">{{ $rp->product_name }}</div>
-                    <div class="product-category">{{ $rp->category->name ?? 'Uncategorized' }}</div>
-                </div>
-                <div class="product-price">₱{{ number_format($rp->sales_price, 2) }}</div>
-                </li>
-                @endforeach
-            </ul>
-        </div>
-    </div>
     
-
-    <div class="col-lg-6 fade-in">
+    
+      <div class="col-lg-6 fade-in">
+          <div class="section-container">
+            <div class="section-header"><i class="fa fa-th"></i> Highest Selling Products</div>
+              <table>
+                  <thead>
+                  <tr>
+                      <th>Product</th>
+                      <th>Total Sold</th>
+                      <th>Total Quantity</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  @foreach($highestSelling as $p)
+                  <tr>
+                      <td>{{ $p->product_name }}</td>
+                      <td>{{ number_format($p->total_sales, 2) }}</td>
+                      <td>{{ $p->total_qty }}</td>
+                  </tr>
+                  @endforeach
+                  </tbody>
+              </table>
+            </div>
+          </div>
+      <div class="col-lg-6 fade-in">
         <div class="section-container">
         <div class="section-header"><i class="fa fa-shopping-cart"></i> Latest Sales</div>
         <table class="latest-sales-table">
@@ -214,39 +220,31 @@
 
     {{-- Lists --}}
     <div class="row mt-4">
-        <div class="col-lg-6 fade-in">
+      <div class="col-lg-6 fade-in">
         <div class="section-container">
-            <div class="section-header"><i class="fa fa-th"></i> Highest Selling Products</div>
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Total Sold</th>
-                        <th>Total Quantity</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($highestSelling as $p)
-                    <tr>
-                        <td>{{ $p->product_name }}</td>
-                        <td>{{ number_format($p->total_sales, 2) }}</td>
-                        <td>{{ $p->total_qty }}</td>
-                    </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+            <div class="section-header"><i class="fa fa-cube"></i> Recently Added Products</div>
+            <ul class="product-list">
+                @foreach($recentProducts as $rp)
+                <li class="product-list-item">
+                <i class="fa fa-cube product-icon"></i>
+                <div class="product-details">
+                    <div class="product-name">{{ $rp->product_name }}</div>
+                    <div class="product-category">{{ $rp->category->name ?? 'Uncategorized' }}</div>
+                </div>
+                <div class="product-price">₱{{ number_format($rp->sales_price, 2) }}</div>
+                </li>
+                @endforeach
+            </ul>
         </div>
-    </div>
-
-        <div class="col-lg-6 fade-in">
+      </div>
+      <div class="col-lg-6 fade-in">
             <div class="section-container">
                 <div class="section-header"><i class="fa fa-cash-register"></i> Recent Collections</div>
                     <table>
                         <thead>
                         <tr>
-                            <th>#</th>
                             <th>Customer</th>
-                            <th>Invoice</th>
+                            <th>Collection Number</th>
                             <th>Amount Paid</th>
                             <th>Date</th>
                         </tr>
@@ -254,11 +252,10 @@
                         <tbody>
                         @forelse($recentCollections as $collection)
                         <tr>
-                            <td>{{ $collection->id }}</td>
                             <td>{{ $collection->invoice->customer->name ?? 'N/A' }}</td>
                             <td>
-                            <a href="{{ route('invoice.show', $collection->invoice->id) }}">
-                                {{ $collection->invoice->id }}
+                            <a href="{{ route('invoice.show', $collection->collection_number) }}">
+                                {{ $collection->collection_number }}
                             </a>
                             </td>
                             <td>₱{{ number_format($collection->amount_paid, 2) }}</td>
