@@ -26,7 +26,7 @@
 
         {{-- Success Message --}}
         @if(session()->has('message'))
-            <div class="alert alert-success">
+            <div class="alert alert-success mt-2">
                 {{ session()->get('message') }}
             </div>
         @endif
@@ -394,17 +394,17 @@
             $('#hidden_other').val($('#other').val() || 0);
             $('#hidden_grand_total').val($('#grand_total').val() || 0);
 
-            // Check if any discount exists
+            // check for discounts
             const hasPerItemDiscount = $('.dis').toArray().some(inp => parseFloat($(inp).val()) > 0);
             const overallDiscount = parseFloat($('#discount').val()) || 0;
 
             if (hasPerItemDiscount || overallDiscount > 0) {
-                formPendingSubmit = this; // store form for later submission
+                formPendingSubmit = this;
                 $("#adminPassword").val("");
                 $("#passwordError").addClass("d-none");
-                discountModal.show(); // <-- show modal here
+                discountModal.show(); // ✅ show modal only on submit
             } else {
-                this.submit(); // no discount → submit immediately
+                this.submit();
             }
         });
 
@@ -421,7 +421,7 @@
                 keyboard: false
             });
 
-            $(document).on("input", ".dis, #discount", function() {
+            /*$(document).on("input", ".dis, #discount", function() {
                 var val = parseFloat($(this).val()) || 0;
 
                 if (val > 0) {
@@ -436,7 +436,7 @@
                         calculateTotals();
                     }
                 }
-            });
+            });*/
 
             $('#approveDiscount').on('click', function () {
                 let password = $('#adminPassword').val().trim();
@@ -454,6 +454,7 @@
                         password: password
                     },
                     success: function (response) {
+                        console.log('password'.response);
                         if(response.success){
                             $('#discount_approved').val(1);
                             discountModal.hide(); // hide modal

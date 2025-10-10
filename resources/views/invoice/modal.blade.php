@@ -67,13 +67,13 @@
                     <td>{{ $item->qty }}</td>
                     <td>₱{{ number_format($item->price, 2) }}</td>
                     <td>
-                        @if($item->discount > 0)
-                            {{ $item->discount }} {{ $item->discount_type == 'percent' ? '%' : '₱' }}
+                        @if($item->dis > 0)
+                            {{ $item->dis }} %
                         @else
                             -
                         @endif
                     </td>
-                    <td>₱{{ number_format($item->total, 2) }}</td>
+                    <td>₱{{ number_format($item->amount, 2) }}</td>
                 </tr>
             @endforeach
         </tbody>

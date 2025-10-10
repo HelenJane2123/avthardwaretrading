@@ -46,6 +46,7 @@
                                     <th>Product Code</th>
                                     <th>Product</th>
                                     <th>Qty</th>
+                                    <th>Remaining Qty</th>
                                     <th>Supplier Item Code</th>
                                     <th>Supplier</th>
                                     <th>Threshold</th>
@@ -59,6 +60,7 @@
                                         <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
                                         <td>{{ $add->product->product_name }}</td>
                                         <td>{{ $add->product->quantity }}</td>
+                                        <td>{{ $add->product->remaining_stock }}</td>
                                         <td>{{ $add->product->supplier_product_code }}</td>
                                         <td>{{ $add->supplier->name }}</td>
                                         <td>{{ $add->product->threshold }}</td>

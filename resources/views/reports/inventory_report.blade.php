@@ -81,23 +81,23 @@
                                             <th>Supplier</th>
                                             <th>Sales Price</th>
                                             <th>Quantity</th>
-                                            <th>Threshold</th>
                                             <th>Remaining Stock</th>
+                                            <th>Threshold</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($inventory as $item)
                                             <tr>
-                                                <td>{{ $item->product_code }}</td>
-                                                <td>{{ $item->product_name }}</td>
+                                                <td>{{ $item->product_code }} - {{ $item->product_name }}</td>
+                                                <td>{{ $item->product_code }} - {{ $item->product_name }}</td>
                                                 <td>{{ $item->category_name }}</td>
                                                 <td>{{ $item->unit_name }}</td>
                                                 <td>{{ $item->supplier_name }}</td>
                                                 <td>{{ number_format($item->sales_price, 2) }}</td>
                                                 <td>{{ $item->quantity }}</td>
-                                                <td>{{ $item->threshold }}</td>
                                                 <td>{{ $item->remaining_stock }}</td>
+                                                <td>{{ $item->threshold }}</td>
                                                 <td>
                                                     @if($item->product_status == 'Out of Stock')
                                                         <span class="badge bg-danger">Out of Stock</span>
@@ -133,11 +133,10 @@
     $('#inventoryProductTable').DataTable({
         "order": [[0, 'asc']], // Sort by Supplier Code
         "rowGroup": {
-            dataSrc: 0, // Group by first column (Supplier Code)
+            dataSrc: 2, // Group by first column (Supplier Code)
             startRender: function (rows, group) {
-                // Optionally display Supplier Name in the group header
-                var productName = rows.data()[0][1]; // Second column = Supplier Name
-                return group + ' - ' + productName;
+                var productCat = rows.data()[0][1];
+                return group;
             }
         },
         "columnDefs": [

@@ -213,7 +213,8 @@ class InvoiceController extends Controller
     {
         $request->validate(['password' => 'required']);
 
-        $admin = User::where('role', 'super_admin')->first();
+        // Use the correct column name: user_role
+        $admin = User::where('user_role', 'super_admin')->first();
 
         if ($admin && \Hash::check($request->password, $admin->password)) {
             return response()->json(['success' => true]);
@@ -295,7 +296,7 @@ class InvoiceController extends Controller
                     'unit_id'      => $request->unit[$key] ?? null,
                     'qty'          => $request->qty[$key] ?? 0,
                     'price'        => $request->price[$key] ?? 0,
-                    'discount'     => $request->dis[$key] ?? 0,
+                    'dis'          => $request->dis[$key] ?? 0,
                     'amount'       => $request->amount[$key] ?? 0,
                 ]);
             }

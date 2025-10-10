@@ -458,7 +458,7 @@
                 keyboard: false
             });
 
-            $(document).on("input", ".dis, #discount", function() {
+            /*$(document).on("input", ".dis, #discount", function() {
                 var val = parseFloat($(this).val()) || 0;
 
                 if (val > 0) {
@@ -473,7 +473,7 @@
                         calculateTotals();
                     }
                 }
-            });
+            });*/
 
             $('#approveDiscount').on('click', function () {
                 let password = $('#adminPassword').val().trim();

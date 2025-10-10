@@ -40,7 +40,7 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|min:2|unique:units|regex:/^[a-zA-Z ]+$/',
+            'name' => 'required|min:2|unique:units|regex:#^[a-zA-Z\s.\'/-]+$#',
         ]);
 
         $unit = new Unit();
@@ -84,7 +84,7 @@ class UnitController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|min:2|regex:/^[a-zA-Z ]+$/',
+            'name' => ["required", "min:2", "regex:/^[a-zA-Z\s.\'\/\-]+$/"],
         ]);
 
         $unit = Unit::findOrFail($id);

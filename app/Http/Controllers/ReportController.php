@@ -76,18 +76,19 @@ class ReportController extends Controller
             ]
         );
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Add logo and header
+        // === Header ===
         $this->addHeader($sheet, 'AR Aging Report');
         $headerRow = 6;
 
-        // Table headers
+        // === Table Headers ===
         $headers = [
             'Customer Code','Customer','Invoice #','Invoice Date','Due Date',
             'Invoice Amount','Outstanding','Amount Paid','Collection Date',
-            'Remarks','Payment Method','Payment Term','Aging Bucket'
+            'Remarks','Payment Method','Payment Term','Aging Bucket',
+            'Payment Status','Invoice Status'
         ];
 
         $col = 'A';
@@ -98,33 +99,31 @@ class ReportController extends Controller
             $col++;
         }
 
-        // Sort results by customer name
+        // === Sort results ===
         usort($results, fn($a, $b) => strcmp($a->customer_name, $b->customer_name));
 
-        // Initialize
+        // === Initialize ===
         $row = $headerRow + 1;
         $currentCustomer = null;
-
         $subtotalInvoice = $subtotalPaid = $subtotalOutstanding = 0;
         $grandInvoice = $grandPaid = $grandOutstanding = 0;
 
         foreach ($results as $record) {
-            // Insert subtotal row when customer changes
+            // Subtotal row per customer
             if ($currentCustomer && $currentCustomer !== $record->customer_name) {
                 $sheet->setCellValue("C{$row}", "Subtotal for $currentCustomer");
                 $sheet->setCellValue("F{$row}", $subtotalInvoice);
                 $sheet->setCellValue("G{$row}", $subtotalOutstanding);
                 $sheet->setCellValue("H{$row}", $subtotalPaid);
-                $sheet->getStyle("A{$row}:M{$row}")->getFont()->setBold(true);
+                $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
                 $row++;
 
-                // Reset subtotals
                 $subtotalInvoice = $subtotalPaid = $subtotalOutstanding = 0;
             }
 
             $currentCustomer = $record->customer_name;
 
-            // Fill row
+            // === Row Values ===
             $sheet->setCellValue("A{$row}", $record->customer_code ?? '');
             $sheet->setCellValue("B{$row}", $record->customer_name ?? '');
             $sheet->setCellValue("C{$row}", $record->invoice_number ?? '');
@@ -147,21 +146,33 @@ class ReportController extends Controller
 
             $sheet->setCellValue("F{$row}", $record->invoice_amount ?? 0);
             $sheet->setCellValue("H{$row}", $record->amount_paid ?? 0);
-
-            // Outstanding formula
             $sheet->setCellValue("G{$row}", "=F{$row}-H{$row}");
-
             $sheet->setCellValue("J{$row}", $record->collection_remarks ?? '');
             $sheet->setCellValue("K{$row}", $record->payment_method ?? '');
             $sheet->setCellValue("L{$row}", $record->payment_term ?? '');
             $sheet->setCellValue("M{$row}", $record->aging_bucket ?? '');
+            $sheet->setCellValue("N{$row}", $record->payment_status ?? '');
+            $sheet->setCellValue("O{$row}", $record->invoice_status ?? '');
 
-            // Add to subtotals
+            // === Optional Color Coding for Payment Status ===
+            $statusCell = "N{$row}";
+            switch (strtolower($record->payment_status)) {
+                case 'paid':
+                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FF008000'); // green
+                    break;
+                case 'overdue':
+                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FFFF0000'); // red
+                    break;
+                case 'partially paid':
+                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FFFFA500'); // orange
+                    break;
+            }
+
+            // === Subtotals ===
             $subtotalInvoice += $record->invoice_amount ?? 0;
             $subtotalPaid += $record->amount_paid ?? 0;
             $subtotalOutstanding += ($record->invoice_amount ?? 0) - ($record->amount_paid ?? 0);
 
-            // Add to grand totals
             $grandInvoice += $record->invoice_amount ?? 0;
             $grandPaid += $record->amount_paid ?? 0;
             $grandOutstanding += ($record->invoice_amount ?? 0) - ($record->amount_paid ?? 0);
@@ -169,13 +180,13 @@ class ReportController extends Controller
             $row++;
         }
 
-        // Final subtotal for last customer
+        // === Final subtotal ===
         if ($currentCustomer) {
             $sheet->setCellValue("C{$row}", "Subtotal for $currentCustomer");
             $sheet->setCellValue("F{$row}", $subtotalInvoice);
             $sheet->setCellValue("G{$row}", $subtotalOutstanding);
             $sheet->setCellValue("H{$row}", $subtotalPaid);
-            $sheet->getStyle("A{$row}:M{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
             $row++;
         }
 
@@ -184,26 +195,26 @@ class ReportController extends Controller
         $sheet->setCellValue("F{$row}", $grandInvoice);
         $sheet->setCellValue("G{$row}", $grandOutstanding);
         $sheet->setCellValue("H{$row}", $grandPaid);
-        $sheet->getStyle("A{$row}:M{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
 
         $lastRow = $row;
 
-        // Format date columns
+        // === Format date columns ===
         foreach (['D','E','I'] as $col) {
             $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
                 ->getNumberFormat()
                 ->setFormatCode('[$-en-US]mmmm d, yyyy');
         }
 
-        // Format amounts
+        // === Format amounts ===
         foreach (['F','G','H'] as $col) {
             $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
                 ->getNumberFormat()
                 ->setFormatCode('#,##0.00');
         }
 
-        // Add borders
-        $sheet->getStyle("A{$headerRow}:M{$lastRow}")->applyFromArray([
+        // === Borders ===
+        $sheet->getStyle("A{$headerRow}:O{$lastRow}")->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -212,7 +223,7 @@ class ReportController extends Controller
             ],
         ]);
 
-        // Export
+        // === Export ===
         $fileName = 'ar_aging_report_'.now()->format('Ymd_His').'.xlsx';
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
@@ -221,6 +232,7 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
+
 
 
     /**

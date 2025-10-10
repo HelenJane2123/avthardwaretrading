@@ -77,6 +77,7 @@
                                         <tr>
                                             <th>Customer Code</th>
                                             <th>Customer</th>
+                                            <th>Invoice Status</th>
                                             <th>Invoice #</th>
                                             <th>Invoice Date</th>
                                             <th>Due Date</th>
@@ -87,6 +88,7 @@
                                             <th>Remarks</th>
                                             <th>Payment Method</th>
                                             <th>Payment Term</th>
+                                            <th>Payment Status</th>
                                             <th>Aging Bucket</th>
                                         </tr>
                                     </thead>
@@ -95,6 +97,15 @@
                                             <tr>
                                                 <td>{{ $row->customer_code }}</td>
                                                 <td>{{ $row->customer_name }}</td>
+                                                <td>
+                                                    <span class="badge 
+                                                        @if($row->invoice_status == 'approved') bg-success
+                                                        @elseif($row->invoice_status == 'pending') bg-warning
+                                                        @elseif($row->invoice_status == 'canceled') bg-danger
+                                                        @endif">
+                                                        {{ ucfirst($row->invoice_status) }}
+                                                    </span>
+                                                </td>
                                                 <td>{{ $row->invoice_number }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($row->invoice_date)->format('Y-m-d') }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
@@ -105,6 +116,15 @@
                                                 <td>{{ $row->collection_remarks ?? '-' }}</td>
                                                 <td>{{ $row->payment_method ?? '-' }}</td>
                                                 <td>{{ $row->payment_term ?? '-' }}</td>
+                                                <td><span class="badge 
+                                                        @if($row->payment_status == 'paid') bg-success
+                                                        @elseif($row->payment_status == 'pending') bg-warning
+                                                        @elseif($row->payment_status == 'overdue') bg-danger
+                                                        @elseif($row->payment_status == 'partial') bg-info
+                                                        @endif">
+                                                        {{ ucfirst($row->payment_status) }}
+                                                    </span>
+                                                </td>
                                                 <td><span class="badge bg-info">{{ $row->aging_bucket }}</span></td>
                                             </tr>
                                         @empty
