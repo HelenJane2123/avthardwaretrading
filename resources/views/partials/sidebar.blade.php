@@ -29,12 +29,12 @@
         {{-- Product --}}
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('product*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-cube"></i><span class="app-menu__label">Product</span>
+                <i class="app-menu__icon fa fa-cube"></i><span class="app-menu__label">Inventory</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="{{ route('product.create') }}"><i class="icon fa fa-plus"></i> New Product</a></li>
-                <li><a class="treeview-item" href="{{ route('product.index') }}"><i class="icon fa fa-edit"></i> Manage Products</a></li>
+                <li><a class="treeview-item" href="{{ route('product.create') }}"><i class="icon fa fa-plus"></i> New Inventory</a></li>
+                <li><a class="treeview-item" href="{{ route('product.index') }}"><i class="icon fa fa-edit"></i> Manage Inventory</a></li>
             </ul>
         </li>
 
@@ -185,9 +185,11 @@
                 <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.ap_aging_report') }}"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.inventory_report') }}"><i class="icon fa fa-circle-o"></i> Inventory Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.purchase_report') }}"><i class="icon fa fa-circle-o"></i> Purchase Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.estimated_income_report') }}"><i class="icon fa fa-circle-o"></i> Estimated Income Report</a></li>
             </ul>
         </li>
     </ul>

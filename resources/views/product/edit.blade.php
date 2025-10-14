@@ -9,7 +9,7 @@
 <main class="app-content">
     <div class="app-title d-flex justify-content-between align-items-center">
         <div>
-            <h1><i class="fa fa-edit"></i> Edit Product</h1>
+            <h1><i class="fa fa-edit"></i> Edit Inventory</h1>
             <p class="text-muted mb-0">Update the details of an existing product in your inventory.</p>
         </div>
         <ul class="app-breadcrumb breadcrumb">

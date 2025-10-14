@@ -9,7 +9,7 @@
         <!-- Page Title -->
         <div class="app-title">
             <div>
-                <h1><i class="fa fa-cubes"></i> Manage Products</h1>
+                <h1><i class="fa fa-cubes"></i> Manage Inventory</h1>
                 <p class="text-muted mb-0">View, add, update, or delete products to keep your inventory organized.</p>
             </div>
             <ul class="app-breadcrumb breadcrumb side">
@@ -38,15 +38,15 @@
                             {{ session()->get('message') }}
                         </div>
                     @endif
-                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Product List Records</h3>
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
                         <table class="table table-hover table-bordered" id="sampleTable">
                             <thead class="thead-dark">
                                 <tr>
                                     <th>Product Code</th>
                                     <th>Product</th>
-                                    <th>Qty</th>
-                                    <th>Remaining Qty</th>
+                                    <th>Available Quantity</th>
+                                    <th>Quantity on Hand</th>
                                     <th>Supplier Item Code</th>
                                     <th>Supplier</th>
                                     <th>Threshold</th>

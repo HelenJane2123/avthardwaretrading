@@ -533,22 +533,38 @@ class ReportController extends Controller
     public function sales_report(Request $request)
     {
         $customerName = $request->customer_id ? Customer::find($request->customer_id)->name : null;
-        $productName = $request->product_id ? Product::find($request->product_id)->name : null;
-        $startDate = $request->start_date ?? null;
-        $endDate = $request->end_date ?? null;
+        $productName  = $request->product_id ? Product::find($request->product_id)->product_name : null;
+        $salesmanName = $request->salesman_name ?? null;
+        $startDate    = $request->start_date ?? null;
+        $endDate      = $request->end_date ?? null;
 
-        // Call the stored procedure
-        $sales = DB::select('CALL get_sales_report(?, ?, ?, ?)', [
+        // Call stored procedure (customer, product, salesman, start, end)
+        $sales = DB::select('CALL get_sales_report(?, ?, ?, ?, ?)', [
             $customerName,
             $productName,
+            $salesmanName,
             $startDate,
             $endDate
         ]);
 
-        $products = Product::all();
-        $customers = Customer::all();
+        // For filter dropdowns
+        $products  = Product::orderBy('product_name')->get();
+        $customers = Customer::orderBy('name')->get();
 
-        return view('reports.sales_report', compact('sales', 'products', 'customers'));
+        // ✅ Dynamically get unique salesman names from invoices
+        $salesmen = DB::table('invoices')
+            ->select('salesman')
+            ->whereNotNull('salesman')
+            ->distinct()
+            ->orderBy('salesman')
+            ->get();
+
+        return view('reports.sales_report', compact(
+            'sales',
+            'products',
+            'customers',
+            'salesmen'
+        ));
     }
 
     public function exportSales(Request $request)
@@ -916,6 +932,263 @@ class ReportController extends Controller
         exit;
     }
 
+    public function estimated_income_report(Request $request)
+    {
+        // Filters
+        $filterType  = $request->input('filter_type', 'monthly'); // weekly, monthly, quarterly, or custom
+        $startDate   = $request->input('start_date') ?: now()->startOfMonth()->toDateString();
+        $endDate     = $request->input('end_date') ?: now()->endOfMonth()->toDateString();
+        $customerId  = $request->input('customer_id') ?: null;
+        $productId   = $request->input('product_id') ?: null;
+
+        // Call stored procedure (the one you created)
+        $reportData = DB::select(
+            'CALL sp_generate_estimated_income_report(:filterType, :startDate, :endDate, :customerId, :productId)',
+            [
+                'filterType' => $filterType,
+                'startDate'  => $startDate,
+                'endDate'    => $endDate,
+                'customerId' => $customerId,
+                'productId'  => $productId,
+            ]
+        );
+
+        // Dropdown data
+        $customers = DB::table('customers')->orderBy('name')->get();
+        $products  = DB::table('products')->orderBy('product_name')->get();
+
+        // Pass to view
+        return view('reports.estimated_income_report', compact(
+            'reportData',
+            'customers',
+            'products',
+            'filterType',
+            'startDate',
+            'endDate',
+            'customerId',
+            'productId'
+        ));
+    }
+
+    public function exportEstimatedIncome(Request $request)
+    {
+        $filterType  = $request->input('filter_type', 'monthly'); // weekly, monthly, quarterly, or custom
+        $startDate   = $request->input('start_date') ?: now()->startOfMonth()->toDateString();
+        $endDate     = $request->input('end_date') ?: now()->endOfMonth()->toDateString();
+        $customerId = $request->input('customer_id') ?: null;
+        $productId  = $request->input('product_id') ?: null;
+
+        try {
+            // Call stored procedure
+            $reportData = DB::select(
+                'CALL sp_generate_estimated_income_report(:filterType, :startDate, :endDate, :customerId, :productId)',
+                [
+                    'filterType' => $filterType,
+                    'startDate'  => $startDate,
+                    'endDate'    => $endDate,
+                    'customerId' => $customerId,
+                    'productId'  => $productId,
+                ]
+            );
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating report: ' . $e->getMessage());
+        }
+
+        // Initialize Excel
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Add header section
+        $this->addHeader($sheet, 'Estimated Income Report');
+
+        // Column headers start at row 6
+        $headerRow = 6;
+        $headers = [
+            'Invoice Number',
+            'Purchase Number',
+            'Date',
+            'Customer',
+            'Product',
+            'Qty Sold',
+            'Qty Purchased',
+            'Sales Price',
+            'Purchase Price',
+            'Total Sales',
+            'Estimated Income (₱)',
+        ];
+
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col.$headerRow, $header);
+            $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+
+        // Populate data
+        $row = $headerRow + 1;
+        $totalSales = 0;
+        $totalIncome = 0;
+
+        foreach ($reportData as $record) {
+            $sheet->setCellValue("A{$row}", $record->invoice_number ?? '');
+            $sheet->setCellValue("B{$row}", $record->purchase_number ?? '');
+            $sheet->setCellValue("C{$row}", $record->invoice_date ?? '');
+            $sheet->setCellValue("D{$row}", $record->customer_name ?? '');
+            $sheet->setCellValue("E{$row}", $record->product_name ?? '');
+            $sheet->setCellValue("F{$row}", $record->quantity_sold ?? 0);
+            $sheet->setCellValue("G{$row}", $record->quantity_purchased ?? 0);
+            $sheet->setCellValue("H{$row}", $record->sales_price ?? 0);
+            $sheet->setCellValue("I{$row}", $record->purchase_price ?? 0);
+            $sheet->setCellValue("J{$row}", $record->total_sales ?? 0);
+            $sheet->setCellValue("K{$row}", $record->estimated_income ?? 0);
+
+            $totalSales += $record->total_sales ?? 0;
+            $totalIncome += $record->estimated_income ?? 0;
+
+            $row++;
+        }
+
+        // Add summary section
+        $sheet->setCellValue("J{$row}", "Total Sales:");
+        $sheet->setCellValue("K{$row}", $totalSales);
+        $sheet->getStyle("J{$row}:K{$row}")->getFont()->setBold(true);
+        $row++;
+
+        $sheet->setCellValue("J{$row}", "Total Estimated Income:");
+        $sheet->setCellValue("K{$row}", $totalIncome);
+        $sheet->getStyle("J{$row}:K{$row}")->getFont()->setBold(true);
+
+        // Apply borders
+        $sheet->getStyle("A{$headerRow}:K{$row}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ]);
+
+        // Output Excel file
+        $fileName = 'estimated_income_report_' . now()->format('Ymd_His') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function purchase_report(Request $request)
+    {
+        $productName = $request->product_id ? Product::find($request->product_id)->product_name : null;
+        $startDate   = $request->start_date ?? null;
+        $endDate     = $request->end_date ?? null;
+
+        // Call stored procedure (filters by product and date range)
+        $purchases = DB::select('CALL get_purchase_report(?, ?, ?)', [
+            $productName,
+            $startDate,
+            $endDate
+        ]);
+
+        $products = Product::orderBy('product_name')->get();
+
+        return view('reports.purchase_report', compact('purchases', 'products'));
+    }
+
+    public function exportPurchase(Request $request)
+    {
+        $productName = $request->product_id ? Product::find($request->product_id)->product_name : null;
+        $startDate   = $request->start_date ?? null;
+        $endDate     = $request->end_date ?? null;
+
+        try {
+            // Call stored procedure (filters by product and date range)
+            $purchases = DB::select('CALL get_purchase_report(?, ?, ?)', [
+                $productName,
+                $startDate,
+                $endDate
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating purchase report: ' . $e->getMessage());
+        }
+
+        // Create spreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Add header title (company name, address, etc.)
+        $this->addHeader($sheet, 'Purchase Report');
+
+        // Header row for table
+        $headerRow = 6;
+        $headers = [
+            'Purchase Number',
+            'Purchase Date',
+            'Supplier Name',
+            'Product',
+            'Quantity Purchased',
+            'Unit Price',
+            'Total Amount',
+            'Payment Term',
+            'Remarks',
+        ];
+
+        // Write table headers
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col.$headerRow, $header);
+            $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+
+        // Fill data
+        $row = $headerRow + 1;
+        $totalAmount = 0;
+
+        foreach ($purchases as $record) {
+            $sheet->setCellValue("A{$row}", $record->po_number ?? '');
+            $sheet->setCellValue("B{$row}", isset($record->purchase_date) 
+                ? \Carbon\Carbon::parse($record->purchase_date)->format('M d, Y') 
+                : '');
+            $sheet->setCellValue("C{$row}", $record->supplier_name ?? '');
+            $sheet->setCellValue("D{$row}", $record->product_name ?? '');
+            $sheet->setCellValue("E{$row}", $record->quantity ?? 0);
+            $sheet->setCellValue("F{$row}", $record->unit_price ?? 0);
+            $sheet->setCellValue("G{$row}", $record->total_amount ?? 0);
+            $sheet->setCellValue("H{$row}", $record->name .' ('.$record->term .' Days)' ?? '');
+            $sheet->setCellValue("I{$row}", $record->remarks ?? '');
+
+            $totalAmount += $record->total_amount ?? 0;
+            $row++;
+        }
+
+        // Add summary row (totals)
+        $sheet->setCellValue("F{$row}", "Grand Total:");
+        $sheet->setCellValue("G{$row}", $totalAmount);
+        $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
+
+        // Add borders around data
+        $sheet->getStyle("A{$headerRow}:I{$row}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ]);
+
+        // Output file
+        $fileName = 'purchase_report_' . now()->format('Ymd_His') . '.xlsx';
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
+    }
 
     /**
      * Helper: add logo and header
@@ -975,5 +1248,6 @@ class ReportController extends Controller
                                             ->setVertical(Alignment::VERTICAL_CENTER);
 
     }
+
 }
 

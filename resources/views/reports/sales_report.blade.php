@@ -32,7 +32,7 @@
                                     <label for="end_date" class="form-label">End Date</label>
                                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="product_id" class="form-label">Product</label>
                                     <select name="product_id" id="product_id" class="form-control">
                                         <option value="">All Products</option>
@@ -43,13 +43,25 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="customer_id" class="form-label">Customer</label>
                                     <select name="customer_id" id="customer_id" class="form-control">
                                         <option value="">All Customers</option>
                                         @foreach($customers as $customer)
                                             <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
                                                 {{ $customer->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="salesman_name" class="form-label">Salesman</label>
+                                    <select name="salesman_name" id="salesman_name" class="form-control">
+                                        <option value="">All Salesmen</option>
+                                        @foreach($salesmen as $salesman)
+                                            <option value="{{ $salesman->salesman }}" 
+                                                {{ request('salesman_name') == $salesman->salesman ? 'selected' : '' }}>
+                                                {{ $salesman->salesman }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -74,6 +86,7 @@
                                             <th>Product</th>
                                             <th>Quantity</th>
                                             <th>Price</th>
+                                            <th>Discount</th>
                                             <th>Total</th>
                                             <th>Payment Method</th>
                                         </tr>
@@ -87,6 +100,7 @@
                                                 <td>{{ $sale->product_name }}</td>
                                                 <td>{{ $sale->quantity }}</td>
                                                 <td>{{ number_format($sale->price, 2) }}</td>
+                                                <td>{{ number_format($sale->discount_value, 2) }}</td>
                                                 <td>{{ number_format($sale->total_amount, 2) }}</td>
                                                 <td>{{ $sale->payment_method }}</td>
                                             </tr>

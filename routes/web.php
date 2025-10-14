@@ -130,6 +130,17 @@ Route::prefix('reports')->group(function () {
     Route::get('supplier_report', [ReportController::class, 'supplier_report'])->name('reports.supplier_report');
     // Export to Excel
     Route::get('/reports/supplier/export', [ReportController::class, 'exportSupplier'])->name('reports.supplier_report_export');
+   // Estimated Income Report
+    Route::get('reports/estimated-income', [ReportController::class, 'estimated_income_report'])
+        ->name('reports.estimated_income_report');
+
+    // Optional: Export to Excel
+    Route::get('reports/estimated-income/export', [ReportController::class, 'exportEstimatedIncome'])
+        ->name('reports.estimated_income_export');
+    
+    Route::get('/reports/purchase-report', [ReportController::class, 'purchase_report'])->name('reports.purchase_report');
+    Route::get('reports/purchase_report/export', [ReportController::class, 'exportPurchase'])
+        ->name('reports.purchase_report_export');
 });
 
 
