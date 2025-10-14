@@ -141,6 +141,10 @@ Route::prefix('reports')->group(function () {
     Route::get('/reports/purchase-report', [ReportController::class, 'purchase_report'])->name('reports.purchase_report');
     Route::get('reports/purchase_report/export', [ReportController::class, 'exportPurchase'])
         ->name('reports.purchase_report_export');
+
+    Route::get('/reports/collection-report', [ReportController::class, 'collection_report'])->name('reports.collection_report');
+    Route::get('reports/collection_report/export', [ReportController::class, 'exportCollection'])
+        ->name('reports.collection_report_export');
 });
 
 

@@ -1158,7 +1158,13 @@ class ReportController extends Controller
             $sheet->setCellValue("E{$row}", $record->quantity ?? 0);
             $sheet->setCellValue("F{$row}", $record->unit_price ?? 0);
             $sheet->setCellValue("G{$row}", $record->total_amount ?? 0);
-            $sheet->setCellValue("H{$row}", $record->name .' ('.$record->term .' Days)' ?? '');
+            $paymentName = strtolower($record->name);
+            if (in_array($paymentName, ['cash', 'gcash'])) {
+                $sheet->setCellValue("H{$row}", $record->name);
+            } else {
+                $termText = $record->term ? "{$record->name} ({$record->term} Days)" : $record->name;
+                $sheet->setCellValue("H{$row}", $termText);
+            }
             $sheet->setCellValue("I{$row}", $record->remarks ?? '');
 
             $totalAmount += $record->total_amount ?? 0;
@@ -1183,6 +1189,160 @@ class ReportController extends Controller
         // Output file
         $fileName = 'purchase_report_' . now()->format('Ymd_His') . '.xlsx';
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function collection_report(Request $request)
+    {
+        $salesman   = $request->salesman ?? null;
+        $customerId = $request->customer_id ?? null;
+        $productId  = $request->product_id ?? null;
+        $startDate  = $request->start_date ?? null;
+        $endDate    = $request->end_date ?? null;
+
+        // Call stored procedure (we'll define next)
+        $reportData = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
+            $salesman,
+            $customerId,
+            $productId,
+            $startDate,
+            $endDate,
+        ]);
+
+        // Get filter dropdown options
+        $customers = DB::table('customers')->select('id', 'name')->orderBy('name')->get();
+        $products = DB::table('products')->select('id', 'product_name')->orderBy('product_name')->get();
+
+        // Get unique salesmen from invoices
+        $salesmen = DB::table('invoices')
+            ->select('salesman')
+            ->whereNotNull('salesman')
+            ->distinct()
+            ->orderBy('salesman')
+            ->get();
+
+        return view('reports.collection_report', compact('reportData', 'salesmen', 'customers', 'products', 'startDate', 'endDate'));
+    }
+
+    public function exportCollection(Request $request)
+    {
+        $salesman   = $request->input('salesman') ?? null;
+        $customerId = $request->input('customer_id') ?? null;
+        $productId  = $request->input('product_id') ?? null;
+        $startDate  = $request->input('start_date') ?? null;
+        $endDate    = $request->input('end_date') ?? null;
+
+        // Call stored procedure (with filters)
+        $collections = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
+            $salesman,
+            $customerId,
+            $productId,
+            $startDate,
+            $endDate
+        ]);
+
+        // Create Excel sheet
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Collection Report');
+
+        // Header info
+        $sheet->setCellValue('A1', 'AVT Hardware Trading');
+        $sheet->setCellValue('A2', 'Collection Report');
+        $sheet->setCellValue('A3', 'Date Generated: ' . now()->format('M d, Y'));
+        $sheet->getStyle('A1:A3')->getFont()->setBold(true);
+        $sheet->getStyle('A1')->getFont()->setSize(14);
+
+        // Table headers
+        $headers = [
+            'Invoice #',
+            'Collection #',
+            'Collection Date',
+            'Salesman',
+            'Customer',
+            'Product',
+            'Payment Mode',
+            'Check Number',
+            'Mobile Number',
+            'Payment Status',
+            'Remarks',
+            'Outstanding Balance',
+            'Amount Collected (₱)'
+        ];
+
+        $col = 'A';
+        $headerRow = 5;
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col.$headerRow, $header);
+            $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+
+        // Group data by invoice
+        $groupedData = collect($collections)->groupBy('invoice_number');
+        $row = $headerRow + 1;
+        $grandTotal = 0;
+
+        foreach ($groupedData as $invoiceNumber => $records) {
+            $sheet->setCellValue("A{$row}", "Invoice: " . $invoiceNumber);
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+            $row++;
+
+            $invoiceTotal = 0;
+
+            foreach ($records as $record) {
+                $sheet->setCellValue("A{$row}", $record->invoice_number ?? '');
+                $sheet->setCellValue("B{$row}", $record->collection_number ?? '');
+                $sheet->setCellValue("C{$row}", \Carbon\Carbon::parse($record->collection_date)->format('M d, Y'));
+                $sheet->setCellValue("D{$row}", $record->salesman ?? '');
+                $sheet->setCellValue("E{$row}", $record->customer_name ?? '');
+                $sheet->setCellValue("F{$row}", $record->product_name ?? '');
+                $sheet->setCellValue("G{$row}", $record->payment_mode ?? '');
+                $sheet->setCellValue("H{$row}", $record->check_number ?? '-');
+                $sheet->setCellValue("I{$row}", $record->mobile_number ?? '-');
+                $sheet->setCellValue("J{$row}", ucfirst($record->payment_status ?? '-'));
+                $sheet->setCellValue("K{$row}", $record->remarks ?? '-');
+                $sheet->setCellValue("L{$row}", number_format($record->outstanding_balance ?? 0, 2));
+                $sheet->setCellValue("M{$row}", number_format($record->amount_collected ?? 0, 2));
+
+                $invoiceTotal += $record->amount_collected ?? 0;
+                $row++;
+            }
+
+            // Invoice subtotal
+            $sheet->setCellValue("L{$row}", "Subtotal for {$invoiceNumber}:");
+            $sheet->setCellValue("M{$row}", number_format($invoiceTotal, 2));
+            $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
+            $row++;
+
+            $grandTotal += $invoiceTotal;
+        }
+
+        // Grand total
+        $sheet->setCellValue("L{$row}", "Grand Total:");
+        $sheet->setCellValue("M{$row}", number_format($grandTotal, 2));
+        $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
+
+        // Borders
+        $lastCol = 'M';
+        $lastRow = $row;
+        $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ]);
+
+        // Export
+        $fileName = 'collection_report_' . now()->format('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename=\"$fileName\"");

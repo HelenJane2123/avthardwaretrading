@@ -185,6 +185,7 @@
                 <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.ap_aging_report') }}"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.inventory_report') }}"><i class="icon fa fa-circle-o"></i> Inventory Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.collection_report') }}"><i class="icon fa fa-circle-o"></i> Collection Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.purchase_report') }}"><i class="icon fa fa-circle-o"></i> Purchase Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>

@@ -76,7 +76,13 @@
                                             <td>{{ $purchase->qty }}</td>
                                             <td>{{ number_format($purchase->unit_price, 2) }}</td>
                                             <td>{{ number_format($purchase->total_amount, 2) }}</td>
-                                            <td>{{ $purchase->name }} - {{ $purchase->term }} Days</td>
+                                            <td>
+                                                @if(in_array(strtolower($purchase->name), ['cash', 'gcash']))
+                                                    {{ $purchase->name }}
+                                                @else
+                                                    {{ $purchase->name }} - {{ $purchase->term }} Days
+                                                @endif
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
