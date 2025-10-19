@@ -108,6 +108,28 @@
                                    value="{{ $collection->amount_paid }}" required>
                         </div>
 
+                        <div id="pdcFields" class="mb-3" style="display: none;">
+                            <label>Check Number</label>
+                            <input type="text" name="check_number" class="form-control"
+                                value="{{ old('check_number', $collection->check_number ?? '') }}"
+                                placeholder="Enter check number">
+                        </div>
+
+                        <div id="gcashFields" style="display: none;">
+                            <div class="mb-3">
+                                <label>GCash Name</label>
+                                <input type="text" name="gcash_name" class="form-control"
+                                    value="{{ old('gcash_name', $collection->gcash_name ?? '') }}"
+                                    placeholder="Enter GCash account name">
+                            </div>
+                            <div class="mb-3">
+                                <label>GCash Mobile Number</label>
+                                <input type="text" name="gcash_mobile" class="form-control"
+                                    value="{{ old('gcash_number', $collection->gcash_number ?? '') }}"
+                                    placeholder="Enter GCash mobile number">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label>Balance</label>
                             <input type="number" step="0.01" name="balance" 
@@ -139,3 +161,21 @@
     </div>
 </main>
 @endsection
+@push('js')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentMode = "{{ strtolower($collection->invoice->payment_mode->name ?? '') }}";
+
+            // Hide all first
+            document.getElementById('pdcFields').style.display = 'none';
+            document.getElementById('gcashFields').style.display = 'none';
+
+            // Show based on payment method
+            if (paymentMode === 'pdc/check') {
+                document.getElementById('pdcFields').style.display = 'block';
+            } else if (paymentMode === 'gcash') {
+                document.getElementById('gcashFields').style.display = 'block';
+            }
+        });
+    </script>
+@endpush

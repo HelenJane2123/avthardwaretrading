@@ -111,6 +111,22 @@
                                 <label>Amount Paid</label>
                                 <input type="number" step="0.01" name="amount_paid" class="form-control" required>
                             </div>
+                            <!-- Extra Fields Based on Payment Method -->
+                            <div id="pdcFields" class="mb-3" style="display: none;">
+                                <label>Check Number</label>
+                                <input type="text" name="check_number" class="form-control" placeholder="Enter check number">
+                            </div>
+
+                            <div id="gcashFields" style="display: none;">
+                                <div class="mb-3">
+                                    <label>GCash Name</label>
+                                    <input type="text" name="gcash_name" class="form-control" placeholder="Enter GCash account name">
+                                </div>
+                                <div class="mb-3">
+                                    <label>GCash Mobile Number</label>
+                                    <input type="text" name="gcash_mobile" class="form-control" placeholder="Enter mobile number">
+                                </div>
+                            </div>
 
                             <!-- <div class="mb-3">
                                 <label>Balance</label>
@@ -176,6 +192,17 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
     $(document).ready(function () {
+        function togglePaymentFields(mode) {
+            $('#pdcFields').hide();
+            $('#gcashFields').hide();
+
+            if (mode.toLowerCase() === 'pdc/check') {
+                $('#pdcFields').show();
+            } else if (mode.toLowerCase() === 'gcash') {
+                $('#gcashFields').show();
+            }
+        }
+
         let table = $('#invoiceTable').DataTable({
             processing: true,
             serverSide: false,
@@ -219,6 +246,8 @@
 
     // Handle Select button
     $(document).on('click', '.select-invoice', function () {
+        const paymentMode = $(this).data("modeofpayment") || "N/A";
+        
         $('#invoiceId').val($(this).data('id'));
         $('#customerId').val($(this).data('customer'));
         $('#invoiceSearch').val($(this).data('number'));
@@ -232,8 +261,10 @@
         $("#detailCustomerEmail").text($(this).data("email") || "N/A");
         $("#detailCustomerPhone").text($(this).data("phone") || "N/A");
         $("#detailCustomerAddress").text($(this).data("address") || "N/A");
-        $("#ModeofPayment").text($(this).data("modeofpayment") || "N/A");
+        $("#ModeofPayment").text(paymentMode);
 
+        // Show appropriate extra fields
+        togglePaymentFields(paymentMode);
 
         // Close modal safely
         $('#invoiceModal').modal('hide');
