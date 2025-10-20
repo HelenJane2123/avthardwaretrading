@@ -142,7 +142,7 @@ class ExportController extends Controller
             $headers = [
                 'Image', 'Product Code', 'Name', 'Serial Number', 'Model', 'Category',
                 'Sales Price', 'Quantity', 'Remaining Stock', 'Threshold', 'Status',
-                'Supplier', 'Price'
+                'Supplier', 'Price', 'Adjustments', 'Remarks', 'Adjustment Status'
             ];
 
             $colIndex = 1;
@@ -176,6 +176,18 @@ class ExportController extends Controller
 
                     $colIndex++; // Move after image
 
+                    // Parse JSON adjustments
+                    $adjustments = $product->adjustments ? json_decode($product->adjustments, true) : [];
+                    $adjustmentText = '';
+                    $remarksText = '';
+                    $statusText = '';
+
+                    foreach ($adjustments as $adj) {
+                        $adjustmentText .= ($adj['adjustment'] ?? '') . "\n";
+                        $remarksText .= ($adj['remarks'] ?? '') . "\n";
+                        $statusText .= ($adj['adjustment_status'] ?? '') . "\n";
+                    }
+
                     $data = [
                         $product->product_code,
                         $product->product_name,
@@ -189,6 +201,9 @@ class ExportController extends Controller
                         $product->status,
                         $supplier->name . ' ' . ($supplier->code ?? ''),
                         $supplier->pivot->price,
+                        trim($adjustmentText),
+                        trim($remarksText),
+                        trim($statusText),
                     ];
 
                     foreach ($data as $value) {
@@ -210,6 +225,8 @@ class ExportController extends Controller
         $writer->save('php://output');
         exit;
     }
+
+
 
     //Export Invoice
     public function exportInvoices()

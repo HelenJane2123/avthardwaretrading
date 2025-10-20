@@ -121,15 +121,15 @@
                                 <h5 class="mb-0">Stock Information</h5>
                             </div>
                             <div class="card-body row g-3">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Initial Quantity</label>
                                     <input type="number" name="quantity" class="form-control" value="{{ $product->quantity }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Remaining Stock</label>
                                     <input type="number" name="remaining_stock" class="form-control" value="{{ $product->remaining_stock }}" readonly>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Selling Price</label>
                                     <input type="number" step="0.01" name="sales_price" class="form-control" value="{{ $product->sales_price }}" required>
                                 </div>
@@ -143,6 +143,83 @@
                                         {{ $product->status }}
                                     </span>
                                 </div>
+                                <div class="form-group col-md-3">
+                                    <label class="control-label">Discount</label>
+                                    <select name="tax_id" class="form-control">
+                                        <option value="0">---Select Discount---</option>
+                                        @foreach($taxes as $tax)
+                                            <option value="{{$tax->id}}" {{ $product->tax_id == $tax->id ? 'selected' : '' }}>
+                                                {{$tax->name}} %
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('tax_id')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card mt-4">
+                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Adjustments</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered table-sm" id="adjustmentTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Adjustment</th>
+                                            <th>Adjustment Status</th>
+                                            <th>Remarks</th>
+                                            <th>New Initial Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if($product->adjustments && $product->adjustments->count() > 0)
+                                            @foreach($product->adjustments as $adj)
+                                                <tr>
+                                                    <td>
+                                                        <input type="number" name="adjustment[]" class="form-control adjustment" 
+                                                            value="{{ $adj->adjustment }}" min="0">
+                                                    </td>
+                                                    <td>
+                                                        <select name="adjustment_status[]" class="form-control">
+                                                            <option value="Return" {{ $adj->adjustment_status == 'Return' ? 'selected' : '' }}>Return</option>
+                                                            <option value="Others" {{ $adj->adjustment_status == 'Others' ? 'selected' : '' }}>Others</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="adjustment_remarks[]" class="form-control" 
+                                                            placeholder="Enter remarks" value="{{ $adj->remarks }}">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" 
+                                                            value="{{ $adj->new_initial_qty }}" readonly>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td>
+                                                    <input type="number" name="adjustment[]" class="form-control adjustment" value="0" min="0">
+                                                </td>
+                                                <td>
+                                                    <select name="adjustment_status[]" class="form-control">
+                                                        <option value="Return">Return</option>
+                                                        <option value="Others">Others</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="adjustment_remarks[]" class="form-control" placeholder="Enter remarks">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" readonly>
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -248,34 +325,57 @@
             $(this).closest('.row').remove();
             x--;
         });
-        //Update status of product based on qty
-         $('input[name="quantity"]').on('input', function(){
-            const qty = parseInt($(this).val());
-            const threshold = qty <= 10 ? 1 : Math.floor(qty * 0.2);
-            $('input[readonly][value="{{ $product->threshold }}"]').val(threshold); // optional live display
+       
+       // Select inputs using jQuery
+        const $initialStockInput = $('input[name="quantity"]');
+        const $remainingStockInput = $('input[name="remaining_stock"]');
 
-            let status = 'In Stock';
-            if (qty === 0) status = 'Out of Stock';
-            else if (qty <= threshold) status = 'Low Stock';
-
-            const badge = $('.badge');
-            badge.text(status);
-            badge.removeClass('badge-success badge-warning badge-danger');
-
-            if(status === 'In Stock') badge.addClass('badge-success');
-            if(status === 'Low Stock') badge.addClass('badge-warning');
-            if(status === 'Out of Stock') badge.addClass('badge-danger');
-        });
-
-        const initialStockInput = document.querySelector('input[name="quantity"]');
-        const remainingStockInput = document.querySelector('input[name="remaining_stock"]');
-
-        if (initialStockInput && remainingStockInput) {
-            initialStockInput.addEventListener('input', function () {
-                remainingStockInput.value = this.value;
-            });
+        // Function to update New Initial Qty for a row
+        function updateRowNewQty($row) {
+            const remainingStock = parseFloat($remainingStockInput.val()) || 0;
+            const adjustment = parseFloat($row.find('.adjustment').val()) || 0;
+            const newInitialQty = remainingStock + adjustment;
+            $row.find('.new-initial-qty').val(newInitialQty);
         }
 
+        // Initialize all adjustment rows on page load
+        $('#adjustmentTable tbody tr').each(function() {
+            updateRowNewQty($(this));
+        });
+
+        // When initial quantity changes
+        $initialStockInput.on('input', function() {
+            const initialVal = parseFloat($(this).val()) || 0;
+            $remainingStockInput.val(initialVal);
+
+            // Update all adjustment rows
+            $('#adjustmentTable tbody tr').each(function() {
+                updateRowNewQty($(this));
+            });
+
+            // Update product status badge
+            const threshold = initialVal <= 10 ? 1 : Math.floor(initialVal * 0.2);
+            let status = 'In Stock';
+            if (initialVal === 0) status = 'Out of Stock';
+            else if (initialVal <= threshold) status = 'Low Stock';
+
+            const $badge = $('.badge');
+            $badge.text(status).removeClass('bg-success bg-warning bg-danger');
+
+            if (status === 'In Stock') $badge.addClass('bg-success');
+            else if (status === 'Low Stock') $badge.addClass('bg-warning');
+            else if (status === 'Out of Stock') $badge.addClass('bg-danger');
+        });
+
+        // When adjustment input changes
+        $('#adjustmentTable').on('input', '.adjustment', function() {
+            const $row = $(this).closest('tr');
+            updateRowNewQty($row);
+        });
+
+        // initialize on page load
+        updateRemainingStock();
+        
         // Product suggestions (autocomplete)
         $("#product_name").on("keyup", function () {
             let query = $(this).val();

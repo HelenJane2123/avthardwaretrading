@@ -9,6 +9,7 @@ use App\Supplier;
 use App\SupplierItem;
 use App\Tax;
 use App\Unit;
+use App\ProductAdjustments;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -17,7 +18,6 @@ class ProductController extends Controller
     {
         $this->middleware('auth');
     }
-
 
     public function index()
     {
@@ -59,9 +59,9 @@ class ProductController extends Controller
         $request->validate([
             'product_code' => 'required|unique:products,product_code',
             'supplier_product_code' => 'required|unique:products,supplier_product_code',
-            'product_name' => 'required|string|min:3|max:255,product_name',
-            'serial_number' => 'required',
-            'model' => 'required',
+            'product_name' => 'required|string|min:3|max:255',
+            // 'serial_number' => 'required',
+            // 'model' => 'required',
             'category_id' => 'required',
             'sales_price' => 'required|numeric',
             'unit_id' => 'required',
@@ -73,6 +73,9 @@ class ProductController extends Controller
             'supplier_price.*' => 'numeric|min:0',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'tax_id' => 'nullable|integer',
+            // 'adjustment' => 'nullable|integer|min:0', // new adjustment input
+            // 'adjustment_status' => 'nullable|in:Return,Others',
+            // 'remarks' => 'nullable|string|max:500',
         ]);
 
         $product = new Product();
@@ -108,15 +111,42 @@ class ProductController extends Controller
 
         $product->save();
 
-        // ✅ Attach suppliers with pivot data
+        // Attach suppliers
         $syncData = [];
         foreach ($request->supplier_id as $key => $supplierId) {
             $syncData[$supplierId] = ['price' => $request->supplier_price[$key]];
         }
         $product->suppliers()->sync($syncData);
 
+        //Insert into adjustments if adjustment exists
+        if ($request->has('adjustment')) {
+            foreach ($request->adjustment as $index => $adjustment) {
+                // Skip if adjustment is empty or zero
+                if (empty($adjustment) || $adjustment <= 0) continue;
+
+                $status = $request->adjustment_status[$index] ?? 'Others';
+                $remarks = $request->adjustment_remarks[$index] ?? '';
+                $newQty = $adjustment + $product->remaining_stock;
+
+                \DB::table('product_adjustments')->insert([
+                    'product_id' => $product->id,
+                    'adjustment' => $adjustment,
+                    'adjustment_status' => $status,
+                    'remarks' => $remarks,
+                    'new_initial_qty' => $newQty,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Update product remaining stock
+                $product->remaining_stock += $adjustment;
+                $product->save();
+            }
+        }
+
         return redirect()->route('product.index')->with('message', 'New product has been added successfully');
     }
+
 
     /**
      * Display the specified resource.
@@ -142,7 +172,8 @@ class ProductController extends Controller
             'productSuppliers.supplier',
             'category',
             'unit',
-            'tax'
+            'tax',
+            'adjustments'
         ])->findOrFail($id);
 
         $categories = Category::all();
@@ -178,11 +209,22 @@ class ProductController extends Controller
             'supplier_id.*' => 'required|integer|exists:suppliers,id',
             'supplier_price' => 'required|array',
             'supplier_price.*' => 'required|numeric|min:0',
+            'adjustment' => 'nullable|array',
+            'adjustment.*' => 'nullable|integer|min:0',
+            'adjustment_status' => 'nullable|array',
+            'adjustment_status.*' => 'nullable|in:Return,Others',
+            'adjustment_remarks' => 'nullable|array',
+            'adjustment_remarks.*' => 'nullable|string|max:500',
         ]);
 
         $product = Product::findOrFail($id);
 
         // Update basic product fields
+        $threshold = $request->quantity <= 10 ? 1 : floor($request->quantity * 0.2);
+        $status = $request->quantity == 0 
+                    ? 'Out of Stock' 
+                    : ($request->quantity <= $threshold ? 'Low Stock' : 'In Stock');
+
         $product->update([
             'serial_number' => $request->serial_number,
             'supplier_product_code' => $request->supplier_product_code,
@@ -190,12 +232,12 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'model' => $request->model,
             'quantity' => $request->quantity,
-            'remaining_stock' => $request->quantity, // or however you manage stock
+            'remaining_stock' => $request->quantity, // will adjust later based on adjustments
             'sales_price' => $request->sales_price,
             'unit_id' => $request->unit_id,
             'tax_id' => $request->tax_id,
-            'threshold' => $request->quantity <= 10 ? 1 : floor($request->quantity * 0.2),
-            'status' => $request->quantity == 0 ? 'Out of Stock' : ($request->quantity <= ($request->quantity <= 10 ? 1 : floor($request->quantity * 0.2)) ? 'Low Stock' : 'In Stock'),
+            'threshold' => $threshold,
+            'status' => $status,
         ]);
 
         // Handle image update if uploaded
@@ -207,10 +249,8 @@ class ProductController extends Controller
             $product->save();
         }
 
-        // Delete old supplier records
+        // Delete old supplier records and recreate
         ProductSupplier::where('product_id', $product->id)->delete();
-
-        // Recreate supplier records
         foreach ($request->supplier_id as $index => $supplierId) {
             if (!empty($supplierId) && !empty($request->supplier_price[$index])) {
                 ProductSupplier::create([
@@ -221,8 +261,36 @@ class ProductController extends Controller
             }
         }
 
+        // Delete old adjustments
+        \DB::table('product_adjustments')->where('product_id', $product->id)->delete();
+
+        // Insert new adjustments and update remaining stock
+        $totalAdjustment = 0;
+        if ($request->filled('adjustment')) {
+            foreach ($request->adjustment as $index => $adjValue) {
+                $adjValue = (int) $adjValue;
+                if ($adjValue !== 0) {
+                    \DB::table('product_adjustments')->insert([
+                        'product_id' => $product->id,
+                        'adjustment' => $adjValue,
+                        'adjustment_status' => $request->adjustment_status[$index] ?? 'Others',
+                        'remarks' => $request->adjustment_remarks[$index] ?? null,
+                        'new_initial_qty' => $request->new_initial_qty[$index] ?? ($product->remaining_stock + $adjValue),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $totalAdjustment += $adjValue;
+                }
+            }
+        }
+
+        // Update remaining stock with total adjustments
+        $product->remaining_stock += $totalAdjustment;
+        $product->save();
+
         return redirect()->route('product.index')->with('message', 'Product updated successfully!');
     }
+
 
     public function getProductInfo($id)
     {

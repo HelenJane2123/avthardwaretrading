@@ -56,4 +56,9 @@ class Product extends Model
                     ->withPivot('quantity', 'price', 'discount')
                     ->withTimestamps();
     }
+
+    public function adjustments()
+    {
+        return $this->hasMany(ProductAdjustment::class);
+    }
 }

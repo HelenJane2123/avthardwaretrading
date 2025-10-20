@@ -137,8 +137,6 @@
                                             @enderror
                                         </div>
 
-                                        
-
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Initial Quantity</label>
                                             <input name="quantity" class="form-control" type="number" min="0" placeholder="Enter Initial Stock">
@@ -173,8 +171,7 @@
                                             </span>
                                             @enderror
                                         </div>
-
-                                        <!-- <div class="form-group col-md-4">
+                                        <div class="form-group col-md-4">
                                             <label class="control-label">Discount</label>
                                             <select name="tax_id" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -187,8 +184,45 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
-                                        </div> -->
+                                        </div>
                                     </div>
+                                </div>
+                            </div>
+                            {{-- Adjustment Section --}}
+                            <div class="card mt-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Adjustments</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-bordered table-sm" id="adjustmentTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Adjustment</th>
+                                                <th>Adjustment Status</th>
+                                                <th>Remarks</th>
+                                                <th>New Initial Qty</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <input type="number" name="adjustment[]" class="form-control adjustment" value="0" min="0">
+                                                </td>
+                                                <td>
+                                                    <select name="adjustment_status[]" class="form-control">
+                                                        <option value="Return">Return</option>
+                                                        <option value="Others">Others</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="adjustment_remarks[]" class="form-control" placeholder="Enter remarks">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" readonly>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                            {{-- Supplier Section --}}
@@ -345,14 +379,39 @@
         // Set it when the page loads
         $('#product_code').val(generateProductCode());
 
-        const initialStockInput = document.querySelector('input[name="quantity"]');
-        const remainingStockInput = document.querySelector('input[name="remaining_stock"]');
+         // Initial stock & remaining stock inputs
+        const initialStockInput = $('input[name="quantity"]');
+        const remainingStockInput = $('input[name="remaining_stock"]');
 
-        if (initialStockInput && remainingStockInput) {
-            initialStockInput.addEventListener('input', function () {
-                remainingStockInput.value = this.value;
+        // Auto-update remaining stock when initial changes
+        initialStockInput.on('input', function() {
+            remainingStockInput.val($(this).val());
+            updateAllNewQty();
+        });
+
+        // Auto-update New Initial Qty when adjustment changes
+        $('#adjustmentTable').on('input', '.adjustment', function() {
+            updateRowNewQty($(this).closest('tr'));
+        });
+
+        function updateRowNewQty(row) {
+            const initialQty = parseFloat(initialStockInput.val()) || 0;
+            const remainingStock = parseFloat(remainingStockInput.val()) || 0;
+            const adjustment = parseFloat(row.find('.adjustment').val()) || 0;
+
+            const newInitialQty = remainingStock + adjustment;
+            row.find('.new-initial-qty').val(newInitialQty);
+        }
+
+        function updateAllNewQty() {
+            $('#adjustmentTable tbody tr').each(function() {
+                updateRowNewQty($(this));
             });
         }
+
+        // Initialize table values
+        updateAllNewQty();
+        
     </script>
 
 @endpush
