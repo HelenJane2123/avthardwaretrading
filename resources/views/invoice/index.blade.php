@@ -91,19 +91,37 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $invoice->id }}"><i class="fa fa-eye"></i></button>
-                                            <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                            @if($invoice->invoice_status == 'approved')
+                                            <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $invoice->id }}">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+
+                                           @if($invoice->invoice_status == 'approved')
+                                                {{-- Show print button only when approved --}}
                                                 <a class="btn btn-secondary btn-sm" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
                                                     <i class="fa fa-print"></i>
                                                 </a>
+
+                                            @elseif($invoice->invoice_status == 'canceled')
+                                                <span class="badge bg-danger text-light">
+                                                    This invoice is already canceled
+                                                </span>
+                                            @else
+                                                {{-- Show edit and approve buttons only if not approved or canceled --}}
+                                                <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
+                                                    <i class="fa fa-check"></i> Approve
+                                                </button>
                                             @endif
+
                                             <button class="btn btn-danger btn-sm" onclick="deleteTag({{ $invoice->id }})">
                                                 <i class="fa fa-trash"></i>
                                             </button>
-                                            <form id="delete-form-{{ $invoice->id }}" action="{{ route('invoice.destroy',$invoice->id) }}" method="POST" style="display: none;">
+
+                                            <form id="delete-form-{{ $invoice->id }}" 
+                                                action="{{ route('invoice.destroy',$invoice->id) }}" 
+                                                method="POST" style="display:none;">
                                                 @csrf
                                                 @method('DELETE')
                                             </form>
@@ -119,18 +137,15 @@
     </main>
 
     <!-- Invoice Modal -->
-    <div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog" aria-labelledby="invoiceModalLabel" aria-modal="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <!-- Modal Header -->
                 <div class="modal-header">
                     <h5 class="modal-title" id="invoiceModalLabel">Invoice Details</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-
-                <!-- Modal Body -->
                 <div class="modal-body" id="invoiceDetails">
                     <!-- AJAX loads details here -->
                 </div>
@@ -165,13 +180,85 @@
             })
         }
 
-        // Show modal with invoice details
+       // Show modal with invoice details safely
         $(document).on('click', '.view-invoice', function () {
-            let id = $(this).data('id');
-            $.get("{{ url('invoice') }}/" + id, function (data) {
-                $('#invoiceDetails').html(data);
-                $('#invoiceModal').modal('show');
+            const id = $(this).data('id');
+            const $modal = $('#invoiceModal');
+            const $details = $('#invoiceDetails');
+
+            // First, clear old data
+            $details.html('<p class="text-muted">Loading details...</p>');
+
+             // Force remove if Bootstrap left it behind
+            $modal.removeAttr('aria-hidden');
+
+            // Show modal first (Bootstrap handles aria attributes properly)
+            $modal.modal('show');
+
+            // Then load the content dynamically
+            $.get(`{{ url('invoice') }}/${id}`, function (data) {
+                // Insert the new HTML *after* the modal is visible
+                $details.html(data);
             });
         });
+
+        // Optional: clean up when closed
+        $('#invoiceModal').on('hidden.bs.modal', function () {
+            $('#invoiceDetails').empty();
+        });
+
+        function approveInvoice(id) {
+            swal({
+                title: 'Confirm Approval',
+                text: 'Only Super Admin can approve invoices.',
+                input: 'password',
+                inputPlaceholder: 'Enter Super Admin password',
+                showCancelButton: true,
+                confirmButtonText: 'Approve',
+                confirmButtonColor: '#28a745',
+                cancelButtonText: 'Cancel',
+                preConfirm: function (password) {
+                    return new Promise(function (resolve, reject) {
+                        if (!password) {
+                            reject('Please enter your password');
+                            return;
+                        }
+
+                        $.ajax({
+                            url: `/invoice/${id}/approve`,
+                            type: 'PUT',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                password: password
+                            },
+                            success: function (response) {
+                                console.log("test response",response);
+                                if (response.error) {
+                                    reject(response.error);
+                                } else {
+                                    resolve(response);
+                                }
+                            },
+                            error: function () {
+                                reject('An error occurred during approval.');
+                            }
+                        });
+                    });
+                }
+            }).then(function (result) {
+                if (result && result.value && result.value.success) {
+                    swal({
+                        type: 'success',
+                        title: 'Approved!',
+                        text: result.value.success,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                }
+            }).catch(function (error) {
+                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
+            });
+        }
     </script>
 @endpush

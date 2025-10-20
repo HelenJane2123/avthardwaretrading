@@ -30,35 +30,51 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'invoice_id'  => 'required|exists:invoices,id',
-            'amount_paid' => 'required|numeric|min:0.01',
-            'payment_date'=> 'required|date',
-            'remarks'     => 'nullable|string|max:255',
+            'invoice_id'   => 'required|exists:invoices,id',
+            'amount_paid'  => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'remarks'      => 'nullable|string|max:255',
+            'check_number' => 'nullable|string|max:100',
+            'gcash_name'   => 'nullable|string|max:100',
+            'gcash_mobile' => 'nullable|string|max:20',
         ]);
 
-        // Load invoice (you may optionally lock it for update to avoid race conditions)
         $invoice = Invoice::with('paymentMode')->findOrFail($request->invoice_id);
 
-        // Wrap in transaction to keep things consistent if multiple payments occur concurrently
-        DB::transaction(function () use ($request, $invoice, &$newTotalPaid, &$balance, &$paymentStatus, &$invoiceStatus) {
+        // Normalize mode of payment
+        $paymentMode = strtolower(trim($invoice->paymentMode->name ?? ''));
 
-            // Create the collection (payment) record first
-            Collection::create([
+        DB::transaction(function () use ($request, $invoice, $paymentMode, &$newTotalPaid, &$balance, &$paymentStatus, &$invoiceStatus) {
+
+            $collectionData = [
                 'collection_number' => $request->collection_number,
-                'invoice_id'   => $invoice->id,
-                'customer_id'  => $invoice->customer_id,
-                'payment_date' => $request->payment_date,
-                'amount_paid'  => $request->amount_paid,
-                'remarks'      => $request->remarks,
-            ]);
+                'invoice_id'        => $invoice->id,
+                'customer_id'       => $invoice->customer_id,
+                'payment_date'      => $request->payment_date,
+                'last_paid_amount'  => $request->amount_paid,
+                'amount_paid'       => $request->amount_paid,
+                'remarks'           => $request->remarks,
+            ];
 
-            // Recompute total paid from DB (authoritative)
+            // ✅ Match exact database name "PDC/Check" (case-insensitive)
+            if ($paymentMode === 'pdc/check') {
+                $collectionData['check_number'] = $request->check_number;
+            }
+
+            // ✅ Handle GCash mode
+            if ($paymentMode === 'gcash') {
+                $collectionData['gcash_name']   = $request->gcash_name;
+                $collectionData['gcash_number'] = $request->gcash_number;
+            }
+
+            // Create collection record
+            Collection::create($collectionData);
+
+            // Compute total paid
             $paidTotal = (float) Collection::where('invoice_id', $invoice->id)->sum('amount_paid');
+            $balance   = max(0, round((float)$invoice->grand_total - $paidTotal, 2));
 
-            // Determine balance (never negative)
-            $balance = max(0, round((float)$invoice->grand_total - $paidTotal, 2));
-
-            // Determine payment status (use >= to avoid float-equality issues)
+            // Determine payment status
             if (round($paidTotal, 2) >= round((float)$invoice->grand_total, 2)) {
                 $paymentStatus = 'paid';
             } elseif ($paidTotal > 0 && $balance > 0) {
@@ -67,12 +83,12 @@ class CollectionController extends Controller
                 $paymentStatus = 'pending';
             }
 
-            // Overdue check (if still has balance and past due date)
+            // Mark overdue if balance remains and due date has passed
             if ($balance > 0 && now()->greaterThan($invoice->due_date)) {
                 $paymentStatus = 'overdue';
             }
 
-            // Determine invoice status (your existing logic)
+            // Invoice status logic
             $invoiceStatus = $invoice->invoice_status;
             if ($invoice->paymentMode && strtolower($invoice->paymentMode->name) !== 'cash' && $invoiceStatus === 'pending') {
                 $invoiceStatus = 'approved';
@@ -85,7 +101,6 @@ class CollectionController extends Controller
                 'invoice_status'      => $invoiceStatus,
             ]);
 
-            // set values for logging / return if needed
             $newTotalPaid = $paidTotal;
         });
 
@@ -96,45 +111,75 @@ class CollectionController extends Controller
             ->with('message', 'Collection saved successfully.');
     }
 
-
-
     public function edit(Collection $collection)
     {
+        $collection->load([
+            'invoice.paymentMode',
+            'invoice.customer'
+        ]);
         return view('collection.edit', compact('collection'));
     }
 
     public function update(Request $request, Collection $collection)
     {
         $request->validate([
-            'amount_paid'   => 'required|numeric|min:0',
-            'payment_date'  => 'required|date',
-            'payment_status'=> 'required|string',
+            'amount_paid'    => 'required|numeric|min:0',
+            'payment_date'   => 'required|date',
+            'payment_status' => 'required|string',
+            'remarks'        => 'nullable|string|max:255',
+            'check_number'   => 'nullable|string|max:100',
+            'gcash_name'     => 'nullable|string|max:100',
+            'gcash_mobile'   => 'nullable|string|max:20',
         ]);
 
-        // Update collection
-        $collection->update([
-            'amount_paid'   => $request->amount_paid,
-            'remarks'       => $request->remarks,
-            'payment_date'  => $request->payment_date,
-        ]);
-
-        // Update linked invoice payment status + balance
         $invoice = $collection->invoice;
-        if ($invoice) {
-            $invoice->payment_status = $request->payment_status;
 
-            // Optionally recalc balance:
-            $invoice->outstanding_balance = max(
-                $invoice->grand_total - $collection->amount_paid, 
-                0
-            );
+        // Determine payment mode
+        $paymentMode = strtolower($invoice->paymentMode->name ?? '');
 
-            $invoice->save();
+        // Prepare update data
+        $updateData = [
+            'amount_paid'  => $request->amount_paid,
+            'remarks'      => $request->remarks,
+            'payment_date' => $request->payment_date,
+            'last_paid_amount' => $request->amount_paid
+        ];
+
+        // Conditional fields based on payment mode
+        if ($paymentMode === 'pdc/check') {
+            $updateData['check_number'] = $request->check_number;
+            $updateData['gcash_name']   = null;
+            $updateData['gcash_number'] = null;
+        } elseif ($paymentMode === 'gcash') {
+            $updateData['gcash_name']   = $request->gcash_name;
+            $updateData['gcash_number'] = $request->gcash_number;
+            $updateData['check_number'] = null;
+        } else {
+            // For cash or others, clear all optional fields
+            $updateData['check_number'] = null;
+            $updateData['gcash_name']   = null;
+            $updateData['gcash_number'] = null;
         }
 
-        return redirect()->route('collection.index')
+        // Update collection
+        $collection->update($updateData);
+
+        // Recalculate total payments and outstanding balance
+        if ($invoice) {
+            $totalPaid = (float) Collection::where('invoice_id', $invoice->id)->sum('amount_paid');
+            $balance   = max(0, round($invoice->grand_total - $totalPaid, 2));
+
+            $invoice->update([
+                'outstanding_balance' => $balance,
+                'payment_status'      => $request->payment_status,
+            ]);
+        }
+
+        return redirect()
+            ->route('collection.index')
             ->with('message', 'Collection updated successfully!');
     }
+
 
     public function destroy(Collection $collection)
     {

@@ -83,6 +83,7 @@ Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->nam
 Route::patch('/invoice/{id}/status', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
 Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('invoice.print');
 Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
+Route::put('/invoice/{id}/approve', [InvoiceController::class, 'approve'])->name('invoice.approve');
 
 //collection details
 Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])

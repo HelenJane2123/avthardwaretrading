@@ -10,7 +10,11 @@ class Collection extends Model
         'collection_number',
         'invoice_id',
         'customer_id',
+        'check_number',
+        'gcash_number',
+        'gcash_name',
         'payment_date',
+        'last_paid_amount',
         'amount_paid',
         'remarks',
     ];

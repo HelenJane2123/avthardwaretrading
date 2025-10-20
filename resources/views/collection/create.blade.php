@@ -124,7 +124,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label>GCash Mobile Number</label>
-                                    <input type="text" name="gcash_mobile" class="form-control" placeholder="Enter mobile number">
+                                    <input type="text" name="gcash_number" class="form-control" placeholder="Enter mobile number">
                                 </div>
                             </div>
 
@@ -286,6 +286,23 @@ function generateCollectionNumber() {
 document.addEventListener('DOMContentLoaded', function() {
     const collectionNumberField = document.getElementById('collectionNumber');
     collectionNumberField.value = generateCollectionNumber();
+});
+
+// Validation: Prevent overpayment
+$(document).on("submit", "form", function (e) {
+    const balanceText = $("#detailBalance").text().trim();
+    const amountPaid = parseFloat($("input[name='amount_paid']").val()) || 0;
+    const balance = parseFloat(balanceText.replace(/,/g, "")) || 0;
+
+    if (amountPaid > balance) {
+        e.preventDefault();
+        Swal.fire({
+            icon: "error",
+            title: "Invalid Payment",
+            text: `The amount paid (₱${amountPaid.toFixed(2)}) cannot exceed the balance (₱${balance.toFixed(2)}).`,
+            confirmButtonColor: "#d33",
+        });
+    }
 });
 </script>
 @endpush

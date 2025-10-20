@@ -28,9 +28,6 @@
 
     <!-- Header with Logo -->
     <div class="d-flex justify-content-between mb-4 align-items-center">
-        <div>
-            <img src="{{ asset('images/avt_logo.png') }}" alt="Company Logo" class="logo">
-        </div>
         <div class="text-end">
             <h4><strong>AVT HARDWARE</strong></h4>
             <p>
@@ -38,6 +35,9 @@
                 VAT Reg. TIN: 255-670-536-000 <br>
                 Contact: (053) 123-4567
             </p>
+        </div>
+        <div>
+            <img src="{{ asset('images/avt_logo.png') }}" alt="Company Logo" class="logo">
         </div>
     </div>
 
@@ -63,6 +63,10 @@
             </p>
         </div>
     </div>
+  <!-- Remarks -->
+    @if(!empty($invoice->remarks))
+    <p><strong>Remarks:</strong> {{ $invoice->remarks }}</p>
+    @endif
 
     <!-- Products Table -->
     <table class="table table-bordered">
@@ -129,11 +133,6 @@
             <td class="text-end"><strong>{{ number_format($invoice->grand_total, 2) }}</strong></td>
         </tr>
     </table>
-
-    <!-- Remarks -->
-    @if(!empty($invoice->remarks))
-    <p><strong>Remarks:</strong> {{ $invoice->remarks }}</p>
-    @endif
 
     <!-- Print Button -->
     <div class="text-center no-print">

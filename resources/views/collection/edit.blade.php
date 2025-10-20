@@ -54,11 +54,11 @@
                                     </tr>
                                     <tr>
                                         <th>Balance</th>
-                                        <td>₱{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
+                                        <td>₱<span id="detailBalance">{{ number_format($collection->invoice->outstanding_balance, 2) }}</span></td>
                                     </tr>
                                     <tr>
                                         <th>Payment Mode</th>
-                                        <td>{{ $collection->invoice->payment_mode->name ?? 'N/A' }}</td>
+                                        <td>{{ $collection->invoice->paymentMode->name ?? 'N/A' }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -97,6 +97,18 @@
                         </div>
 
                         <div class="mb-3">
+                            <label>Last Payment Date</label>
+                            <input type="date" name="payment_date" class="form-control" 
+                                   value="{{ \Carbon\Carbon::parse($collection->updated_at)->format('Y-m-d') }}" required disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Last Amount Paid</label>
+                            <input type="number" step="0.01" name="last_paid_amount" class="form-control" 
+                                   value="{{ $collection->last_paid_amount }}" required disabled>
+                        </div>
+
+                        <div class="mb-3">
                             <label>Payment Date</label>
                             <input type="date" name="payment_date" class="form-control" 
                                    value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" required>
@@ -105,7 +117,7 @@
                         <div class="mb-3">
                             <label>Amount Paid</label>
                             <input type="number" step="0.01" name="amount_paid" class="form-control" 
-                                   value="{{ $collection->amount_paid }}" required>
+                                   required>
                         </div>
 
                         <div id="pdcFields" class="mb-3" style="display: none;">
@@ -124,7 +136,7 @@
                             </div>
                             <div class="mb-3">
                                 <label>GCash Mobile Number</label>
-                                <input type="text" name="gcash_mobile" class="form-control"
+                                <input type="text" name="gcash_number" class="form-control"
                                     value="{{ old('gcash_number', $collection->gcash_number ?? '') }}"
                                     placeholder="Enter GCash mobile number">
                             </div>
@@ -162,20 +174,53 @@
 </main>
 @endsection
 @push('js')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const paymentMode = "{{ strtolower($collection->invoice->payment_mode->name ?? '') }}";
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const paymentMode = "{{ strtolower($collection->invoice->paymentMode->name ?? '') }}";
 
-            // Hide all first
-            document.getElementById('pdcFields').style.display = 'none';
-            document.getElementById('gcashFields').style.display = 'none';
+    // Hide all first
+    document.getElementById('pdcFields').style.display = 'none';
+    document.getElementById('gcashFields').style.display = 'none';
 
-            // Show based on payment method
-            if (paymentMode === 'pdc/check') {
-                document.getElementById('pdcFields').style.display = 'block';
-            } else if (paymentMode === 'gcash') {
-                document.getElementById('gcashFields').style.display = 'block';
-            }
+    // Show based on payment method
+    if (paymentMode === 'pdc/check') {
+        document.getElementById('pdcFields').style.display = 'block';
+    } else if (paymentMode === 'gcash') {
+        document.getElementById('gcashFields').style.display = 'block';
+    }
+});
+
+$(document).on("submit", "form", function (e) {
+    // Only check if this is the collection/payment form
+    const $form = $(this);
+
+    // Clean and parse numeric values (remove ₱, commas, etc.)
+    const balance = parseFloat(($form.find("input[name='balance']").val() || "0").replace(/[^0-9.-]/g, ""));
+    const amountPaid = parseFloat(($form.find("input[name='amount_paid']").val() || "0").replace(/[^0-9.-]/g, ""));
+    const paymentStatus = $form.find("select[name='payment_status']");
+
+    // Debugging helper (optional)
+    console.log("Balance:", balance, "Amount Paid:", amountPaid);
+
+    // Prevent overpayment
+    if (amountPaid > balance) {
+        e.preventDefault();
+        Swal.fire({
+            icon: "error",
+            title: "Invalid Payment",
+            text: `The amount paid (₱${amountPaid.toFixed(2)}) cannot exceed the balance (₱${balance.toFixed(2)}).`,
+            confirmButtonColor: "#d33",
         });
-    </script>
+        return false;
+    }
+
+    // Auto-update payment status
+    if (amountPaid < balance) {
+        paymentStatus.val("partial");
+    } else if (amountPaid === balance) {
+        paymentStatus.val("paid");
+    }
+});
+</script>
 @endpush

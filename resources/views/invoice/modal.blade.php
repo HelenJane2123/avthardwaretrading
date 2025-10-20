@@ -117,34 +117,129 @@
         @csrf
         <div class="mb-3">
             <label class="fw-bold">Status</label>
-            <select name="invoice_status" class="form-control">
+            <select name="invoice_status" class="form-control"
+                {{ $invoice->invoice_status == 'canceled' ? 'disabled' : '' }}>
                 <option value="pending" {{ $invoice->invoice_status == 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="approved" {{ $invoice->invoice_status == 'approved' ? 'selected' : '' }}>Approved</option>
-                <option value="canceled" {{ $invoice->invoice_status == 'cancelled' ? 'selected' : '' }}>Canceled</option>
+                <option value="canceled" {{ $invoice->invoice_status == 'canceled' ? 'selected' : '' }}>Canceled</option>
             </select>
         </div>
 
-        <!-- Modal Footer -->
         <div class="modal-footer">
-            <button type="button" class="btn btn-success update-status" data-id="{{ $invoice->id }}">Update</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            @if($invoice->invoice_status != 'canceled')
+                <button type="button" class="btn btn-success update-status" data-id="{{ $invoice->id }}">
+                    Update
+                </button>
+            @else
+                <span class="badge bg-danger">This invoice is already canceled</span>
+            @endif
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
     </form>
 </div>
+<!-- Approve Confirmation Modal -->
+<div class="modal fade" id="confirmApproveModal" tabindex="-1" role="dialog" aria-labelledby="confirmApproveLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="confirmApproveLabel">Confirm Approval</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Enter the Super Admin password to approve this invoice:</p>
+        <input type="password" id="adminPassword" class="form-control" placeholder="Enter password">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="confirmApproveBtn">Approve</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-    $('.update-status').on('click', function () {
-        let id = $(this).data('id');
-        let formData = $('#statusForm').serialize();
+$('.update-status').on('click', function () {
+    const id = $(this).data('id');
+    const selectedStatus = $('select[name="invoice_status"]').val();
 
+    // If approving, show inline password box
+    if (selectedStatus === 'approved') {
+        // Build password prompt markup
+        const passwordPrompt = `
+            <div id="approveBox" class="mt-3 p-3 border rounded bg-light">
+                <label class="fw-bold mb-2">Super Admin Password:</label>
+                <input type="password" id="adminPassword" class="form-control mb-2" placeholder="Enter password">
+                <div class="text-end">
+                    <button type="button" class="btn btn-success btn-sm" id="confirmApproveBtn">Confirm Approval</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="cancelApproveBtn">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        // Prevent duplicate prompt
+        if (!$('#approveBox').length) {
+            $('.modal-footer').before(passwordPrompt);
+        }
+
+        // Handle cancel button
+        $(document).on('click', '#cancelApproveBtn', function () {
+            $('#approveBox').remove();
+        });
+
+        // Handle confirm button
+        $(document).on('click', '#confirmApproveBtn', function () {
+            const password = $('#adminPassword').val().trim();
+            if (!password) {
+                alert('Please enter password.');
+                return;
+            }
+
+            $.ajax({
+                url: "{{ url('invoice') }}/" + id + "/approve",
+                type: "PUT",
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    password: password
+                },
+                success: function (response) {
+                    if (response.error) {
+                        $('#statusMessageTitle').text('Approval Failed!');
+                        $('#statusMessageText').text(response.error);
+                        $('#statusMessageModal .modal-body i').removeClass('text-success').addClass('text-danger');
+                        $('#statusMessageModal').modal('show');
+                    } else {
+                        $('#statusMessageTitle').text('Invoice Approved!');
+                        $('#statusMessageText').text('The invoice was successfully approved.');
+                        $('#statusMessageModal .modal-body i').removeClass('text-danger').addClass('text-success');
+                        $('#statusMessageModal').modal('show');
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                },
+                error: function (xhr) {
+                    alert(xhr.responseJSON?.error || 'Approval failed.');
+                }
+            });
+        });
+
+    } else {
+        // Regular update (Pending or Canceled)
         $.ajax({
             url: "{{ url('invoice') }}/" + id + "/status",
             type: "PATCH",
-            data: formData,
+            data: $('#statusForm').serialize(),
             success: function () {
-                alert('Status updated!');
-                location.reload();
+                $('#statusMessageTitle').text('Invoice Status Updated!');
+                $('#statusMessageText').text('Status successfully approved.');
+                $('#statusMessageModal .modal-body i').removeClass('text-danger').addClass('text-success');
+                $('#statusMessageModal').modal('show');
+                setTimeout(() => location.reload(), 1500);
             }
         });
-    });
+    }
+});
 </script>
+
+
+
