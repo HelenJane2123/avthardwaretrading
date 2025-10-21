@@ -15277,3 +15277,8 @@ be a descendant of the grid when it is being dragged.
     text-align: center;
     vertical-align: middle;
 }
+
+.selected-product-info {
+    font-size: 13px;
+    color: #6c757d; /* muted gray */
+}

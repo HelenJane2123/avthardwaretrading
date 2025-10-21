@@ -31,4 +31,9 @@ class InvoiceSales extends Model
         return $this->belongsTo(Invoice::class);
     }
 
+    public function discounts()
+    {
+        return $this->hasMany(InvoiceSalesDiscount::class, 'invoice_sale_id');
+    }
+
 }

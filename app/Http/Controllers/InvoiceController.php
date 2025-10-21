@@ -15,6 +15,7 @@ use App\Customer;
 use App\Category;
 use App\User;
 use App\Collection;
+use App\Tax;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
@@ -56,11 +57,12 @@ class InvoiceController extends Controller
         $customers = Customer::all();
         $products = Product::all();
         $units = Unit::all();
+        $taxes = Tax::all();
 
         // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
 
-        return view('invoice.create', compact('customers','products','paymentModes','units'));
+        return view('invoice.create', compact('customers','products','paymentModes','units','taxes'));
     }
 
     public function getCustomerInformation($id)
@@ -83,6 +85,7 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
+
         try {
             $request->validate([
                 'customer_id'      => 'required|exists:customers,id',
@@ -94,14 +97,13 @@ class InvoiceController extends Controller
                 'price'            => 'required|array|min:1',
             ]);
 
-            // ✅ Debug: check incoming request
             \Log::info('Invoice request data', $request->all());
 
             $invoice = Invoice::create([
                 'invoice_number'    => $request->invoice_number,
                 'customer_id'       => $request->customer_id,
-                'invoice_date'      => $request->invoice_date, 
-                'due_date'          => $request->due_date, 
+                'invoice_date'      => $request->invoice_date,
+                'due_date'          => $request->due_date,
                 'payment_mode_id'   => $request->payment_mode_id,
                 'discount_type'     => $request->discount_type,
                 'discount_value'    => $request->discount_value ?? 0,
@@ -112,10 +114,8 @@ class InvoiceController extends Controller
                 'remarks'           => $request->remarks,
                 'invoice_status'    => 'pending',
                 'payment_status'    => 'pending',
-                'discount_approved' => $request->discount_approved ?? 0
+                'discount_approved' => $request->discount_approved ?? 0,
             ]);
-
-            \Log::info('Invoice created', $invoice->toArray());
 
             $products   = $request->product_id;
             $qtys       = $request->qty;
@@ -125,29 +125,57 @@ class InvoiceController extends Controller
             $subtotal = 0;
 
             foreach ($products as $index => $productId) {
-                $qty   = $qtys[$index] ?? 0;
-                $price = $prices[$index] ?? 0;
-                $dis   = $discounts[$index] ?? 0;
-
+                $qty   = (float)($qtys[$index] ?? 0);
+                $price = (float)($prices[$index] ?? 0);
                 $lineTotal = $price * $qty;
 
-                if ($request->discount_type === 'per_item' && $dis > 0) {
-                    $lineTotal -= ($lineTotal * $dis / 100);
+                // Handle multiple discounts per product
+                $disArr = $discounts[$index] ?? [];
+
+                if (is_array($disArr) && count($disArr) > 0) {
+                    foreach ($disArr as $disId) {
+                        $tax = DB::table('taxes')->where('id', $disId)->first();
+
+                        if ($tax) {
+                            $lineTotal -= ($lineTotal * ($tax->name / 100));
+
+                            // Save each discount separately
+                            $invoiceSaleDiscounts[] = [
+                                'discount_name'   => 'Custom Discount',
+                                'discount_type'   => 'percent',
+                                'discount_value'  => $tax->name,
+                            ];
+                        }
+                    }
+                } else {
+                    $invoiceSaleDiscounts = [];
                 }
 
+                // Create invoice line
                 $line = InvoiceSales::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => $productId,
                     'qty'        => $qty,
                     'price'      => $price,
-                    'dis'        => $request->discount_type === 'per_item' ? $dis : 0,
+                    'dis'        => 0, // no single discount value now (handled below)
                     'amount'     => $lineTotal,
                 ]);
 
-                \Log::info('Invoice line inserted', $line->toArray());
+                // Save all discounts related to this line
+                foreach ($invoiceSaleDiscounts as $discountData) {
+                    DB::table('invoice_sales_discounts')->insert([
+                        'invoice_sale_id' => $line->id,
+                        'discount_name'   => $discountData['discount_name'],
+                        'discount_type'   => $discountData['discount_type'],
+                        'discount_value'  => $discountData['discount_value'],
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                }
 
                 $subtotal += $lineTotal;
 
+                // Update product stock
                 $product = Product::find($productId);
                 if ($product) {
                     $product->remaining_stock -= $qty;
@@ -165,11 +193,10 @@ class InvoiceController extends Controller
                     }
 
                     $product->save();
-
-                    \Log::info('Product stock updated', $product->toArray());
                 }
             }
 
+            // Apply overall discount if any
             $overallDiscount = 0;
             if ($request->discount_type === 'overall' && $request->discount_value > 0) {
                 $overallDiscount = $subtotal * ($request->discount_value / 100);
@@ -185,27 +212,16 @@ class InvoiceController extends Controller
                 'grand_total' => $grandTotal,
             ]);
 
-            \Log::info('Invoice totals updated', [
-                'subtotal'    => $subtotal,
-                'grand_total' => $grandTotal,
-            ]);
-
             DB::commit();
 
-            return redirect()->route('invoice.index')
-                ->with('message', 'Invoice created successfully!');
+            return redirect()->route('invoice.index')->with('message', 'Invoice created successfully!');
         } catch (\Exception $e) {
-            DB::rollback();
-
-            // ✅ Log the error with stack trace
+            DB::rollBack();
             \Log::error('Invoice creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-
-            return back()->withErrors([
-                'error' => 'Failed to create invoice: ' . $e->getMessage()
-            ])->withInput();
+            return back()->withErrors(['error' => 'Failed to create invoice: ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -248,13 +264,14 @@ class InvoiceController extends Controller
      */
     public function edit($id)
     {
-        $invoice = Invoice::with('items')->findOrFail($id);
+        $invoice = Invoice::with(['items.discounts'])->findOrFail($id);
         $customers = Customer::all();
         $products = Product::all();
         $units = Unit::all();
         $paymentModes = ModeofPayment::all();
+        $taxes = Tax::all(); // If you’re using discount options from $taxes in the form
 
-        return view('invoice.edit', compact('invoice','customers','products','units','paymentModes'));
+        return view('invoice.edit', compact('invoice', 'customers', 'products', 'units', 'paymentModes', 'taxes'));
     }
 
     /**
@@ -269,6 +286,7 @@ class InvoiceController extends Controller
         DB::transaction(function() use ($request, $id) {
             $invoice = Invoice::findOrFail($id);
 
+            // Update main invoice details
             $invoice->update([
                 'customer_id'    => $request->customer_id,
                 'invoice_number' => $request->invoice_number,
@@ -284,12 +302,16 @@ class InvoiceController extends Controller
                 'remarks'        => $request->remarks,
             ]);
 
-            // Remove old items first
+            // ✅ Delete old items and related discounts
+            $oldItems = $invoice->items;
+            foreach ($oldItems as $item) {
+                DB::table('invoice_sales_discounts')->where('invoice_sale_id', $item->id)->delete();
+            }
             $invoice->items()->delete();
 
-            // Re-insert updated items
+            // ✅ Re-insert updated items and discounts
             foreach ($request->product_id as $key => $productId) {
-                InvoiceSales::create([
+                $invoiceSale = InvoiceSales::create([
                     'invoice_id'   => $invoice->id,
                     'product_id'   => $productId,
                     'product_code' => $request->product_code[$key] ?? '',
@@ -299,10 +321,34 @@ class InvoiceController extends Controller
                     'dis'          => $request->dis[$key] ?? 0,
                     'amount'       => $request->amount[$key] ?? 0,
                 ]);
+
+                // ✅ If discount exists, store it in invoice_sales_discounts
+                if (!empty($request->dis[$key]) && $request->dis[$key] > 0) {
+                    DB::table('invoice_sales_discounts')->insert([
+                        'invoice_sale_id' => $invoiceSale->id,
+                        'discount_name'   => 'Custom Discount',
+                        'discount_type'   => 'percent',
+                        'discount_value'  => $request->dis[$key],
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                }
+            }
+
+            // ✅ Optional: record overall discount for tracking
+            if ($request->discount_type === 'overall' && $request->discount_value > 0) {
+                DB::table('invoice_sales_discounts')->insert([
+                    'invoice_sale_id' => null,
+                    'discount_name'   => 'Overall Discount',
+                    'discount_type'   => 'percent',
+                    'discount_value'  => $request->discount_value,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
             }
         });
 
-        return redirect()->route('invoice.index')->with('message','Invoice updated successfully.');
+        return redirect()->route('invoice.index')->with('message', 'Invoice updated successfully.');
     }
 
     /**

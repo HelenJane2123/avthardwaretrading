@@ -186,7 +186,16 @@
                                         </td>
                                         <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item->price }}"></td>
-                                        <td><input type="number" step="0.01" name="dis[]" class="form-control dis" value="{{ $item->discount }}"></td>
+                                        <td>
+                                            <select name="tax_id" class="form-control">
+                                                <option value="0">---Select Discount---</option>
+                                                @foreach($taxes as $tax)
+                                                    <option value="{{$tax->id}}" {{ $item->tax_id == $tax->id ? 'selected' : '' }}>
+                                                        {{$tax->name}} %
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
                                         <td><input type="number" step="0.01" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
@@ -304,12 +313,25 @@
                         <small class="text-muted available-stock"></small>
                     </td>
                     <td><input type="text" name="price[]" class="form-control price"></td>
-                    <td><input type="text" name="dis[]" class="form-control dis"></td>
+                    <td>
+                        <div class="discounts-wrapper">
+                            <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                                <select name="dis[0][]" class="form-control dis" disabled>
+                                    <option value="">---Select Discount---</option>
+                                    <option value="default">Default Discount</option>
+                                </select>
+                                <button type="button" class="btn btn-success btn-sm add-discount" disabled>
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
                     <td><a class="btn btn-danger remove"><i class="fa fa-trash"></i></a></td>
                 </tr>`;
 
                 $('#po-body').append(newRow);
+                toggleDiscountControls(); // <- ensure correct button state when new row is added
             }
             $(document).on('click', '.remove', function () {
                 var l = $('tbody tr').length;
@@ -551,6 +573,23 @@
             }
         });
 
+        function toggleDiscountControls() {
+            const discountType = $('#discount_type').val();
+
+            if (discountType === '') {
+                // disable all discount fields & add buttons if type not selected
+                $('.dis').prop('disabled', true);
+                $('.add-discount').prop('disabled', true);
+            } else if (discountType === 'overall') {
+                // disable per-item discounts if overall discount
+                $('.dis').prop('disabled', true);
+                $('.add-discount').prop('disabled', true);
+            } else if (discountType === 'per_item') {
+                // enable per-item discounts
+                $('.dis').prop('disabled', false);
+                $('.add-discount').prop('disabled', false);
+            }
+        }
         function calculateTotals() {
             let subtotal = 0;
 
@@ -608,15 +647,18 @@
             const type = $(this).val();
 
             if (type === 'overall') {
-                // Enable overall discount
                 $('#discount').prop('disabled', false);
-                $('.dis').prop('disabled', true).val(0); // disable per-item discounts
+                $('.dis').prop('disabled', true).val(0);
             } else if (type === 'per_item') {
-                // Disable overall discount & reset value to 0
                 $('#discount').prop('disabled', true).val(0);
-                $('.dis').prop('disabled', false); // allow per-item discounts
+                $('.dis').prop('disabled', false);
+            } else {
+                // No type selected
+                $('#discount').prop('disabled', true).val(0);
+                $('.dis').prop('disabled', true).val(0);
             }
 
+            toggleDiscountControls(); // 👈 ensure button states update properly
             calculateTotals();
         });
                 

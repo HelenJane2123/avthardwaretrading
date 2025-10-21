@@ -134,6 +134,7 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div class="text-muted small selected-product-info mt-1"></div>                                            
                                         </td>
                                         <td>
                                             <select name="unit[]" class="form-control unit">
@@ -148,7 +149,19 @@
                                             <small class="text-muted available-stock"></small>
                                         </td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
-                                        <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td>
+                                        <td>
+                                            <div class="discounts-wrapper">
+                                                <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                                                    <select name="dis[0][]" class="form-control dis">
+                                                        <option value="0">---Select Discount---</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button" class="btn btn-success btn-sm add-discount"><i class="fa fa-plus"></i></button>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td><input type="number" step="0.01" name="amount[]" class="form-control amount" readonly></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
@@ -223,6 +236,9 @@
 @push('js')
     <script type="text/javascript">
         $(document).ready(function(){
+            // Disable all Add Discount buttons initially
+            $('.add-discount').prop('disabled', true);
+
             $('.addRow').on('click', function() {
                 addRow();
                 calculateTotals();
@@ -252,6 +268,7 @@
                         <select name="product_id[]" class="form-control productname">
                             ${options}
                         </select>
+                        <div class="text-muted small selected-product-info mt-1"></div>
                     </td>
                     <td>
                         <select name="unit[]" class="form-control unit">
@@ -266,13 +283,45 @@
                         <small class="text-muted available-stock"></small>
                     </td>
                     <td><input type="text" name="price[]" class="form-control price"></td>
-                    <td><input type="text" name="dis[]" class="form-control dis"></td>
+                    <td>
+                        <div class="discounts-wrapper">
+                            <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                                <select name="dis[]" class="form-control dis">
+                                    <option value="0">---Select Discount---</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-success btn-sm add-discount">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
                     <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
                 </tr>`;
 
                 $('#po-body').append(newRow);
+
+                // ✅ Apply same behavior based on current discount type
+                const discountType = $('#discount_type').val();
+
+                if (discountType === "per_item") {
+                    // enable per-item discount controls
+                    $('#po-body tr:last .dis').prop('disabled', false);
+                    $('#po-body tr:last .add-discount').prop('disabled', false);
+                } else if (discountType === "overall") {
+                    // disable per-item discount controls
+                    $('#po-body tr:last .dis').prop('disabled', true);
+                    $('#po-body tr:last .add-discount').prop('disabled', true);
+                } else {
+                    // no type selected yet
+                    $('#po-body tr:last .dis').prop('disabled', true);
+                    $('#po-body tr:last .add-discount').prop('disabled', true);
+                }
             }
+
             $(document).on('click', '.remove', function () {
                 var l = $('tbody tr').length;
                 if (l == 1) {
@@ -282,6 +331,48 @@
                     $(this).closest('tr').remove();
                     calculateTotals();
                 }
+            });
+
+            $(document).on('change', '.dis', function() {
+                const selectedVal = $(this).val();
+                const addBtn = $(this).closest('.discount-row').find('.add-discount');
+                if (selectedVal !== "0" && selectedVal !== "" && selectedVal !== null) {
+                    addBtn.prop('disabled', false);
+                } else {
+                    addBtn.prop('disabled', true);
+                }
+                calculateTotals();
+            });
+
+             $(document).on('click', '.add-discount', function () {
+                const wrapper = $(this).closest('.discounts-wrapper');
+                const newRow = `
+                    <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                        <select name="dis[]" class="form-control dis">
+                            <option value="0">---Select Discount---</option>
+                            @foreach($taxes as $tax)
+                                <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                            @endforeach
+                        </select>
+                        <button type="button" class="btn btn-success btn-sm add-discount">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm remove-discount">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>`;
+                wrapper.append(newRow);
+
+                // Reapply disable state if needed
+                const discountType = $('#discount_type').val();
+                if (discountType !== 'per_item') {
+                    $('.add-discount').prop('disabled', true);
+                }
+            });
+            // Remove a discount
+            $(document).on('click', '.remove-discount', function() {
+                $(this).closest('.discount-row').remove();
+                calculateTotals();
             });
 
             // Populate Customer Information
@@ -316,31 +407,24 @@
             $(document).on('change', '.productname', function () {
                 var $row = $(this).closest('tr');
                 var selected = $(this).find(':selected');
-
-                var stock = selected.data('stock') || 0;
+                var productName = selected.text();
+                var stock = parseInt(selected.data('stock')) || 0;
                 var unitId = selected.data('unit') || '';
+                var code = selected.data('code') || '';
+                var price = parseFloat(selected.data('price')) || 0;
 
-                // Populate fields
-                $row.find('.code').val(selected.data('code') || '');
-                $row.find('.price').val(selected.data('price') || '');
-                $row.find('.qty').val('');
+                // Fill data
+                $row.find('.code').val(code);
+                $row.find('.price').val(price);
+                $row.find('.amount').val('');
                 $row.find('.available-stock').text("Available: " + stock);
+                $row.find('.qty').prop('readonly', false).val('').data('stock', stock); // ✅ fix: store stock data
+                if (unitId) $row.find('.unit').val(unitId);
 
-                // set unit dropdown automatically
-                if (unitId) {
-                    $row.find('.unit').val(unitId);
-                }
+                // Show selected product name below dropdown
+                $row.find('.selected-product-info').html(productName);
 
-                // store original stock
-                $row.find('.qty').data('original-stock', stock);
-
-                var productSelected = $(this).val();
-                if (productSelected) {
-                    $row.find('.dis').prop('disabled', false);
-                } else {
-                    $row.find('.dis').prop('disabled', true).val(0);
-                    calculateTotals();
-                }
+                calculateTotals();
             });
 
             // Auto-compute due date based on mode of payment
@@ -360,20 +444,33 @@
             // Validate qty on input
             $(document).on('input', '.qty', function () {
                 var $row = $(this).closest('tr');
-                var originalStock = parseInt($row.find('.qty').data('original-stock')) || 0;
+                var originalStock = parseInt($row.find('.qty').data('stock')) || 0;
                 var enteredQty = parseInt($(this).val()) || 0;
 
+                // If no product selected yet, prevent typing
+                if (!$row.find('.productname').val()) {
+                    alert("Please select a product first!");
+                    $(this).val('');
+                    return;
+                }
+
+                // Validation: exceed stock
                 if (enteredQty > originalStock) {
                     alert("Quantity exceeds available stock!");
                     $(this).val(originalStock);
                     enteredQty = originalStock;
                 }
 
-                // Update displayed available stock
+                // Update remaining stock display
                 var remainingStock = originalStock - enteredQty;
                 $row.find('.available-stock').text("Available: " + remainingStock);
 
-                calculateTotals(); // recalc totals after change
+                // Update amount
+                var price = parseFloat($row.find('.price').val()) || 0;
+                var amount = price * enteredQty;
+                $row.find('.amount').val(amount.toFixed(2));
+
+                calculateTotals();
             });
             
             // get the latest Invoice number in database
@@ -412,7 +509,6 @@
         $('.dis, #discount').prop('disabled', true);
 
         $('#discount_type').trigger('change');
-
             let discountApprovalCount = 0;
             let pendingDiscountInput = null;
 
@@ -518,67 +614,64 @@
         function calculateTotals() {
             let subtotal = 0;
 
-            // 1. Loop through line items (apply per-item discounts first)
-            $('#po-body tr').each(function() {
-                let qty   = parseFloat($(this).find('.qty').val()) || 0;
+            $('#po-body tr').each(function(index) {
+                let qty = parseFloat($(this).find('.qty').val()) || 0;
                 let price = parseFloat($(this).find('.price').val()) || 0;
-                let dis   = parseFloat($(this).find('.dis').val()) || 0; // per-item %
+                let lineTotal = qty * price;
 
-                let lineTotal = price * qty;
-
-                if (dis > 0) {
-                    lineTotal -= (lineTotal * dis / 100);
-                }
+                // Apply per-item discounts
+                $(this).find('.dis').each(function() {
+                    let disText = $(this).find('option:selected').text();
+                    let disValue = parseFloat(disText) || 0;
+                    if (disValue > 0) {
+                        lineTotal -= (lineTotal * disValue / 100);
+                    }
+                });
 
                 $(this).find('.amount').val(lineTotal.toFixed(2));
                 subtotal += lineTotal;
             });
 
-            // 2. Apply overall discount
-            let overallType  = $('#discount_type').val(); // "overall", "fixed", or ""
-            let overallValue = parseFloat($('#discount').val()) || 0;
-            let discountAmount = 0;
+            // Overall discount
+            let discountType = $('#discount_type').val();
+            let overallDis = parseFloat($('#discount').val()) || 0;
+            let overallAmount = 0;
 
-            if (overallValue > 0) {
-                if (overallType === 'overall') {
-                    // percentage discount
-                    discountAmount = subtotal * (overallValue / 100);
-                } else if (overallType === 'per_item') {
-                    // fixed peso discount
-                    discountAmount = overallValue;
-                } else {
-                    // no type selected → default to percentage
-                    discountAmount = subtotal * (overallValue / 100);
-                }
+            if (discountType === 'overall' && overallDis > 0) {
+                overallAmount = subtotal * (overallDis / 100);
             }
 
-            let afterDiscount = subtotal - discountAmount;
-
-            // 3. Add shipping and other charges
+            let afterDiscount = subtotal - overallAmount;
             let shipping = parseFloat($('#shipping').val()) || 0;
-            let other    = parseFloat($('#other').val()) || 0;
-
+            let other = parseFloat($('#other').val()) || 0;
             let grandTotal = afterDiscount + shipping + other;
 
-            // 4. Update fields
             $('#subtotal').val(subtotal.toFixed(2));
-            $('#hidden_overall_discount').val(discountAmount.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
         }
 
-        $(document).on('input change', '.qty, .price, .dis, #discount, #shipping, #other, #discount_type', calculateTotals);
+        $(document).on('change input', '.dis, .qty, .price, #discount_type, #discount, #shipping, #other', function() {
+            calculateTotals();
+        });
 
-        $('#discount_type').on('change', function() {
+        $('#discount_type').on('change', function () {
             const type = $(this).val();
 
-            if (type === 'overall') {
-                // Enable overall discount
+            if (type === "per_item") {
+                // Enable add buttons only for per-item discount
+                $('.add-discount').prop('disabled', false);
+                $('.dis').prop('disabled', false);
+                $('#discount').prop('disabled', true).val(0); // disable overall field
+            } else if (type === "overall") {
+                // Disable add buttons when overall discount selected
+                $('.add-discount').prop('disabled', true);
+                $('.dis').prop('disabled', true).val(0); // disable per-item dropdowns
                 $('#discount').prop('disabled', false);
-                $('.dis').prop('disabled', true).val(0); // disable per-item discounts
-            } else if (type === 'per_item') {
-                // Disable overall discount & reset value to 0
+            } else {
+                // Disable everything if no type selected
+                $('.add-discount').prop('disabled', true);
+                $('.dis').prop('disabled', true).val(0);
                 $('#discount').prop('disabled', true).val(0);
-                $('.dis').prop('disabled', false); // allow per-item discounts
             }
 
             calculateTotals();
