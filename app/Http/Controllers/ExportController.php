@@ -9,6 +9,7 @@ use App\Collection;
 use App\Purchase;
 use App\PurchaseItem;
 use App\ModeofPayment;
+use App\Salesman;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
@@ -92,6 +93,81 @@ class ExportController extends Controller
 
         // Download
         $fileName = 'avthardwaretrading_customers_' . now()->format('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($temp_file);
+
+        return response()->download($temp_file, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function exportSalesman()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $this->addHeader($sheet, 'Salesman List');
+
+        // Style: Company name
+        $sheet->getStyle('B1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 14],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // Style: Address
+        $sheet->getStyle('B2')->applyFromArray([
+            'font' => ['bold' => false, 'size' => 10],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // Style: Subtitle
+        $sheet->getStyle('B3')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 13],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        // Leave a row for spacing
+        $headerRow = 5;
+
+        // Column headers
+        $headers = ['Saleman Code','Salesman', 'Address', 'Contact', 'Email', 'Status'];
+        $sheet->fromArray($headers, null, 'A' . $headerRow);
+
+        // Style header row
+        $sheet->getStyle('A' . $headerRow . ':I' . $headerRow)->applyFromArray([
+            'font' => ['bold' => true],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+            ],
+        ]);
+
+        // Populate customer data
+        $salesmen = Salesman::all();
+        $row = $headerRow + 1;
+        foreach ($salesmen as $salesman) {
+            $sheet->setCellValue('A' . $row, $salesman->salesman_code);
+            $sheet->setCellValue('B' . $row, $salesman->salesman_name);
+            $sheet->setCellValue('C' . $row, $salesman->address);
+            $sheet->setCellValue('D' . $row, $salesman->phone);
+            $sheet->setCellValue('E' . $row, $salesman->email);
+            $sheet->setCellValue('F' . $row, $salesman->status == 1 ? 'Active' : 'Inactive');
+            // Apply borders to each row
+            $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray([
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
+            ]);
+            
+            $row++;
+        }
+
+        // Auto-size columns A–E
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Download
+        $fileName = 'avthardwaretrading_salesman_' . now()->format('Ymd_His') . '.xlsx';
         $writer = new Xlsx($spreadsheet);
         $temp_file = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($temp_file);
@@ -225,8 +301,6 @@ class ExportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
-
 
     //Export Invoice
     public function exportInvoices()

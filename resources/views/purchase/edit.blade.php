@@ -58,8 +58,15 @@
                              {{-- Salesman --}}
                             <div class="col-md-4 form-group">
                                 <label for="salesman">Salesman</label>
-                                <input type="text" name="salesman" id="salesman" 
-                                    class="form-control" value="{{ old('salesman', $purchase->salesman) }}">
+                                <select name="salesman" id="salesman" class="form-control" required>
+                                <option value="">-- Select Salesman --</option>
+                                @foreach($salesman as $salesmen)
+                                    <option value="{{ $salesmen->id }}" 
+                                        {{ $salesmen->id == $purchase->salesman ? 'selected' : '' }}>
+                                        {{ $salesmen->salesman_name }} 
+                                    </option>
+                                @endforeach
+                            </select>
                             </div>
 
                             {{-- Payment Term --}}

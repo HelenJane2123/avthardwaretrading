@@ -6,7 +6,6 @@ use App\Customer;
 use App\Supplier;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\CustomerExport;
 use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller

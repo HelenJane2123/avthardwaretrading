@@ -38,7 +38,6 @@ class Purchase extends Model
         return $this->hasMany(PurchaseItem::class);
     }
 
-
     public function paymentMode()
     {
         return $this->belongsTo(ModeofPayment::class, 'id');
@@ -57,6 +56,11 @@ class Purchase extends Model
     public function payments()
     {
         return $this->hasMany(PurchasePayment::class, 'purchase_id', 'id');
+    }
+
+    public function salesman()
+    {
+        return $this->hasMany(Salesman::class, 'id');
     }
 }
 

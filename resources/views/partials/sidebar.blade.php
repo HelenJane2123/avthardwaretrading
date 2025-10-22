@@ -110,6 +110,19 @@
             </ul>
         </li>
 
+        {{-- Salesmen --}}
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('salesmen*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-users"></i><span class="app-menu__label">Salesmen</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('salesmen.create') }}"><i class="icon fa fa-circle-o"></i> Add Salesmen</a></li>
+                <li><a class="treeview-item" href="{{ route('salesmen.index') }}"><i class="icon fa fa-circle-o"></i> Manage Salesmen</a></li>
+            </ul>
+        </li>
+
+
          {{-- 🛠 Maintenance --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Maintenance —</li>
 

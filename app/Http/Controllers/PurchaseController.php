@@ -12,6 +12,7 @@ use App\Invoice;
 use App\PurchaseDetail;
 use App\ModeofPayment;
 use App\Unit;
+use App\Salesman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -53,7 +54,10 @@ class PurchaseController extends Controller
 
          // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
-        return view('purchase.create', compact('suppliers','products','paymentModes','units'));
+
+        //get salesman
+        $salesman = Salesman::where('status',1)->get();
+        return view('purchase.create', compact('suppliers','products','paymentModes','units','salesman'));
     }
 
     public function getSupplierItems($id)
@@ -217,12 +221,15 @@ class PurchaseController extends Controller
         $supplierItems = SupplierItem::where('supplier_id', $purchase->supplier_id)
                                     ->get();
 
+        //get salesman
+        $salesman = Salesman::where('status',1)->get();
         return view('purchase.edit', compact(
             'purchase',
             'suppliers',
             'paymentModes',
             'units',
-            'supplierItems'
+            'supplierItems',
+            'salesman'
         ));
 }
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\ModeofPaymentController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PurchasePaymentController;
+use App\Http\Controllers\SalesmenController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -51,6 +52,7 @@ Route::resource('purchase', PurchaseController::class);
 Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
 Route::resource('collection', CollectionController::class);
+Route::resource('salesmen', SalesmenController::class);
 
 
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
@@ -92,6 +94,7 @@ Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceip
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
+Route::get('/export/salesman', [ExportController::class, 'exportSalesman'])->name('export.salesman');
 Route::get('/export/products', [ExportController::class, 'exportProducts'])->name('export.products');
 Route::get('/supplier/{supplier}/products/export', [ExportSupplierController::class, 'exportSupplierProducts'])->name('supplier.supplier-products.export');
 Route::get('/export/invoices', [ExportController::class, 'exportInvoices'])->name('export.invoices');

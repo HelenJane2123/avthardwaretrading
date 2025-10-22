@@ -59,7 +59,14 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                                <input type="text" name="salesman" id="salesman" class="form-control" placeholder="Enter salesman's name">
+                               <select name="salesman" id="salesman" class="form-control" required>
+                                    <option value="">-- Select Salesman --</option>
+                                    @foreach($salesman as $salesmen)
+                                        <option value="{{ $salesmen->id }}">
+                                            {{ $salesmen->salesman_name }} 
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
@@ -113,7 +120,10 @@
                                 <tbody id="po-body">
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                                        <td><select name="product_id[]" class="form-control productname"></select></td>
+                                        <td>
+                                            <select name="product_id[]" class="form-control productname"></select>
+                                            <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
+                                        </td>
                                         <td>
                                             <select name="unit[]" class="form-control unit">
                                                 <option value="">Select Unit</option>
@@ -218,6 +228,7 @@
                         <select name="product_id[]" class="form-control productname">
                             ${options}
                         </select>
+                        <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
                     </td>
                     <td>
                         <select name="unit[]" class="form-control unit">
@@ -291,9 +302,13 @@
                 var $row = $(this).closest('tr');
                 var selected = $(this).find(':selected');
 
-                $row.find('.code').val(selected.data('code') || '');
-                $row.find('.price').val(selected.data('price') || '');
-                //$row.find('.dis').val(selected.data('dis') || '');
+                const code  = selected.data('code') || '';
+                const price = selected.data('price') || '';
+                const name  = selected.text().trim() || '';
+
+                $row.find('.code').val(code);
+                $row.find('.price').val(price);
+                $row.find('.selected-product-name').text(name);
 
                 calculateTotals(); // make sure this function exists
             });
