@@ -117,94 +117,124 @@ class InvoiceController extends Controller
                 'discount_approved' => $request->discount_approved ?? 0,
             ]);
 
-            $products   = $request->product_id;
-            $qtys       = $request->qty;
-            $prices     = $request->price;
-            $discounts  = $request->dis ?? [];
+            // Normalize inputs
+            $products  = (array) $request->product_id;
+            $qtys      = (array) $request->qty;
+            $prices    = (array) $request->price;
+            // $request->dis should be like: dis[0] => [1,2], dis[1] => [3]
+            $discounts = $request->dis ?? [];
 
             $subtotal = 0;
 
             foreach ($products as $index => $productId) {
-                $qty   = (float)($qtys[$index] ?? 0);
-                $price = (float)($prices[$index] ?? 0);
+                $qty   = (float) ($qtys[$index] ?? 0);
+                $price = (float) ($prices[$index] ?? 0);
                 $lineTotal = $price * $qty;
 
-                // Handle multiple discounts per product
-                $disArr = $discounts[$index] ?? [];
+                // Initialize per-product discounts array (so it won't carry from previous iteration)
+                $invoiceSaleDiscounts = [];
 
-                if (is_array($disArr) && count($disArr) > 0) {
-                    foreach ($disArr as $disId) {
-                        $tax = DB::table('taxes')->where('id', $disId)->first();
+                // Get discount IDs for this product (could be missing)
+                $disIds = [];
 
-                        if ($tax) {
-                            $lineTotal -= ($lineTotal * ($tax->name / 100));
-
-                            // Save each discount separately
-                            $invoiceSaleDiscounts[] = [
-                                'discount_name'   => 'Custom Discount',
-                                'discount_type'   => 'percent',
-                                'discount_value'  => $tax->name,
-                            ];
-                        }
-                    }
+                // handle different shapes defensively:
+                // If dis is an array keyed by product index and each value is an array of IDs -> use that
+                if (isset($discounts[$index]) && is_array($discounts[$index])) {
+                    $disIds = $discounts[$index];
                 } else {
-                    $invoiceSaleDiscounts = [];
+                    // fallback: if discounts is flat (bad shape), try to map by position
+                    // e.g. dis => [ [1], 2 ] etc. we'll try to coerce
+                    if (is_array($discounts) && array_key_exists($index, $discounts)) {
+                        $maybe = $discounts[$index];
+                        if (is_array($maybe)) $disIds = $maybe;
+                        elseif ($maybe) $disIds = [$maybe];
+                    } elseif (is_array($discounts) && isset($discounts[0]) && !is_array($discounts[0])) {
+                        // last resort: if user submitted single-level dis[] for first product only,
+                        // you may want to combine them — but safest is to ignore. So skip.
+                        $disIds = [];
+                    }
                 }
 
-                // Create invoice line
+                // For each discount id, lookup tax row, get numeric rate and type, apply sequentially
+                foreach ($disIds as $disId) {
+                    if (!$disId) continue; // skip empty selects
+                    $tax = DB::table('taxes')->where('id', $disId)->first();
+                    if (!$tax) continue;
+
+                    // Figure out numeric discount value (defensive)
+                    // Try common column names: 'discount_value', 'value', otherwise parse numbers from 'name'
+                    $rate = null;
+                    if (isset($tax->discount_value)) $rate = floatval($tax->discount_value);
+                    elseif (isset($tax->value)) $rate = floatval($tax->value);
+                    else {
+                        // parse digits from name (e.g. "10 %" or "Promo 5%")
+                        $num = preg_replace('/[^0-9.]/', '', $tax->name);
+                        $rate = $num !== '' ? floatval($num) : 0;
+                    }
+
+                    // Determine discount type (prefer explicit column `type` or fallback to percent)
+                    $t = strtolower($tax->type ?? 'percent');
+                    if ($t === 'percent' || $t === 'percentage') {
+                        // apply percent on current running lineTotal
+                        $lineTotal -= ($lineTotal * ($rate / 100));
+                    } else {
+                        // fixed amount
+                        $lineTotal -= $rate;
+                    }
+
+                    // push to array to save after invoice line created
+                    $invoiceSaleDiscounts[] = [
+                        'discount_name'  => $tax->name,
+                        'discount_type'  => ($t === 'percent' || $t === 'percentage') ? 'percent' : 'fixed',
+                        'discount_value' => $rate,
+                    ];
+                }
+
+                // create invoice sales line
                 $line = InvoiceSales::create([
                     'invoice_id' => $invoice->id,
                     'product_id' => $productId,
                     'qty'        => $qty,
                     'price'      => $price,
-                    'dis'        => 0, // no single discount value now (handled below)
-                    'amount'     => $lineTotal,
+                    'dis'        => 0,
+                    'amount'     => round($lineTotal, 2),
                 ]);
 
-                // Save all discounts related to this line
-                foreach ($invoiceSaleDiscounts as $discountData) {
+                // save discounts for this invoice sale
+                foreach ($invoiceSaleDiscounts as $d) {
                     DB::table('invoice_sales_discounts')->insert([
                         'invoice_sale_id' => $line->id,
-                        'discount_name'   => $discountData['discount_name'],
-                        'discount_type'   => $discountData['discount_type'],
-                        'discount_value'  => $discountData['discount_value'],
+                        'discount_name'   => $d['discount_name'],
+                        'discount_type'   => $d['discount_type'],
+                        'discount_value'  => $d['discount_value'],
                         'created_at'      => now(),
                         'updated_at'      => now(),
                     ]);
                 }
 
-                $subtotal += $lineTotal;
+                $subtotal += round($lineTotal, 2);
 
-                // Update product stock
+                // update product stock
                 $product = Product::find($productId);
                 if ($product) {
                     $product->remaining_stock -= $qty;
-
-                    $product->threshold = $product->remaining_stock <= 10
-                        ? 1
-                        : floor($product->remaining_stock * 0.2);
-
-                    if ($product->remaining_stock <= 0) {
-                        $product->status = 'Out of Stock';
-                    } elseif ($product->remaining_stock <= $product->threshold) {
-                        $product->status = 'Low Stock';
-                    } else {
-                        $product->status = 'In Stock';
-                    }
-
+                    $product->threshold = $product->remaining_stock <= 10 ? 1 : floor($product->remaining_stock * 0.2);
+                    if ($product->remaining_stock <= 0) $product->status = 'Out of Stock';
+                    elseif ($product->remaining_stock <= $product->threshold) $product->status = 'Low Stock';
+                    else $product->status = 'In Stock';
                     $product->save();
                 }
             }
 
-            // Apply overall discount if any
+            // overall discount
             $overallDiscount = 0;
             if ($request->discount_type === 'overall' && $request->discount_value > 0) {
                 $overallDiscount = $subtotal * ($request->discount_value / 100);
             }
 
             $afterDiscount = $subtotal - $overallDiscount;
-            $shipping   = $request->shipping_fee ?? 0;
-            $other      = $request->other_charges ?? 0;
+            $shipping = $request->shipping_fee ?? 0;
+            $other = $request->other_charges ?? 0;
             $grandTotal = $afterDiscount + $shipping + $other;
 
             $invoice->update([

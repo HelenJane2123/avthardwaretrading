@@ -240,6 +240,3 @@ $('.update-status').on('click', function () {
     }
 });
 </script>
-
-
-

@@ -418,9 +418,19 @@
                 $row.find('.price').val(price);
                 $row.find('.amount').val('');
                 $row.find('.available-stock').text("Available: " + stock);
-                $row.find('.qty').prop('readonly', false).val('').data('stock', stock); // ✅ fix: store stock data
+                $row.find('.qty').prop('readonly', false).val('').data('stock', stock);
                 if (unitId) $row.find('.unit').val(unitId);
 
+                let statusText = '';
+                if (stock <= 0) {
+                    statusText = `<span class="text-danger">Out of Stock</span>`;
+                } else if (stock <= 5) {
+                    statusText = `<span class="text-warning">Low Stock (${stock} left)</span>`;
+                } else {
+                    statusText = `<span class="text-success">In Stock (${stock} available)</span>`;
+                }
+
+                $row.find('.available-stock').html(statusText);
                 // Show selected product name below dropdown
                 $row.find('.selected-product-info').html(productName);
 
