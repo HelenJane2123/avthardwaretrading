@@ -60,7 +60,7 @@
                                     @endphp
                                     <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
                                     <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
-                                    <td>{{ $purchase->salesman ?? '-' }}</td>
+                                    <td>{{ $purchase->salesman->salesman_name ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
                                     <td>
                                         @if ($purchase->discount_type === 'per_item')

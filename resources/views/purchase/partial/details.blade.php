@@ -7,7 +7,7 @@
         <div style="width: 48%;">
             <h4 style="margin-bottom: 8px; border-bottom: 1px solid #000;">Purchase Info</h4>
             <p><strong>PO Number:</strong> {{ $purchase->po_number }}</p>
-            <p><strong>Salesman:</strong> {{ $purchase->salesman }}</p>
+            <p><strong>Salesman:</strong> {{ $purchase->salesman['salesman_name'] }}</p>
             <p><strong>Date Purchased:</strong> {{ \Carbon\Carbon::parse($purchase->date)->format('F d, Y') }}</p>
         </div>
 

@@ -9,8 +9,7 @@ class Salesman extends Model
 {
     use HasFactory;
 
-    // ✅ Match the database table name
-    protected $table = 'salesmen';
+    protected $table = 'salesman';
 
     protected $fillable = [
         'salesman_code',

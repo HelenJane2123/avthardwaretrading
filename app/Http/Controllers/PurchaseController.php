@@ -31,10 +31,9 @@ class PurchaseController extends Controller
         $this->middleware('auth');
     }
 
-
     public function index()
     {
-        $purchases = Purchase::with('supplier')->get();
+        $purchases = Purchase::with('supplier','salesman')->get();
         return view('purchase.index', compact('purchases'));
     }
 
@@ -137,7 +136,7 @@ class PurchaseController extends Controller
                 'supplier_id'        => $request->supplier_id,
                 'date'               => $request->date,
                 'po_number'          => $request->po_number,
-                'salesman'           => $request->salesman,
+                'salesman_id'           => $request->salesman_id,
                 'payment_id'         => $request->payment_id,
                 'discount_type'      => $request->discount_type,
                 'discount_value'     => $request->discount_value ?? 0,
@@ -283,7 +282,7 @@ class PurchaseController extends Controller
             $purchase->update([
                 'supplier_id'        => $request->supplier_id,
                 'po_number'          => $request->po_number,
-                'salesman'           => $request->salesman,
+                'salesman_id'        => $request->salesman_id,
                 'payment_id'         => $request->payment_id,
                 'date'               => $request->date,
                 'discount_type'      => $request->discount_type,

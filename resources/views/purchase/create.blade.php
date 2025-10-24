@@ -59,7 +59,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                               <select name="salesman" id="salesman" class="form-control" required>
+                               <select name="salesman_id" id="salesman_id" class="form-control" required>
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}">

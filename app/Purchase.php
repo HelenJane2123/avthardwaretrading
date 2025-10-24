@@ -60,7 +60,7 @@ class Purchase extends Model
 
     public function salesman()
     {
-        return $this->hasMany(Salesman::class, 'id');
+        return $this->belongsTo(Salesman::class, 'salesman_id','id');
     }
 }
 

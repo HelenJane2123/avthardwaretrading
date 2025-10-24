@@ -149,7 +149,7 @@
                     </td>
 
                     <td colspan="2">
-                        <strong>Salesman:</strong> {{ $purchase->salesman ?? '-' }}
+                        <strong>Salesman:</strong> {{ $purchase->salesman['salesman_name'] ?? '-' }}
                     </td>
                 </tr>
             </table>
