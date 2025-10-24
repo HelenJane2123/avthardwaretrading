@@ -33,8 +33,9 @@ class PurchaseController extends Controller
 
     public function index()
     {
+        $paymentModes = ModeofPayment::all();
         $purchases = Purchase::with('supplier','salesman')->get();
-        return view('purchase.index', compact('purchases'));
+        return view('purchase.index', compact('purchases','paymentModes'));
     }
 
     /**
@@ -84,8 +85,27 @@ class PurchaseController extends Controller
 
     public function print($id)
     {
-        $purchase = Purchase::with(['supplier', 'items.supplierItem',])->findOrFail($id);
-        return view('purchase.partial.print', compact('purchase'));
+        $purchase = Purchase::with([
+            'supplier',
+            'items.supplierItem',
+            'paymentMode',
+            'payments' // include the payment history
+        ])->findOrFail($id);
+
+        // Compute total paid from all payments
+        $totalPaid = $purchase->payments->sum('amount_paid');
+        $outstanding = $purchase->grand_total - $totalPaid;
+
+        // Determine payment status
+        if ($totalPaid <= 0) {
+            $paymentStatus = 'Unpaid';
+        } elseif ($totalPaid < $purchase->grand_total) {
+            $paymentStatus = 'Partial Payment';
+        } else {
+            $paymentStatus = 'Fully Paid';
+        }
+
+        return view('purchase.partial.print', compact('purchase', 'totalPaid', 'outstanding', 'paymentStatus'));
     }
 
     /**
@@ -230,7 +250,7 @@ class PurchaseController extends Controller
             'supplierItems',
             'salesman'
         ));
-}
+    }
 
 
     /**

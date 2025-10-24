@@ -249,6 +249,8 @@
                 })->implode('') 
             !!}`;
 
+            let rowIndex = $('#po-body tr').length;
+
             function addRow() {
                 let options = `<option value="">Select Product</option>`;
 
@@ -286,7 +288,7 @@
                     <td>
                         <div class="discounts-wrapper">
                             <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                <select name="dis[]" class="form-control dis">
+                                <select name="dis[${rowIndex}][]" class="form-control dis">
                                     <option value="0">---Select Discount---</option>
                                     @foreach($taxes as $tax)
                                         <option value="{{$tax->id}}">{{$tax->name}} %</option>
@@ -490,29 +492,47 @@
 
         let formPendingSubmit = null;
         $('form').on('submit', function(e) {
-            e.preventDefault(); // always prevent immediate submit
+            e.preventDefault(); // stop default submit
 
-            // --- keep your hidden fields update here ---
-            const type = $('#discount_type').val();
-            $('#hidden_discount_type').val(type);
-            $('#hidden_overall_discount').val(type === 'overall' ? ($('#discount').val() || 0) : 0);
-            $('#hidden_subtotal').val($('#subtotal').val() || 0);
-            $('#hidden_shipping').val($('#shipping').val() || 0);
-            $('#hidden_other').val($('#other').val() || 0);
-            $('#hidden_grand_total').val($('#grand_total').val() || 0);
+            let hasError = false;
+            let errorMessages = [];
 
-            // check for discounts
-            const hasPerItemDiscount = $('.dis').toArray().some(inp => parseFloat($(inp).val()) > 0);
-            const overallDiscount = parseFloat($('#discount').val()) || 0;
+            $('#po-body tr').each(function(index) {
+                const $row = $(this);
+                const productName = $row.find('.productname option:selected').text();
+                const productId = $row.find('.productname').val();
+                const stock = parseInt($row.find('.qty').data('stock')) || 0;
+                const qty = parseInt($row.find('.qty').val()) || 0;
 
-            if (hasPerItemDiscount || overallDiscount > 0) {
-                formPendingSubmit = this;
-                $("#adminPassword").val("");
-                $("#passwordError").addClass("d-none");
-                discountModal.show(); // ✅ show modal only on submit
-            } else {
-                this.submit();
+                // Skip empty rows
+                if (!productId) return;
+
+                // Out of stock
+                if (stock <= 0) {
+                    hasError = true;
+                    errorMessages.push(`❌ ${productName} is out of stock.`);
+                }
+
+                // Exceeds stock
+                if (qty > stock) {
+                    hasError = true;
+                    errorMessages.push(`⚠️ ${productName} quantity (${qty}) exceeds available stock (${stock}).`);
+                }
+
+                // Zero or negative qty
+                if (qty <= 0) {
+                    hasError = true;
+                    errorMessages.push(`⚠️ ${productName} must have a quantity greater than 0.`);
+                }
+            });
+
+            if (hasError) {
+                alert("Cannot submit invoice:\n\n" + errorMessages.join("\n"));
+                return false; // stop submit
             }
+
+            // if all good, continue with submission
+            this.submit();
         });
 
         // Disable all discount fields by default

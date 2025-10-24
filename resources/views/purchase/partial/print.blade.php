@@ -100,10 +100,8 @@
                 </p>
             </div>
         </div>
-        
     </div>
 </div>
-
 
 <table width="100%" style="margin-bottom: 20px;">
     <tr>
@@ -127,16 +125,10 @@
     <tr>
         <td colspan="3" style="padding-top: 10px;">
             <table width="100%" border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse;">
-                <!-- <tr>
-                    <td><strong>Requisitioner:</strong> {{ $purchase->requisitioner ?? '-' }}</td>
-                    <td><strong>Ship Via:</strong> {{ $purchase->ship_via ?? '-' }}</td>
-                    <td><strong>F.O.B:</strong> {{ $purchase->fob ?? '-' }}</td>
-                    <td><strong>Shipping Terms:</strong> {{ $purchase->shipping_terms ?? '-' }}</td>
-                </tr> -->
                 <tr>
-                    @if($purchase->payment && strtolower($purchase->payment->name) === 'pdc/check')
+                    @if($purchase->paymentMode && strtolower($purchase->paymentMode->name) === 'pdc/check')
                         <td>
-                            <strong>Payment Terms:</strong> {{ $purchase->payment->term ?? 'N/A' }} days
+                            <strong>Payment Terms:</strong> {{ $purchase->paymentMode->term ?? 'N/A' }} days
                         </td>
                     @else
                         <td>
@@ -145,7 +137,7 @@
                     @endif
 
                     <td>
-                        <strong>Payment Method:</strong> {{ $purchase->payment->description ?? '-' }}
+                        <strong>Payment Method:</strong> {{ $purchase->paymentMode->name ?? '-' }}
                     </td>
 
                     <td colspan="2">
@@ -170,10 +162,6 @@
     <tbody>
         @php $subtotal = 0; @endphp
         @foreach($purchase->items as $item)
-            <!-- @php 
-                $lineTotal = $item->quantity * $item->unit_price;
-                $subtotal += $lineTotal;
-            @endphp -->
             <tr>
                 <td>{{ $item->product_code ?? '-' }}</td>
                 <td>
@@ -189,9 +177,9 @@
         @endforeach
     </tbody>
 </table>
+
 <table width="100%" style="margin-top: 30px;">
     <tr>
-        <!-- Comments / Special Instructions -->
         <td width="60%" valign="top" style="padding-right: 20px; border: none !important;">
             <strong>Comments or Special Instructions:</strong><br>
             <div style="border: 1px solid #000; min-height: 80px; padding: 10px;">
@@ -206,7 +194,7 @@
                 </tr>
                 <tr>
                     <td><strong>DISCOUNT</strong></td>
-                    <td>{{$purchase->discount_value }}</td>
+                    <td>{{ $purchase->discount_value }}</td>
                 </tr>
                 <tr>
                     <td><strong>SHIPPING</strong></td>
@@ -224,6 +212,53 @@
         </td>
     </tr>
 </table>
+
+{{-- ✅ PAYMENT SUMMARY --}}
+<table width="100%" style="margin-top: 20px; border: 1px solid #000; border-collapse: collapse;">
+    <tr style="background-color: #004080; color: #fff;">
+        <th colspan="4" style="padding: 8px; text-align: left;">PAYMENT SUMMARY</th>
+    </tr>
+    <tr>
+        <td><strong>Total Amount:</strong></td>
+        <td>₱{{ number_format($purchase->grand_total, 2) }}</td>
+        <td><strong>Total Paid:</strong></td>
+        <td>₱{{ number_format($totalPaid, 2) }}</td>
+    </tr>
+    <tr>
+        <td><strong>Outstanding Balance:</strong></td>
+        <td>₱{{ number_format($outstanding, 2) }}</td>
+        <td><strong>Status:</strong></td>
+        <td style="font-weight:bold; color:
+            {{ $paymentStatus === 'Fully Paid' ? 'green' : ($paymentStatus === 'Partial Payment' ? 'orange' : 'red') }}">
+            {{ $paymentStatus }}
+        </td>
+    </tr>
+</table>
+
+{{-- ✅ PAYMENT HISTORY --}}
+@if($purchase->payments->count() > 0)
+    <table width="100%" style="margin-top: 15px; border: 1px solid #000; border-collapse: collapse;">
+        <tr style="background-color: #004080; color: #fff;">
+            <th colspan="4" style="padding: 8px; text-align: left;">PAYMENT HISTORY</th>
+        </tr>
+        <tr>
+            <th style="width: 20%;">Date</th>
+            <th style="width: 30%;">Amount Paid</th>
+            <th style="width: 25%;">Outstanding Balance</th>
+            <th style="width: 25%;">Payment Status</th>
+        </tr>
+        @foreach($purchase->payments as $payment)
+            <tr>
+                <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('m/d/Y') }}</td>
+                <td>₱{{ number_format($payment->amount_paid, 2) }}</td>
+                <td>₱{{ number_format($payment->outstanding_balance, 2) }}</td>
+                <td>{{ ucfirst($payment->payment_status) }}</td>
+            </tr>
+        @endforeach
+    </table>
+@else
+    <p style="margin-top: 15px; font-style: italic;">No payments recorded yet.</p>
+@endif
 
 <div style="clear: both;"></div>
 <div class="footer">

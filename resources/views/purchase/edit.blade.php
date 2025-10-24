@@ -62,7 +62,7 @@
                                 <option value="">-- Select Salesman --</option>
                                 @foreach($salesman as $salesmen)
                                     <option value="{{ $salesmen->id }}" 
-                                        {{ $salesmen->id == $purchase->salesman ? 'selected' : '' }}>
+                                        {{ $salesmen->id == $purchase->salesman_id ? 'selected' : '' }}>
                                         {{ $salesmen->salesman_name }} 
                                     </option>
                                 @endforeach
@@ -128,14 +128,16 @@
                                             <select name="product_id[]" class="form-control productname">
                                                 <option value="">Select Product</option>
                                                 @foreach($supplierItems as $supplierItem)
-                                                    <option value="{{ $supplierItem->id }}" 
-                                                        data-code="{{ $supplierItem->item_code }}"
-                                                        data-price="{{ $supplierItem->item_price }}"
-                                                        {{ $supplierItem->id == $item->supplier_item_id ? 'selected' : '' }}>
+                                                    <option value="{{ $supplierItem->id }}"
+                                                            data-code="{{ $supplierItem->item_code }}"
+                                                            data-price="{{ $supplierItem->item_price }}"
+                                                            data-name="{{ $supplierItem->item_description }}"
+                                                            {{ $supplierItem->id == $item->supplier_item_id ? 'selected' : '' }}>
                                                         {{ $supplierItem->item_description }}
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <small class="text-muted d-block product-display mt-1"></small>
                                         </td>
                                         <td>
                                             <select name="unit[]" class="form-control unit">
@@ -161,8 +163,9 @@
                                         <th colspan="5" class="text-end">Discount Type</th>
                                         <th colspan="2">
                                             <select id="discount_type" name="discount_type" class="form-control">
-                                                <option value="per_item" {{ $purchase->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
+                                                <option value="all" {{ $purchase->discount_type == 'all' ? 'selected' : '' }}>All</option>
                                                 <option value="overall" {{ $purchase->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
+                                                <option value="per_item" {{ $purchase->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
                                             </select>
                                         </th>
                                     </tr>
@@ -189,7 +192,11 @@
                                 </tfoot>
                             </table>
                         </div>
-
+                        {{-- Remarks --}}
+                        <div class="form-group mb-4">
+                            <label class="form-label">Comments / Special Instructions</label>
+                            <textarea name="remarks" rows="3" class="form-control">{{ $purchase->remarks }}</textarea>
+                        </div>
                         <div class="form-group mt-3">
                             <button type="submit" class="btn btn-success">
                                 <i class="fa fa-save"></i> Update Purchase Order
@@ -213,9 +220,10 @@
 $(document).ready(function(){
 
     let supplierItems = @json($supplierItems);
-    // Add new row dynamically
+
+    // Add Row
     $('.addRow').on('click', function() {
-        if (!supplierItems || supplierItems === 0) {
+        if (!supplierItems || supplierItems.length === 0) {
             alert('Please select a supplier first.');
             return;
         }
@@ -225,16 +233,20 @@ $(document).ready(function(){
 
     function addRow(supplierItems = []) {
         let options = '<option value="">Select Product</option>';
-        supplierItems.forEach(function(item){
-            options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}">
-                           ${item.item_description}
+        supplierItems.forEach(function(item) {
+            options += `<option value="${item.id}" 
+                                data-code="${item.item_code}" 
+                                data-price="${item.item_price}" 
+                                data-name="${item.item_description}">
+                            ${item.item_description}
                         </option>`;
         });
 
-        const addRow = `<tr>
+        const newRow = `<tr>
             <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
             <td>
                 <select name="product_id[]" class="form-control productname">${options}</select>
+                <small class="text-muted d-block product-display mt-1"></small>
             </td>
             <td>
                 <select name="unit[]" class="form-control unit">
@@ -250,93 +262,126 @@ $(document).ready(function(){
             <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
         </tr>`;
 
-        $('#po-body').append(addRow);
-        if ($('#discount_type').val() === 'overall') {
-            $('#po-body tr:last').find('.dis').prop('disabled', true);
-        }
+        $('#po-body').append(newRow);
     }
 
     // Remove row
     $(document).on('click', '.remove', function () {
         var l = $('tbody tr').length;
         if(l==1){
-            alert('you can\'t delete the last row');
+            alert('You can\'t delete the last row');
             calculateTotals();
-        }
-        else{
-            $(this).parent().parent().remove();
+        } else {
+            $(this).closest('tr').remove();
             calculateTotals();
         }
     });
 
-    // Change product
-    $(document).on('change', '.productname', function () {
-        var $row = $(this).closest('tr');
-        var selected = $(this).find(':selected');
-        $row.find('.code').val(selected.data('code') || '');
-        $row.find('.price').val(selected.data('price') || '');
+    // Product change
+    function updateDiscountFieldState() {
+        const type = $('#discount_type').val();
+
+        if (type === 'all') {
+            // Enable both
+            $('.dis').prop('disabled', false);
+            $('#discount').prop('disabled', false);
+        }
+        else if (type === 'overall') {
+            // Enable only overall discount
+            $('.dis').prop('disabled', true);
+            $('#discount').prop('disabled', false);
+        } 
+        else if (type === 'per_item') {
+            // Enable only per-item discounts
+            $('.dis').prop('disabled', false);
+            $('#discount').prop('disabled', true).val('');
+        } 
         calculateTotals();
+    }
+
+    // When user changes discount type
+    $(document).on('change', '#discount_type', function() {
+        updateDiscountFieldState();
     });
 
-    // Calculate totals on input
+    function updateProductDisplay($select) {
+        const selected = $select.find(':selected');
+        const $row = $select.closest('tr');
+        const name = selected.data('name') || '';
+        const code = selected.data('code') || '';
+        const price = selected.data('price') || '';
+
+        $row.find('.product-display').text(name);
+        $row.find('.code').val(code);
+        $row.find('.price').val(price);
+
+        calculateTotals();
+    }
+
+    $(document).on('change', '.productname', function() {
+        updateProductDisplay($(this));
+    });
+
+    // Recalculate totals when any field changes
     $(document).on('input', '.qty, .price, .dis, #discount, #shipping, #other', function() {
         calculateTotals();
     });
-    $('#discount_type').on('change', function() {
-        const type = $(this).val();
-        if (type === 'overall') {
-            $('#discount').prop('disabled', false);
-            $('.dis').prop('disabled', true).val(0);
-        } else if (type === 'per_item') {
-            $('#discount').prop('disabled', true).val(0);
-            $('.dis').prop('disabled', false);
-        }
-        calculateTotals();
-    });
 
-    // initial calculation
-    calculateTotals();
-
+    // Calculate Totals
     function calculateTotals() {
-        let baseSubtotal = 0;
-        let totalDiscount = 0;
+        let subtotal = 0;
+        let perItemDiscountTotal = 0;
+
         const discountType = $('#discount_type').val();
 
+        // 1️⃣ Calculate per-item totals if enabled (either "per_item" or "all")
         $('#po-body tr').each(function () {
             const qty   = parseFloat($(this).find('.qty').val())   || 0;
             const price = parseFloat($(this).find('.price').val()) || 0;
             const disP  = parseFloat($(this).find('.dis').val())   || 0;
 
             const lineBase = qty * price;
-            baseSubtotal += lineBase;
+            let lineDisc = 0;
 
-            let lineNet = lineBase;
-
-            if (discountType === 'per_item' && disP > 0) {
-                const lineDiscAmt = lineBase * disP / 100;
-                totalDiscount += lineDiscAmt;
-                lineNet = lineBase - lineDiscAmt;
+            if (discountType === 'per_item' || discountType === 'all') {
+                lineDisc = (disP > 0) ? (lineBase * disP / 100) : 0;
             }
+
+            const lineNet = lineBase - lineDisc;
+            subtotal += lineBase;
+            perItemDiscountTotal += lineDisc;
+
             $(this).find('.amount').val(lineNet.toFixed(2));
         });
 
-        if (discountType === 'overall') {
+        // 2️⃣ Apply overall discount if enabled (either "overall" or "all")
+        let overallDiscount = 0;
+        if (discountType === 'overall' || discountType === 'all') {
             const overallPct = parseFloat($('#discount').val()) || 0;
-            totalDiscount = baseSubtotal * overallPct / 100;
+            const baseForOverall = (discountType === 'all') 
+                ? (subtotal - perItemDiscountTotal) 
+                : subtotal;
+            overallDiscount = baseForOverall * overallPct / 100;
         }
 
+        // 3️⃣ Add shipping & other charges
         const shipping = parseFloat($('#shipping').val()) || 0;
         const other    = parseFloat($('#other').val())    || 0;
-        const grandTotal  = (baseSubtotal - totalDiscount) + shipping + other;
 
-        $('#subtotal').val(baseSubtotal.toFixed(2));
+        // 4️⃣ Compute grand total
+        const grandTotal = (subtotal - perItemDiscountTotal - overallDiscount) + shipping + other;
+
+        // 5️⃣ Update fields
+        $('#subtotal').val(subtotal.toFixed(2));
         $('#grand_total').val(grandTotal.toFixed(2));
-
-        // update hidden fields
-        $('#hidden_subtotal').val(baseSubtotal.toFixed(2));
-        $('#hidden_discount_value').val(totalDiscount.toFixed(2));
-        $('#hidden_grand_total').val(grandTotal.toFixed(2));
     }
+
+    calculateTotals();
+    updateDiscountFieldState();
+
+    $('.productname').each(function() {
+        updateProductDisplay($(this));
+    });
 });
 </script>
 @endpush

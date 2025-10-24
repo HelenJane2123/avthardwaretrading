@@ -169,10 +169,25 @@
                             <label for="po_number" class="form-label">PO Number</label>
                             <input type="text" class="form-control" id="po_number" readonly>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="mode_of_payment" class="form-label">Mode of Payment</label>
+                            <select name="payment_id" id="mode_of_payment" class="form-control" readonly>
+                                @foreach($paymentModes as $mode)
+                                    <option value="{{ $mode->id }}" 
+                                        {{ $mode->id == $purchase->payment_id ? 'selected' : '' }}>
+                                        {{ $mode->name }} 
+                                        @if($mode->term) ({{ $mode->term }} days) @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="mb-3">
                             <label for="outstanding_balance" class="form-label">Outstanding Balance</label>
                             <input type="text" class="form-control" id="outstanding_balance" readonly>
                         </div>
+
                         <div class="mb-3">
                             <label for="payment_status" class="form-label">Payment Status</label>
                             <select class="form-control" id="payment_status" name="payment_status" required>
@@ -180,15 +195,40 @@
                                 <option value="paid">Paid</option>
                             </select>
                         </div>
+
                         <div class="mb-3">
                             <label for="amount_paid" class="form-label">Amount Paid</label>
                             <input type="number" step="0.01" class="form-control" id="amount_paid" name="amount_paid" required>
                         </div>
+
                         <div class="mb-3">
                             <label for="payment_date" class="form-label">Payment Date</label>
-                            <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ date('Y-m-d') }}" required>
+                            <input type="date" class="form-control" id="payment_date" name="payment_date"
+                                value="{{ date('Y-m-d') }}" required>
+                        </div>
+
+                        <div id="check-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="check_number" class="form-label">Check Number</label>
+                                <input type="text" class="form-control" id="check_number" name="check_number"
+                                    placeholder="Enter check number">
+                            </div>
+                        </div>
+
+                        <div id="gcash-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="gcash_number" class="form-label">GCash Number</label>
+                                <input type="text" class="form-control" id="gcash_number" name="gcash_number"
+                                    placeholder="Enter GCash number">
+                            </div>
+                            <div class="mb-3">
+                                <label for="gcash_name" class="form-label">GCash Name</label>
+                                <input type="text" class="form-control" id="gcash_name" name="gcash_name"
+                                    placeholder="Enter GCash account name">
+                            </div>
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-success">Submit Payment</button>
@@ -236,12 +276,16 @@
     });
     
     // Open Make Payment Modal
-    $(document).on("click", ".payment-btn", function () {
+   $(document).on("click", ".payment-btn", function () {
         let purchaseId = $(this).data("id");
 
-        // Set hidden input
+        // Reset form fields
+        $("#make-payment-form")[0].reset();
         $("#payment-purchase-id").val(purchaseId);
-        $("#amount_paid").val(''); // clear previous input
+
+        // Hide conditional fields
+        $("#check-fields").hide();
+        $("#gcash-fields").hide();
 
         // Set the form action dynamically
         $("#make-payment-form").attr("action", "/purchase/" + purchaseId + "/payment-store");
@@ -250,10 +294,29 @@
         $.get('/purchase/' + purchaseId + '/payment-info', function (data) {
             $("#po_number").val(data.po_number);
             $("#outstanding_balance").val(data.outstanding_balance);
-            // Pre-select status
             $("#payment_status").val(data.payment_status);
+
+            // Set mode of payment dropdown
+            $("#mode_of_payment").val(data.mode_of_payment_id).trigger("change");
+
+            // Hide all optional fields first
+            $("#check-fields").hide();
+            $("#gcash-fields").hide();
+
+            // Show and populate based on payment mode name
+            if (data.mode_of_payment_name && data.mode_of_payment_name.toLowerCase().includes("pdc/check")) {
+                $("#check_number").val(data.check_number || '');
+                $("#check-fields").show();
+            } 
+            else if (data.mode_of_payment_name && data.mode_of_payment_name.toLowerCase().includes("gcash")) {
+                $("#gcash_number").val(data.gcash_number || '');
+                $("#gcash_name").val(data.gcash_name || '');
+                $("#gcash-fields").show();
+            }
+
             $("#makePaymentModal").modal("show");
         });
     });
+
 </script>
 @endpush

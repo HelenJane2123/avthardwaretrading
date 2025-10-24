@@ -383,7 +383,12 @@ class ExportController extends Controller
      */
     public function exportPurchases()
     {
-        $purchases = Purchase::with(['supplier', 'items.supplierItem'])->get();
+        $purchases = Purchase::with([
+            'supplier',
+            'items.supplierItem',
+            'payments',
+            'paymentMode'
+        ])->get();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -399,9 +404,32 @@ class ExportController extends Controller
         $sheet->setCellValue('F6', 'Quantity');
         $sheet->setCellValue('G6', 'Price');
         $sheet->setCellValue('H6', 'Amount');
+        $sheet->setCellValue('I6', 'Total Paid');
+        $sheet->setCellValue('J6', 'Outstanding Balance');
+        $sheet->setCellValue('K6', 'Payment Method');
+        $sheet->setCellValue('L6', 'Payment Terms');
+        $sheet->setCellValue('M6', 'Payment Status');
+
         $row = 7;
 
         foreach ($purchases as $purchase) {
+            // Calculate totals and outstanding balance
+            $totalPaid = $purchase->payments->sum('amount_paid');
+            $outstandingBalance = $purchase->grand_total - $totalPaid;
+
+            // Determine payment status
+            if ($totalPaid <= 0) {
+                $status = 'Unpaid';
+            } elseif ($totalPaid < $purchase->grand_total) {
+                $status = 'Partial Payment';
+            } else {
+                $status = 'Fully Paid';
+            }
+
+            // Get payment details
+            $paymentMethod = $purchase->paymentMode->name ?? '-';
+            $paymentTerms = $purchase->paymentMode->term ?? '-';
+
             foreach ($purchase->items as $item) {
                 $sheet->setCellValue("A{$row}", $purchase->po_number);
                 $sheet->setCellValue("B{$row}", $purchase->supplier->name ?? 'N/A');
@@ -411,17 +439,29 @@ class ExportController extends Controller
                 $sheet->setCellValue("F{$row}", $item->qty);
                 $sheet->setCellValue("G{$row}", number_format($item->unit_price, 2));
                 $sheet->setCellValue("H{$row}", number_format($item->total, 2));
+                $sheet->setCellValue("I{$row}", number_format($totalPaid, 2));
+                $sheet->setCellValue("J{$row}", number_format($outstandingBalance, 2));
+                $sheet->setCellValue("K{$row}", $paymentMethod);
+                $sheet->setCellValue("L{$row}", $paymentTerms);
+                $sheet->setCellValue("M{$row}", $status);
                 $row++;
             }
         }
 
-        // Write file to temp and return download
+        // Auto-size columns for readability
+        foreach (range('A', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Export the Excel file
         $writer = new Xlsx($spreadsheet);
         $fileName = 'purchases_export_' . now()->format('Ymd_His') . '.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), 'purchase_export_') . '.xlsx'; // ensure .xlsx
+        $tempFile = tempnam(sys_get_temp_dir(), 'purchase_export_') . '.xlsx';
         $writer->save($tempFile);
+
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
+
 
     /**
      * Export payment collections.

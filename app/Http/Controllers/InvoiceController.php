@@ -84,174 +84,85 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
-        DB::beginTransaction();
-
         try {
-            $request->validate([
-                'customer_id'      => 'required|exists:customers,id',
-                'payment_mode_id'  => 'required|exists:mode_of_payment,id',
-                'invoice_date'     => 'required|date',
-                'due_date'         => 'required|date',
-                'product_id'       => 'required|array|min:1',
-                'qty'              => 'required|array|min:1',
-                'price'            => 'required|array|min:1',
-            ]);
-
             \Log::info('Invoice request data', $request->all());
 
-            $invoice = Invoice::create([
-                'invoice_number'    => $request->invoice_number,
-                'customer_id'       => $request->customer_id,
-                'invoice_date'      => $request->invoice_date,
-                'due_date'          => $request->due_date,
-                'payment_mode_id'   => $request->payment_mode_id,
-                'discount_type'     => $request->discount_type,
-                'discount_value'    => $request->discount_value ?? 0,
-                'subtotal'          => 0,
-                'shipping_fee'      => $request->shipping_fee ?? 0,
-                'other_charges'     => $request->other_charges ?? 0,
-                'grand_total'       => 0,
-                'remarks'           => $request->remarks,
-                'invoice_status'    => 'pending',
-                'payment_status'    => 'pending',
-                'discount_approved' => $request->discount_approved ?? 0,
+            // Validate required fields
+            $request->validate([
+                'customer_id' => 'required',
+                'invoice_date' => 'required|date',
+                'invoice_number' => 'required|unique:invoices,invoice_number',
+                'product_id' => 'required|array',
             ]);
 
-            // Normalize inputs
-            $products  = (array) $request->product_id;
-            $qtys      = (array) $request->qty;
-            $prices    = (array) $request->price;
-            // $request->dis should be like: dis[0] => [1,2], dis[1] => [3]
-            $discounts = $request->dis ?? [];
+            // Create the main invoice record
+            $invoice = new Invoice();
+            $invoice->customer_id = $request->customer_id;
+            $invoice->invoice_number = $request->invoice_number;
+            $invoice->invoice_date = $request->invoice_date;
+            $invoice->due_date = $request->due_date;
+            $invoice->payment_mode_id = $request->payment_mode_id;
+            $invoice->discount_type = $request->discount_type;
+            $invoice->shipping_fee = $request->shipping_fee ?? 0;
+            $invoice->other_charges = $request->other_charges ?? 0;
+            $invoice->subtotal = $request->subtotal ?? 0;
+            $invoice->grand_total = $request->grand_total ?? 0;
+            $invoice->discount_approved = $request->discount_approved ?? 0;
+            $invoice->remarks = $request->remarks;
+            $invoice->save();
 
-            $subtotal = 0;
+            // Product-related fields
+            $productIds = $request->product_id;
+            $quantities = $request->qty;
+            $prices = $request->price;
+            $amounts = $request->amount;
+            $discounts = $request->dis ?? []; // multiple discounts per item
+            $discountType = $request->discount_type;
 
-            foreach ($products as $index => $productId) {
-                $qty   = (float) ($qtys[$index] ?? 0);
-                $price = (float) ($prices[$index] ?? 0);
-                $lineTotal = $price * $qty;
+            // Loop through each product in the invoice
+            foreach ($productIds as $index => $productId) {
+                $product = new InvoiceSales();
+                $product->invoice_id = $invoice->id;
+                $product->product_id = $productId;
+                $product->qty = $quantities[$index] ?? 0;
+                $product->price = $prices[$index] ?? 0;
+                $product->amount = $amounts[$index] ?? 0;
+                $product->save();
 
-                // Initialize per-product discounts array (so it won't carry from previous iteration)
-                $invoiceSaleDiscounts = [];
+                // 🔹 Apply per-item discounts (if applicable)
+                if (in_array($discountType, ['per_item', 'overall'])) {
+                    $itemDiscounts = isset($discounts[$index]) ? (array)$discounts[$index] : [];
 
-                // Get discount IDs for this product (could be missing)
-                $disIds = [];
-
-                // handle different shapes defensively:
-                // If dis is an array keyed by product index and each value is an array of IDs -> use that
-                if (isset($discounts[$index]) && is_array($discounts[$index])) {
-                    $disIds = $discounts[$index];
-                } else {
-                    // fallback: if discounts is flat (bad shape), try to map by position
-                    // e.g. dis => [ [1], 2 ] etc. we'll try to coerce
-                    if (is_array($discounts) && array_key_exists($index, $discounts)) {
-                        $maybe = $discounts[$index];
-                        if (is_array($maybe)) $disIds = $maybe;
-                        elseif ($maybe) $disIds = [$maybe];
-                    } elseif (is_array($discounts) && isset($discounts[0]) && !is_array($discounts[0])) {
-                        // last resort: if user submitted single-level dis[] for first product only,
-                        // you may want to combine them — but safest is to ignore. So skip.
-                        $disIds = [];
+                    foreach ($itemDiscounts as $discountId) {
+                        InvoiceSalesDiscount::create([
+                            'invoice_sales_id' => $product->id,
+                            'discount_id' => $discountId,
+                        ]);
                     }
-                }
-
-                // For each discount id, lookup tax row, get numeric rate and type, apply sequentially
-                foreach ($disIds as $disId) {
-                    if (!$disId) continue; // skip empty selects
-                    $tax = DB::table('taxes')->where('id', $disId)->first();
-                    if (!$tax) continue;
-
-                    // Figure out numeric discount value (defensive)
-                    // Try common column names: 'discount_value', 'value', otherwise parse numbers from 'name'
-                    $rate = null;
-                    if (isset($tax->discount_value)) $rate = floatval($tax->discount_value);
-                    elseif (isset($tax->value)) $rate = floatval($tax->value);
-                    else {
-                        // parse digits from name (e.g. "10 %" or "Promo 5%")
-                        $num = preg_replace('/[^0-9.]/', '', $tax->name);
-                        $rate = $num !== '' ? floatval($num) : 0;
-                    }
-
-                    // Determine discount type (prefer explicit column `type` or fallback to percent)
-                    $t = strtolower($tax->type ?? 'percent');
-                    if ($t === 'percent' || $t === 'percentage') {
-                        // apply percent on current running lineTotal
-                        $lineTotal -= ($lineTotal * ($rate / 100));
-                    } else {
-                        // fixed amount
-                        $lineTotal -= $rate;
-                    }
-
-                    // push to array to save after invoice line created
-                    $invoiceSaleDiscounts[] = [
-                        'discount_name'  => $tax->name,
-                        'discount_type'  => ($t === 'percent' || $t === 'percentage') ? 'percent' : 'fixed',
-                        'discount_value' => $rate,
-                    ];
-                }
-
-                // create invoice sales line
-                $line = InvoiceSales::create([
-                    'invoice_id' => $invoice->id,
-                    'product_id' => $productId,
-                    'qty'        => $qty,
-                    'price'      => $price,
-                    'dis'        => 0,
-                    'amount'     => round($lineTotal, 2),
-                ]);
-
-                // save discounts for this invoice sale
-                foreach ($invoiceSaleDiscounts as $d) {
-                    DB::table('invoice_sales_discounts')->insert([
-                        'invoice_sale_id' => $line->id,
-                        'discount_name'   => $d['discount_name'],
-                        'discount_type'   => $d['discount_type'],
-                        'discount_value'  => $d['discount_value'],
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
-
-                $subtotal += round($lineTotal, 2);
-
-                // update product stock
-                $product = Product::find($productId);
-                if ($product) {
-                    $product->remaining_stock -= $qty;
-                    $product->threshold = $product->remaining_stock <= 10 ? 1 : floor($product->remaining_stock * 0.2);
-                    if ($product->remaining_stock <= 0) $product->status = 'Out of Stock';
-                    elseif ($product->remaining_stock <= $product->threshold) $product->status = 'Low Stock';
-                    else $product->status = 'In Stock';
-                    $product->save();
                 }
             }
 
-            // overall discount
-            $overallDiscount = 0;
-            if ($request->discount_type === 'overall' && $request->discount_value > 0) {
-                $overallDiscount = $subtotal * ($request->discount_value / 100);
+            // 🔹 Apply overall discounts (if applicable)
+            if (in_array($discountType, ['overall', 'per_item'])) {
+                if ($request->has('overall_discounts')) {
+                    foreach ($request->overall_discounts as $discountId) {
+                        InvoiceOverallDiscount::create([
+                            'invoice_id' => $invoice->id,
+                            'discount_id' => $discountId,
+                        ]);
+                    }
+                }
             }
 
-            $afterDiscount = $subtotal - $overallDiscount;
-            $shipping = $request->shipping_fee ?? 0;
-            $other = $request->other_charges ?? 0;
-            $grandTotal = $afterDiscount + $shipping + $other;
+            \Log::info('Invoice successfully created', ['invoice_id' => $invoice->id]);
 
-            $invoice->update([
-                'subtotal'    => $subtotal,
-                'grand_total' => $grandTotal,
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('invoice.index')->with('message', 'Invoice created successfully!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+            return redirect()->route('invoices.index')->with('success', 'Invoice created successfully!');
+        } catch (\Throwable $e) {
             \Log::error('Invoice creation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return back()->withErrors(['error' => 'Failed to create invoice: ' . $e->getMessage()])->withInput();
+            return back()->with('error', 'An error occurred while creating the invoice.');
         }
     }
 

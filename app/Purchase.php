@@ -12,6 +12,9 @@ class Purchase extends Model
         'po_number',
         'salesman',
         'payment_id',
+        'gcash_number',
+        'gcash_name',
+        'check_number',
         'date',
         'discount_type',
         'discount_value',
@@ -40,7 +43,7 @@ class Purchase extends Model
 
     public function paymentMode()
     {
-        return $this->belongsTo(ModeofPayment::class, 'id');
+        return $this->belongsTo(ModeofPayment::class, 'payment_id', 'id');
     }
 
     public function items()

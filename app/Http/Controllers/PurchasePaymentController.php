@@ -11,7 +11,7 @@ class PurchasePaymentController extends Controller
     // Return payment info for modal
     public function paymentInfo($id)
     {
-        $purchase = Purchase::with('payments')->findOrFail((int)$id);
+        $purchase = Purchase::with('paymentMode')->findOrFail((int)$id);
 
         $totalPaid = $purchase->payments->sum('amount_paid');
         $outstanding = $purchase->grand_total - $totalPaid;
@@ -20,6 +20,11 @@ class PurchasePaymentController extends Controller
         return response()->json([
             'po_number' => $purchase->po_number,
             'outstanding_balance' => number_format($outstanding, 2),
+            'mode_of_payment_id' => $purchase->payment_id,
+            'mode_of_payment_name' => $purchase->paymentMode->name, 
+            'gcash_number' => $purchase->gcash_number,
+            'gcash_name' => $purchase->gcash_name,
+            'check_number' => $purchase->check_number,
             'payment_status' => $status,
         ]);
     }
@@ -33,25 +38,27 @@ class PurchasePaymentController extends Controller
             'payment_date' => 'required|date',
         ]);
 
-        // Find the purchase
         $purchase = Purchase::findOrFail($request->purchase_id);
 
-        // Calculate total paid so far
         $totalPaid = $purchase->payments()->sum('amount_paid') + $request->amount_paid;
-
-        // Compute outstanding balance
         $outstandingBalance = $purchase->grand_total - $totalPaid;
+        //dd($request->all());
+        $purchase->update([
+            'gcash_number' => $request->gcash_number,
+            'gcash_name'   => $request->gcash_name,
+            'check_number' => $request->check_number,
+        ]);
 
-        // Save payment including outstanding balance
         PurchasePayment::create([
             'purchase_id' => $request->purchase_id,
             'amount_paid' => $request->amount_paid,
             'outstanding_balance' => $outstandingBalance,
             'payment_date' => $request->payment_date,
-            'payment_status' => $request->payment_status
+            'payment_status' => $request->payment_status,
         ]);
 
         return redirect()->route('purchase.index')
             ->with('message', 'Payment recorded successfully! Outstanding balance: ' . number_format($outstandingBalance, 2));
     }
+
 }

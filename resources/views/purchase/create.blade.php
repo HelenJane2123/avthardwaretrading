@@ -146,7 +146,8 @@
                                         <th colspan="5" class="text-end">Discount Type</th>
                                         <td colspan="3">
                                             <select id="discount_type" name="discount_type" class="form-control">
-                                                <option value="per_item" selected>Per Item</option>
+                                                <option value="all" selected>All</option>
+                                                <option value="per_item" >Per Item</option>
                                                 <option value="overall">Overall</option>
                                             </select>
                                         </td>
@@ -338,6 +339,13 @@
             });
         });
 
+        $('.productname').each(function() {
+            const $row = $(this).closest('tr');
+            const selected = $(this).find(':selected');
+            const name = selected.text().trim() || '';
+            $row.find('.selected-product-name').text(name);
+        });
+
         $('form').on('submit', function () {
             const type = $('#discount_type').val();
             $('#hidden_discount_type').val(type);
@@ -386,11 +394,10 @@
         });
 
         function calculateTotals() {
-            let baseSubtotal = 0;     // sum of qty*price for all lines (no discounts, no charges)
-            let totalDiscount = 0;    // total discount in amount
+            let baseSubtotal = 0;
+            let totalDiscount = 0;
             const discountType = $('#discount_type').val();
 
-            // --- Line items ---
             $('#po-body tr').each(function () {
                 const qty   = parseFloat($(this).find('.qty').val())   || 0;
                 const price = parseFloat($(this).find('.price').val()) || 0;
@@ -401,68 +408,59 @@
 
                 let lineNet = lineBase;
 
-                if (discountType === 'per_item' && disP > 0) {
+                // Per-item discount
+                if ((discountType === 'per_item' || discountType === 'all') && disP > 0) {
                     const lineDiscAmt = lineBase * disP / 100;
                     totalDiscount += lineDiscAmt;
-                    lineNet = lineBase - lineDiscAmt;
+                    lineNet -= lineDiscAmt;
                 }
 
                 $(this).find('.amount').val(lineNet.toFixed(2));
             });
 
-            // --- Overall discount ---
-            if (discountType === 'overall') {
+            // Overall discount
+            if (discountType === 'overall' || discountType === 'all') {
                 const overallPct = parseFloat($('#discount').val()) || 0;
-                totalDiscount = baseSubtotal * overallPct / 100;
+                const overallDiscAmt = baseSubtotal * overallPct / 100;
+                totalDiscount += overallDiscAmt;
             }
 
-            // --- Charges ---
             const shipping = parseFloat($('#shipping').val()) || 0;
             const other    = parseFloat($('#other').val())    || 0;
 
-            // --- Tax ---
-            let taxAmount = 0;
-            if (discountType === 'overall') {
-                const taxPercent = parseFloat($('#tax').val()) || 0;
-                const taxableBase = (baseSubtotal - totalDiscount) + shipping + other;
-                taxAmount = taxableBase * taxPercent / 100;
-            } 
-            // else if per_item → tax = 0 automatically
-
-            // --- Final computation ---
             const taxableBase = (baseSubtotal - totalDiscount) + shipping + other;
-            const grandTotal  = taxableBase + taxAmount;
+            const grandTotal  = taxableBase;
 
-            // --- Update UI ---
             $('#subtotal').val(baseSubtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
 
-            // Hidden fields for backend
+            // Hidden backend values if you have them
             $('#hidden_subtotal').val(baseSubtotal.toFixed(2));
             $('#hidden_discount_value').val(totalDiscount.toFixed(2));
             $('#hidden_grand_total').val(grandTotal.toFixed(2));
-            $('#hidden_tax').val(taxAmount.toFixed(2)); // store tax separately if needed
         }
 
         $(document).on('input', '.qty, .price, .dis, #discount, #tax, #shipping, #other', function() {
             calculateTotals();
         });
+
         $('#discount_type').on('change', function() {
             const type = $(this).val();
 
             if (type === 'overall') {
-                // Enable overall discount
                 $('#discount').prop('disabled', false);
-                $('.dis').prop('disabled', true).val(0); // disable per-item discounts
+                $('.dis').prop('disabled', true).val(0);
             } else if (type === 'per_item') {
-                // Disable overall discount & reset value to 0
                 $('#discount').prop('disabled', true).val(0);
-                $('.dis').prop('disabled', false); // allow per-item discounts
+                $('.dis').prop('disabled', false);
+            } else if (type === 'all') {
+                $('#discount').prop('disabled', false);
+                $('.dis').prop('disabled', false);
             }
 
             calculateTotals();
         });
-                
+        calculateTotals();
     </script>
 
 @endpush
