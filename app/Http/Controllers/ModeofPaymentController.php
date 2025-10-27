@@ -100,8 +100,6 @@ class ModeofPaymentController extends Controller
         return redirect()->route('modeofpayment.index')->with('message', 'Mode of payment updated successfully!');
     }
 
-
-
     /**
      * Remove the specified resource from storage.
      *
@@ -111,6 +109,16 @@ class ModeofPaymentController extends Controller
     public function destroy($id)
     {
         $modeofpayment = ModeofPayment::findOrFail($id);
+
+        // Check if mode of payment is used in purchases or invoices
+        $isUsedInPurchases = $modeofpayment->purchases()->exists();
+        $isUsedInInvoices = $modeofpayment->invoices()->exists();
+
+        if ($isUsedInPurchases || $isUsedInInvoices) {
+            return redirect()->back()->with('error', 'Cannot delete this mode of payment because it is used in purchases or invoices.');
+        }
+
+        // Safe to delete
         $modeofpayment->delete();
         return redirect()->back();
     }

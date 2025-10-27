@@ -110,9 +110,16 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        $category = Category::find($id);
+        $category = Category::findOrFail($id);
+
+        // Check if mode of payment is used in products or supplier items
+        $isUsedInProducts = $category->supplierItems()->exists();
+        $isUsedInSupplierItems = $category->products()->exists();
+
+        if ($isUsedInProducts || $isUsedInSupplierItems) {
+            return redirect()->back()->with('error', 'Cannot delete this mode of payment because it is used in products or supplier items.');
+        }
         $category->delete();
         return redirect()->back();
-
     }
 }

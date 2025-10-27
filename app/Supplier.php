@@ -28,7 +28,7 @@ class Supplier extends Model
      */
     public function items()
     {
-        return $this->hasMany(SupplierItem::class); // adjust namespace if needed
+        return $this->hasMany(SupplierItem::class, 'supplier_id'); // adjust namespace if needed
     }
 
     // Automatically delete items and images when supplier is deleted
@@ -63,5 +63,15 @@ class Supplier extends Model
         return $this->belongsToMany(Product::class, 'product_suppliers')
                     ->withPivot('price')
                     ->withTimestamps();
+    }
+
+    public function productSupplier()
+    {
+        return $this->hasMany(ProductSupplier::class, 'supplier_id');
+    }
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'supplier_id');
     }
 }

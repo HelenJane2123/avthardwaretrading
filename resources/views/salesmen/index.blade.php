@@ -35,6 +35,11 @@
                 </button>
             </div>
         @endif
+         @if (session()->has('error'))
+             <div class="alert alert-danger mt-2">
+                {{ session()->get('error') }}
+            </div>
+        @endif
 
         <div class="tile shadow-sm rounded">
             <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Salesman Records</h3>

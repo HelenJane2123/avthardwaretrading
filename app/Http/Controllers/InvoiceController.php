@@ -302,8 +302,13 @@ class InvoiceController extends Controller
     public function destroy($id)
     {
         $invoice = Invoice::findOrFail($id);
-        $invoice->delete();
+        $isUsedInCollection = $invoice->collections()->exists();
 
+        if ($isUsedInCollection) {
+            return redirect()->back()->with('error', 'Cannot delete this invoice because it is used by collection.');
+        }
+        
+        $invoice->delete();
         return redirect()->route('invoice.index')->with('message','Invoice deleted successfully.');
     }
 

@@ -104,7 +104,13 @@ class TaxController extends Controller
      */
     public function destroy($id)
     {
-        $tax = Tax::find($id);
+        $tax = Tax::findOrFail($id);
+        $isUsedInProducts = $unit->products()->exists();
+
+         // If used in products
+        if ($isUsedInProducts) {
+            return redirect()->back()->with('error', 'Cannot delete this discount because it is used by existing products.');
+        }
         $tax->delete();
         return redirect()->back();
 

@@ -19,4 +19,9 @@ class Salesman extends Model
         'email',
         'status',
     ];
+
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'salesman_id');
+    }
 }

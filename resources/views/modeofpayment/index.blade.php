@@ -25,6 +25,11 @@
                 {{ session()->get('message') }}
             </div>
         @endif
+        @if (session()->has('error'))
+             <div class="alert alert-danger mt-2">
+                {{ session()->get('error') }}
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">

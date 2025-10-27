@@ -79,6 +79,12 @@ class SalesmenController extends Controller
     public function destroy($id)
     {
         $salesman = Salesman::findOrFail($id);
+        $isUsedInPurchase = $unit->purchases()->exists();
+
+        if ($isUsedInPurchase) {
+            return redirect()->back()->with('error', 'Cannot delete this salesman because it is used by existing purchases.');
+        }
+
         $salesman->delete();
 
         return redirect()->back()->with('message', 'Salesman deleted successfully.');

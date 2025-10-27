@@ -226,6 +226,13 @@ class SupplierController extends Controller
     public function destroy($id)
     {
         $supplier = Supplier::findOrFail($id);
+        $isUsedInSupplierItems = $supplier->items()->exists();
+        $isUsedInProductSupplier = $supplier->productSupplier()->exists();
+        $isUsedInPurchases = $supplier->purchases()->exists();
+
+        if ($isUsedInSupplierItems || $isUsedInProductSupplier || $isUsedInPurchases) {
+            return redirect()->back()->with('error', 'Cannot delete this supplier because it is used by either supplier items, products or purchases.');
+        }
         $supplier->delete();
         return redirect()->back()->with('success', 'Supplier and all items deleted successfully.');
     }

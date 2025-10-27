@@ -103,9 +103,25 @@ class UnitController extends Controller
      */
     public function destroy($id)
     {
-        $unit = Unit::find($id);
+        $unit = Unit::findOrFail($id);
+
+        // Check if unit is used in related modules
+        $isUsedInPurchase = $unit->purchaseItems()->exists();
+        $isUsedInSupplier = $unit->supplierItems()->exists();
+        $isUsedInProducts = $unit->products()->exists();
+
+        // If used in products
+        if ($isUsedInProducts) {
+            return redirect()->back()->with('error', 'Cannot delete this unit because it is used by existing products.');
+        }
+
+        // If used in purchase or supplier items
+        if ($isUsedInPurchase || $isUsedInSupplier) {
+            return redirect()->back()->with('error', 'Cannot delete this unit because it is used by existing modules.');
+        }
+
+        // Safe to delete
         $unit->delete();
         return redirect()->back();
-
     }
 }

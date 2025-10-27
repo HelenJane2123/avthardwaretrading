@@ -30,4 +30,9 @@ class ModeofPayment extends Model
     {
         return $this->hasMany(Purchase::class, 'payment_id');
     }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'payment_mode_id');
+    }
 }

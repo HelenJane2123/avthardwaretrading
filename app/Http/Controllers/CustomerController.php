@@ -134,10 +134,15 @@ class CustomerController extends Controller
      */
     public function destroy($id)
     {
-        $customer = Customer::find($id);
+        $customer = Customer::findOrFail($id);
+        $isUsedInInvoice = $customer->invoice()->exists();
+
+        if ($isUsedInInvoice) {
+            return redirect()->back()->with('error', 'Cannot delete this customer because it is used by invoices.');
+        }
+        
         $customer->delete();
         return redirect()->back();
-
     }
 
     /**
