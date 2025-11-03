@@ -67,8 +67,10 @@
                     <td>{{ $item->qty }}</td>
                     <td>₱{{ number_format($item->price, 2) }}</td>
                     <td>
-                        @if($item->dis > 0)
-                            {{ $item->dis }} %
+                        @if($item->discounts->count() > 0)
+                            @foreach($item->discounts as $discount)
+                                <span class="badge bg-info text-dark">{{ $discount->discount_value }} %</span>
+                            @endforeach
                         @else
                             -
                         @endif

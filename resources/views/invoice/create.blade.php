@@ -155,7 +155,7 @@
                                                     <select name="dis[0][]" class="form-control dis">
                                                         <option value="0">---Select Discount---</option>
                                                         @foreach($taxes as $tax)
-                                                            <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                                            <option value="{{$tax->name}}">{{$tax->name}} %</option>
                                                         @endforeach
                                                     </select>
                                                     <button type="button" class="btn btn-success btn-sm add-discount"><i class="fa fa-plus"></i></button>
@@ -291,7 +291,7 @@
                                 <select name="dis[${rowIndex}][]" class="form-control dis">
                                     <option value="0">---Select Discount---</option>
                                     @foreach($taxes as $tax)
-                                        <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                        <option value="{{$tax->name}}">{{$tax->name}} %</option>
                                     @endforeach
                                 </select>
                                 <button type="button" class="btn btn-success btn-sm add-discount">
@@ -346,14 +346,16 @@
                 calculateTotals();
             });
 
-             $(document).on('click', '.add-discount', function () {
+            $(document).on('click', '.add-discount', function () {
                 const wrapper = $(this).closest('.discounts-wrapper');
+                const row = $(this).closest('tr');
+                const rowIndex = row.index(); // get row number
                 const newRow = `
                     <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                        <select name="dis[]" class="form-control dis">
+                        <select name="dis[${rowIndex}][]" class="form-control dis">
                             <option value="0">---Select Discount---</option>
                             @foreach($taxes as $tax)
-                                <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                <option value="{{$tax->name}}">{{$tax->name}} %</option>
                             @endforeach
                         </select>
                         <button type="button" class="btn btn-success btn-sm add-discount">
@@ -364,12 +366,6 @@
                         </button>
                     </div>`;
                 wrapper.append(newRow);
-
-                // Reapply disable state if needed
-                const discountType = $('#discount_type').val();
-                if (discountType !== 'per_item') {
-                    $('.add-discount').prop('disabled', true);
-                }
             });
             // Remove a discount
             $(document).on('click', '.remove-discount', function() {

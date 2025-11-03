@@ -187,14 +187,32 @@
                                         <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item->price }}"></td>
                                         <td>
-                                            <select name="tax_id" class="form-control">
-                                                <option value="0">---Select Discount---</option>
-                                                @foreach($taxes as $tax)
-                                                    <option value="{{$tax->id}}" {{ $item->tax_id == $tax->id ? 'selected' : '' }}>
-                                                        {{$tax->name}} %
-                                                    </option>
+                                            <div class="discounts-wrapper">
+                                                @php
+                                                    $discounts = $item->discounts ?? collect(); // Assuming relation: $item->discounts()
+                                                @endphp
+
+                                                @foreach($discounts as $discount)
+                                                    <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                                                        <select name="dis[{{ $loop->parent->index }}][]" class="form-control dis">
+                                                            <option value="">---Select Discount---</option>
+                                                            @foreach($taxes as $tax)
+                                                                <option value="{{ $tax->name }}" {{ $discount->discount_name == $tax->name ? 'selected' : '' }}>
+                                                                    {{ $tax->name }} %
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        <button type="button" class="btn btn-danger btn-sm remove-discount">
+                                                            <i class="fa fa-minus"></i>
+                                                        </button>
+                                                    </div>
                                                 @endforeach
-                                            </select>
+
+                                                {{-- Add new discount button --}}
+                                                <button type="button" class="btn btn-success btn-sm add-discount">
+                                                    <i class="fa fa-plus"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                         <td><input type="number" step="0.01" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
                                         <td class="text-center">
@@ -571,6 +589,31 @@
             } else {
                 $('.productname').empty().append('<option value="">Select Product</option>');
             }
+        });
+
+        $(document).on('click', '.add-discount', function () {
+            const wrapper = $(this).closest('.discounts-wrapper');
+            const index = wrapper.closest('tr').index();
+            const newRow = `
+                <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                    <select name="dis[${index}][]" class="form-control dis">
+                        <option value="">---Select Discount---</option>
+                        @foreach($taxes as $tax)
+                            <option value="{{ $tax->name }}">{{ $tax->name }} %</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-danger btn-sm remove-discount">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            `;
+            $(this).before(newRow);
+        });
+
+        // Remove a discount row
+        $(document).on('click', '.remove-discount', function () {
+            $(this).closest('.discount-row').remove();
+            calculateTotals();
         });
 
         function toggleDiscountControls() {

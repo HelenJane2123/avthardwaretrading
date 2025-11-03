@@ -569,22 +569,23 @@ class ReportController extends Controller
 
     public function exportSales(Request $request)
     {
-        // Convert IDs to names for the stored procedure
         $customerName = $request->input('customer_id') 
             ? Customer::find($request->input('customer_id'))->name 
             : null;
 
         $productName = $request->input('product_id') 
-            ? Product::find($request->input('product_id'))->name 
+            ? Product::find($request->input('product_id'))->product_name 
             : null;
 
+        $salesmanName = $request->input('salesman_name') ?? null;
         $startDate = $request->input('start_date') ?: null;
         $endDate = $request->input('end_date') ?: null;
 
-        // Call stored procedure for sales report
-        $results = DB::select('CALL get_sales_report(?, ?, ?, ?)', [
+        // Call stored procedure
+        $results = DB::select('CALL get_sales_report(?, ?, ?, ?, ?)', [
             $customerName,
             $productName,
+            $salesmanName,
             $startDate,
             $endDate
         ]);
@@ -592,7 +593,7 @@ class ReportController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Add company header (logo, name, address, report title)
+        // Add header
         $this->addHeader($sheet, 'Sales Report');
 
         $headerRow = 6;
@@ -604,7 +605,8 @@ class ReportController extends Controller
             'Quantity',
             'Price',
             'Total',
-            'Payment Method'
+            'Payment Method',
+            'Discounts'
         ];
 
         $col = 'A';
@@ -615,21 +617,19 @@ class ReportController extends Controller
             $col++;
         }
 
-        // Fill data with subtotals
         $row = $headerRow + 1;
         $currentInvoice = null;
         $invoiceSubtotal = 0;
         $grandTotal = 0;
 
         foreach ($results as $record) {
-            // Insert subtotal when invoice changes
+            // Subtotal per invoice
             if ($currentInvoice !== null && $record->invoice_number !== $currentInvoice) {
                 $sheet->setCellValue("F{$row}", "Subtotal:");
                 $sheet->setCellValue("G{$row}", $invoiceSubtotal);
                 $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
                 $row++;
-
-                $invoiceSubtotal = 0; // reset subtotal
+                $invoiceSubtotal = 0;
             }
 
             // Write row data
@@ -643,15 +643,15 @@ class ReportController extends Controller
             $sheet->setCellValue("F{$row}", $record->price ?? 0);
             $sheet->setCellValue("G{$row}", $record->total_amount ?? 0);
             $sheet->setCellValue("H{$row}", $record->payment_method ?? '');
+            $sheet->setCellValue("I{$row}", $record->discount_display ?? '');
             $row++;
 
-            // Totals
             $invoiceSubtotal += $record->total_amount ?? 0;
             $grandTotal += $record->total_amount ?? 0;
             $currentInvoice = $record->invoice_number;
         }
 
-        // Add last invoice subtotal
+        // Add final subtotal + grand total
         if ($currentInvoice !== null) {
             $sheet->setCellValue("F{$row}", "Subtotal:");
             $sheet->setCellValue("G{$row}", $invoiceSubtotal);
@@ -659,22 +659,21 @@ class ReportController extends Controller
             $row++;
         }
 
-        // Add grand total
         $sheet->setCellValue("F{$row}", "Grand Total:");
         $sheet->setCellValue("G{$row}", $grandTotal);
         $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
 
         $lastRow = $row;
 
-        // Format numbers (Price and Total)
+        // Number formatting
         foreach (['F','G'] as $col) {
             $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
                 ->getNumberFormat()
                 ->setFormatCode('#,##0.00');
         }
 
-        // Add borders (include summary rows)
-        $sheet->getStyle("A{$headerRow}:H{$lastRow}")->applyFromArray([
+        // Borders
+        $sheet->getStyle("A{$headerRow}:I{$lastRow}")->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -683,7 +682,7 @@ class ReportController extends Controller
             ],
         ]);
 
-        // Export Excel
+        // Export file
         $fileName = 'sales_report_'.now()->format('Ymd_His').'.xlsx';
         $writer = new Xlsx($spreadsheet);
 
@@ -692,6 +691,7 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
+
 
     public function customer_report(Request $request)
     {

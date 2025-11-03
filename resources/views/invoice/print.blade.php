@@ -87,8 +87,10 @@
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
                 <td>{{ $item->product->product_code . ' - ' . $item->product->product_name ?? 'N/A' }}</td>
                 <td>
-                    @if($item->dis > 0)
-                        {{ $item->dis }}%
+                    @if($item->discounts->count() > 0)
+                        @foreach($item->discounts as $discount)
+                            <span class="badge bg-info text-dark">{{ $discount->discount_value }} %</span>
+                        @endforeach
                     @else
                         -
                     @endif

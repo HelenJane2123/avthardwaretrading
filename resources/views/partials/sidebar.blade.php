@@ -113,12 +113,12 @@
         {{-- Salesmen --}}
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('salesmen*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-briefcase"></i><span class="app-menu__label">Salesmen</span>
+                <i class="app-menu__icon fa fa-briefcase"></i><span class="app-menu__label">Salesman</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="{{ route('salesmen.create') }}"><i class="icon fa fa-circle-o"></i> Add Salesmen</a></li>
-                <li><a class="treeview-item" href="{{ route('salesmen.index') }}"><i class="icon fa fa-circle-o"></i> Manage Salesmen</a></li>
+                <li><a class="treeview-item" href="{{ route('salesmen.create') }}"><i class="icon fa fa-circle-o"></i> Add Salesman</a></li>
+                <li><a class="treeview-item" href="{{ route('salesmen.index') }}"><i class="icon fa fa-circle-o"></i> Manage Salesman</a></li>
             </ul>
         </li>
 
@@ -127,16 +127,18 @@
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Maintenance —</li>
 
         {{-- User --}}
-        <li class="treeview">
-            <a class="app-menu__item {{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">User</span>
-                <i class="treeview-indicator fa fa-angle-right"></i>
-            </a>
-            <ul class="treeview-menu">
-                <li><a class="treeview-item" href="{{ route('user.create') }}"><i class="icon fa fa-plus"></i> Add User</a></li>
-                <li><a class="treeview-item" href="{{ route('user.index') }}"><i class="icon fa fa-edit"></i> Manage Users</a></li>
-            </ul>
-        </li>
+        @if(auth()->user()->user_role === 'super_admin')
+            <li class="treeview">
+                <a class="app-menu__item {{ request()->is('user*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+                    <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">User</span>
+                    <i class="treeview-indicator fa fa-angle-right"></i>
+                </a>
+                <ul class="treeview-menu">
+                    <li><a class="treeview-item" href="{{ route('user.create') }}"><i class="icon fa fa-plus"></i> Add User</a></li>
+                    <li><a class="treeview-item" href="{{ route('user.index') }}"><i class="icon fa fa-edit"></i> Manage Users</a></li>
+                </ul>
+            </li>
+        @endif
 
         {{-- Tax --}}
         <li class="treeview">
@@ -203,7 +205,9 @@
                 <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.estimated_income_report') }}"><i class="icon fa fa-circle-o"></i> Estimated Income Report</a></li>
+                @if(auth()->user()->user_role === 'super_admin')
+                    <li><a class="treeview-item" href="{{ route('reports.estimated_income_report') }}"><i class="icon fa fa-circle-o"></i> Estimated Income Report</a></li>
+                @endif
             </ul>
         </li>
     </ul>
