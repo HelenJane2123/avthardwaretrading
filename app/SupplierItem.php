@@ -18,7 +18,9 @@ class SupplierItem extends Model
         'item_amount',
         'item_qty',
         'unit_id',
-        'item_image'
+        'item_image',
+        'volume_less',
+        'regular_less'
     ];
 
     /**

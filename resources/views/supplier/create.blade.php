@@ -28,6 +28,14 @@
                 </button>
             </div>
         @endif
+        @if (session()->has('error'))
+             <div class="alert alert-dange alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
 
         <!-- Manage Supplier Button -->
         <div class="mb-3">
@@ -128,11 +136,12 @@
                                         <tr>
                                             <th>Item Code</th>
                                             <th>Category</th>
-                                            <th>Description</th>
+                                            <th>Item Name</th>
                                             <th>Qty</th>
                                             <th>Unit</th>
                                             <th>Price</th>
-                                            <th>Amount</th>
+                                            <th>Volume Less</th>
+                                            <th>Regular Less</th>
                                             <th>Image</th>
                                             <th>
                                                 <button type="button" class="btn btn-sm btn-primary" id="add-row">
@@ -163,7 +172,14 @@
                                                 </select>
                                             </td>
                                             <td><input type="number" name="item_price[]" class="form-control item-price" step="0.01"></td>
-                                            <td><input type="number" name="item_amount[]" class="form-control item-amount" step="0.01" readonly></td>
+                                            <td>
+                                                <textarea name="volume_less[]" 
+                                                    class="form-control"></textarea>
+                                            </td>
+                                            <td>
+                                                <textarea name="regular_less[]" 
+                                                    class="form-control" ></textarea>
+                                            </td>
                                             <td><input type="file" name="item_image[]" class="form-control" accept="image/*"></td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger remove-row">
@@ -172,12 +188,12 @@
                                             </td>
                                         </tr>
                                     </tbody>
-                                    <tfoot>
+                                    <!-- <tfoot>
                                         <tr>
                                             <td colspan="6" class="text-right"><strong>Total Amount:</strong></td>
                                             <td colspan="3"><input type="text" id="total_amount" class="form-control" readonly></td>
                                         </tr>
-                                    </tfoot>
+                                    </tfoot> -->
                                 </table>
                             </div>
 
@@ -247,7 +263,8 @@
                     `<input type="number" name="item_qty[]" class="form-control item-qty">`,
                     `<select name="unit_id[]" class="form-control"><option value="">Select Unit</option>${unitOptions}</select>`,
                     `<input type="number" name="item_price[]" class="form-control item-price" step="0.01">`,
-                    `<input type="number" name="item_amount[]" class="form-control item-amount" step="0.01" readonly>`,
+                    `<textarea name="volume_less[]" class="form-control"></textarea>`,
+                    `<textarea name="regular_less[]" class="form-control"></textarea>`,
                     `<input type="file" name="item_image[]" class="form-control" accept="image/*">`,
                     `<button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>`
                 ]).draw(false); // ✅ keeps search working
@@ -279,6 +296,31 @@
                 $(this).closest('tr').remove();
                 calculateTotalAmount();
             });
+
+
+            //check if selected item is duplicate
+            $(document).on('change', 'input[name="item_description[]"]', function () {
+                const currentValue = $(this).val().trim().toLowerCase();
+                let isDuplicate = false;
+
+                $('input[name="item_description[]"]').not(this).each(function () {
+                    if ($(this).val().trim().toLowerCase() === currentValue && currentValue !== '') {
+                        isDuplicate = true;
+                        return false; // stop checking
+                    }
+                });
+
+                if (isDuplicate) {
+                    swal({
+                        title: "Duplicate Item",
+                        text: "This product already exists in the list.",
+                        icon: "error",
+                        button: "OK",
+                    });
+                    $(this).val(''); // clear the duplicate entry
+                    $(this).focus();
+                }
+            });      
         });
     </script>
 @endpush

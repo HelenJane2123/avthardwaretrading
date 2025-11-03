@@ -35,9 +35,12 @@
                 </button>
             </div>
         @endif
-         @if (session()->has('error'))
-             <div class="alert alert-danger mt-2">
-                {{ session()->get('error') }}
+        @if(session()->has('error'))
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         @endif
 

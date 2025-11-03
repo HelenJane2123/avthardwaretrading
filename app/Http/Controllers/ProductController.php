@@ -350,14 +350,12 @@ class ProductController extends Controller
      */
     public function destroy($id)
     {
-        $product = Product::with('productSuppliers')->find($id);
+        $product = Product::findOrFail($id);
+        $isUsedInvoiceSales = $product->product()->exists();
 
-        if (!$product) {
-            return redirect()->back()->with('error', 'Product not found.');
+        if ($isUsedInvoiceSales) {
+            return redirect()->back()->with('error', 'Cannot delete this product because it is used by invoices.');
         }
-
-        // Delete related suppliers first
-        $product->productSuppliers()->delete();
 
         // Delete the product
         $product->delete();

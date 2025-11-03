@@ -23,12 +23,22 @@
             </a>
         </div>
 
-         @if(session()->has('message'))
-            <div class="alert alert-success mt-2">
-                {{ session()->get('message') }}
+        @if(session()->has('message'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         @endif
-
+        @if(session()->has('error'))
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="tile">

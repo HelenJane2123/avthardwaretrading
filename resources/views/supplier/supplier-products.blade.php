@@ -55,7 +55,8 @@
                             <th>Unit</th>
                             <th>Qty</th>
                             <th>Price</th>
-                            <th>Amount</th>
+                            <th>Volume Less</th>
+                            <th>Regular Less</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,7 +75,8 @@
                                 <td>{{ $item->unit->name ?? 'N/A' }}</td>
                                 <td>{{ $item->item_qty }}</td>
                                 <td>₱{{ number_format($item->item_price, 2) }}</td>
-                                <td>₱{{ number_format($item->item_amount, 2) }}</td>
+                                <td>{{ $item->volume_less }}</td>
+                                <td>{{ $item->regular_less }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -83,7 +85,7 @@
                         @endforelse
                     </tbody>
                     @if($supplier->items->isNotEmpty())
-                    <tfoot>
+                    <!-- <tfoot>
                         <tr class="bg-light font-weight-bold">
                             <td colspan="5" class="text-end">TOTAL</td>
                             <td>
@@ -96,7 +98,7 @@
                                 ₱{{ number_format($supplier->items->sum('item_amount'), 2) }}
                             </td>
                         </tr>
-                    </tfoot>
+                    </tfoot> -->
                     @endif
                 </table>
             </div>

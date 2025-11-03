@@ -117,7 +117,7 @@ class CategoryController extends Controller
         $isUsedInSupplierItems = $category->products()->exists();
 
         if ($isUsedInProducts || $isUsedInSupplierItems) {
-            return redirect()->back()->with('error', 'Cannot delete this mode of payment because it is used in products or supplier items.');
+            return redirect()->back()->with('error', 'Cannot delete this category because it is used in products or supplier items.');
         }
         $category->delete();
         return redirect()->back();

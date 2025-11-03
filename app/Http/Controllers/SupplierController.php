@@ -48,11 +48,22 @@ class SupplierController extends Controller
             'name' => 'required',
             'mobile' => 'required|min:3|digits:11',
             'address' => 'required|min:3',
-            'details' => 'required|min:3|',
+            'details' => 'required|min:3',
             'previous_balance' => 'nullable|numeric',
             'item_image.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
+        // ✅ Step 1: Check for duplicates within the form itself
+        if ($request->has('item_description')) {
+            $descriptions = array_map('strtolower', array_filter($request->item_description));
+            if (count($descriptions) !== count(array_unique($descriptions))) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Duplicate product descriptions found in the form. Please remove or rename them.');
+            }
+        }
+
+        // ✅ Step 2: Create supplier
         $supplier = Supplier::create([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
@@ -64,16 +75,38 @@ class SupplierController extends Controller
             'previous_balance' => $request->previous_balance ?? 0,
         ]);
 
+        // ✅ Step 3: Check for duplicates in DB before inserting new items
+        if ($request->has('item_description')) {
+            foreach ($request->item_description as $desc) {
+                if (!empty($desc)) {
+                    $exists = SupplierItem::where('item_description', $desc)
+                        ->where('supplier_id', $supplier->id)
+                        ->exists();
+
+                    if ($exists) {
+                        // Rollback supplier if duplicate detected
+                        $supplier->delete();
+
+                        return redirect()->back()
+                            ->withInput()
+                            ->with('error', "The product '{$desc}' already exists for this supplier.");
+                    }
+                }
+            }
+        }
+
+        // ✅ Step 4: Save items if all checks passed
         if ($request->has('item_code')) {
             foreach ($request->item_code as $index => $code) {
                 if ($code !== null && $code !== '') {
                     $imagePath = null;
-                    // Check if file exists for this index
+
                     if ($request->hasFile('item_image') && isset($request->file('item_image')[$index])) {
                         $image = $request->file('item_image')[$index];
                         $supplierFolder = $supplier->supplier_code ?? 'items';
-                        $imagePath = $image->store("items/{$supplierFolder}", 'public'); // Stored in storage/app/public/items/SUP-XXX/
+                        $imagePath = $image->store("items/{$supplierFolder}", 'public');
                     }
+
                     SupplierItem::create([
                         'supplier_id' => $supplier->id,
                         'item_code' => $code,
@@ -82,8 +115,10 @@ class SupplierController extends Controller
                         'item_price' => $request->item_price[$index] ?? 0,
                         'item_amount' => $request->item_amount[$index] ?? 0,
                         'unit_id' => $request->unit_id[$index] ?? null,
-                        'item_qty' => $request->item_qty[$index] ?? 0, 
+                        'item_qty' => $request->item_qty[$index] ?? 0,
                         'item_image' => $imagePath,
+                        'volume_less' => $request->volume_less[$index] ?? null,
+                        'regular_less' => $request->regular_less[$index] ?? null,
                     ]);
                 }
             }
@@ -91,6 +126,7 @@ class SupplierController extends Controller
 
         return redirect()->back()->with('message', 'New supplier has been added successfully!');
     }
+
 
     /**
      * Display the specified resource.
@@ -171,7 +207,8 @@ class SupplierController extends Controller
         $item_category = $request->category_id ?? [];
         $unit_id = $request->unit_id ?? [];
         $item_qty = $request->item_qty ?? [];
-
+        $volume_less = $request->volume_less ?? [];
+        $regular_less = $request->regular_less ?? [];
 
         foreach ($codes as $index => $code) {
             $itemId = $itemIds[$index] ?? null;
@@ -185,6 +222,8 @@ class SupplierController extends Controller
                 'item_amount' => $amounts[$index] ?? 0,
                 'unit_id' => $unit_id[$index] ?? null,
                 'item_qty' => $item_qty[$index] ?? 0, 
+                'volume_less' => $volume_less[$index] ?? null,
+                'regular_less' => $regular_less[$index] ?? null,
             ];
 
             if ($request->hasFile("item_image.$index")) {

@@ -83,7 +83,8 @@
                                     <th>Qty</th>
                                     <th>Unit</th>
                                     <th>Price</th>
-                                    <th>Amount</th>
+                                    <th>Volume Less</th>
+                                    <th>Regular Less</th>
                                     <th>Image</th>
                                     <th>
                                         <button type="button" class="btn btn-sm btn-primary" id="add-row">
@@ -140,11 +141,14 @@
                                                    step="0.01" value="{{ $item->item_price }}">
                                         </td>
 
-                                        <td>
-                                            <input type="number" name="item_amount[]" class="form-control amount"
-                                                   step="0.01" value="{{ $item->item_amount }}" readonly>
+                                       <td>
+                                            <textarea name="volume_less[]" 
+                                                class="form-control">{{ $item->volume_less }}</textarea>
                                         </td>
-
+                                        <td>
+                                            <textarea name="regular_less[]" 
+                                                class="form-control" >{{ $item->regular_less }}</textarea>
+                                        </td>
                                         <td>
                                             @if($item->item_image)
                                                 <img src="{{ asset('storage/' . $item->item_image) }}" width="60" class="mb-1">
@@ -160,7 +164,7 @@
                                     </tr>
                                 @endforeach
                                 </tbody>
-                                <tfoot>
+                                <!-- <tfoot>
                                 <tr>
                                     <td colspan="6" class="text-end fw-bold">Total Amount:</td>
                                     <td>
@@ -168,7 +172,7 @@
                                     </td>
                                     <td colspan="2"></td>
                                 </tr>
-                                </tfoot>
+                                </tfoot> -->
                             </table>
 
                             <div class="form-group text-end">
@@ -235,7 +239,7 @@
         }
 
         // Add Row
-        $('#add-row').click(function () {
+        $("#add-row").click(function () {
             let supplierCode = $('#supplier_code').val() || 'SUP';
             let itemCode = supplierCode + '-' + String(itemCount).padStart(3, '0');
 
@@ -266,7 +270,8 @@
                         </select>
                     </td>
                     <td><input type="number" name="item_price[]" class="form-control price" step="0.01" min="0"></td>
-                    <td><input type="number" name="item_amount[]" class="form-control amount" step="0.01" readonly></td>
+                    <td><textarea name="volume_less[]" class="form-control"></textarea></td>
+                    <td><textarea name="regular_less[]" class="form-control"></textarea></td>
                     <td><input type="file" name="item_image[]" class="form-control" accept="image/*"></td>
                     <td><button type="button" class="btn btn-sm btn-danger remove-row">Delete</button></td>
                 </tr>
