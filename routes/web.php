@@ -19,6 +19,7 @@ use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\SalesmenController;
+use App\Http\Controllers\Auth\LoginController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -40,7 +41,11 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/edit_profile', [HomeController::class, 'edit_profile'])->name('edit_profile');
 Route::post('/update_profile/{id}', [HomeController::class, 'update_profile'])->name('update_profile');
 Route::get('/password_change/', [HomeController::class, 'update_password'])->name('update_password');
-
+Route::post('/user/{id}/reset-password', [HomeController::class, 'resetPassword'])->name('user.resetPassword');
+Route::post('/signout', [LoginController::class, 'logout'])
+    ->middleware('web')
+    ->name('logout');
+    
 Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
 Route::resource('unit', UnitController::class);

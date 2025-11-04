@@ -12,6 +12,7 @@ use App\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
@@ -161,41 +162,65 @@ class HomeController extends Controller
         $user->email = $request->email;
 
         if ($request->hasFile('image')){
-        $image_path ="images/user/".$user->image;
-        if (file_exists($image_path)){
-            unlink($image_path);
-        }
-        $imageName =request()->image->getClientOriginalName();
-        request()->image->move(public_path('images/user/'), $imageName);
-        $user->image = $imageName;
-    }
-
-    if ($request->filled(['current_password', 'new_password', 'confirm_password'])) {
-        // Validate password change fields
-        $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8|different:current_password',
-            'confirm_password' => 'required|same:new_password',
-        ]);
-    
-        // Verify if the entered current password matches the actual password
-        if (Hash::check($request->current_password, $user->password)) {
-            // Check if the new and confirm passwords match
-            if ($request->new_password !== $request->confirm_password) {
-                return redirect()->back()->with('error', 'New and confirm passwords do not match');
+            $image_path ="images/user/".$user->image;
+            if (file_exists($image_path)){
+                unlink($image_path);
             }
-    
-            // Hash and update the new password
-            $user->password = Hash::make($request->new_password);
-        } else {
-            return redirect()->back()->with('error', 'Incorrect current password');
+            $imageName =request()->image->getClientOriginalName();
+            request()->image->move(public_path('images/user/'), $imageName);
+            $user->image = $imageName;
         }
+
+        if ($request->filled(['current_password', 'new_password', 'confirm_password'])) {
+            // Validate password change fields
+            $request->validate([
+                'current_password' => 'required',
+                'new_password' => 'required|min:8|different:current_password',
+                'confirm_password' => 'required|same:new_password',
+            ]);
+        
+            // Verify if the entered current password matches the actual password
+            if (Hash::check($request->current_password, $user->password)) {
+                // Check if the new and confirm passwords match
+                if ($request->new_password !== $request->confirm_password) {
+                    return redirect()->back()->with('error', 'New and confirm passwords do not match');
+                }
+        
+                // Hash and update the new password
+                $user->password = Hash::make($request->new_password);
+            } else {
+                return redirect()->back()->with('error', 'Incorrect current password');
+            }
+        }
+        
+        $user->save();
+
+        return redirect()->back()->with('success', 'Profile updated successfully');
     }
-    
 
-    $user->save();
+    public function resetPassword($id)
+    {
+        $user = User::findOrFail($id);
 
-    return redirect()->back()->with('success', 'Profile updated successfully');
+        // Generate temporary password
+        $temporaryPassword = Str::random(8);
+
+        // Update user’s password and flag
+        $user->password = Hash::make($temporaryPassword);
+        $user->password_reset_flag = true;
+        $user->save();
+
+        // Flash a success message
+        return redirect()->back()->with('reset_success', "
+            <div>
+                <p><strong>Temporary password generated:</strong></p>
+                <div class='input-group mb-2'>
+                    <input type='text' class='form-control' id='tempPasswordField' value='{$temporaryPassword}' readonly>
+                    <button class='btn btn-outline-secondary' type='button' onclick='copyTempPassword()'>Copy</button>
+                </div>
+                <small class='text-muted'>Please copy this password and give it to the user so they can log in and change it.</small>
+            </div>
+        ");
     }
 
 

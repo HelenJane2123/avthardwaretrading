@@ -18,6 +18,7 @@
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:image" content="{{ asset('images/og-image.png') }}">
     <meta property="og:description" content="Manage sales, track inventory, and generate reports with AVT Hardware Trading’s system.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
@@ -37,6 +38,7 @@
 
 @yield('content')
 
+
 <!-- Essential javascripts for application to work-->
 <script src="{{asset('/')}}js/jquery-3.2.1.min.js"></script>
 <script src="{{asset('/')}}js/popper.min.js"></script>
@@ -50,5 +52,6 @@
 
 
 @stack('js')
+@include('partials.help-modal')
 </body>
 </html>

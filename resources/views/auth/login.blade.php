@@ -14,6 +14,14 @@
         </div>
 
         <div class="login-box px-4 w-100">
+            @if (session('status'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="fa fa-check-circle"></i>  {{ session('status') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
             <form id="secureLoginForm" class="login-form" method="POST" action="{{ route('login') }}">
                 @csrf
                 {{-- Honeypot field (bot trap) --}}

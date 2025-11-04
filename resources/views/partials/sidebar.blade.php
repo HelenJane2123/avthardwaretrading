@@ -1,5 +1,13 @@
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
+    @if (session('passwordResetNotice'))
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fa fa-check-circle"></i> {{ session('passwordResetNotice') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
     <div class="app-sidebar__user">
         @php
             $user = Auth::user();
