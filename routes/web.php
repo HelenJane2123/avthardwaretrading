@@ -19,6 +19,7 @@ use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\SalesmenController;
+use App\Http\Controllers\AdjustmentCollectionController;
 use App\Http\Controllers\Auth\LoginController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
@@ -58,6 +59,7 @@ Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
 Route::resource('collection', CollectionController::class);
 Route::resource('salesmen', SalesmenController::class);
+Route::resource('adjustment_collection', AdjustmentCollectionController::class);
 
 
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');

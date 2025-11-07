@@ -14,7 +14,8 @@ class Customer extends Model
         'name',
         'address',
         'mobile',
-        'email'
+        'email',
+        'status'
     ];
 
     public function invoice()

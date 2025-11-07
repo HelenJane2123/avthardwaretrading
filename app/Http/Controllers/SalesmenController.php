@@ -35,7 +35,7 @@ class SalesmenController extends Controller
             'phone'         => 'required|digits:11|unique:salesmen,phone',
             'address'       => 'required|min:3',
             'email'         => 'required|email|unique:salesmen,email',
-            'status'        => 'required',
+            'status'        => 'required|boolean',
         ]);
 
         $salesman = new Salesman();

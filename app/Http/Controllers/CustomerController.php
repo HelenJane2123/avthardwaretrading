@@ -53,6 +53,7 @@ class CustomerController extends Controller
             'tax' => 'required|regex:/^\d{3}-\d{3}-\d{3}-\d{3}$/|unique:customers',
             'details' => 'required|min:3',
             'previous_balance' => 'nullable|numeric|min:0',
+            'status' => 'required|boolean',
         ]);
 
         $customer = new Customer();
@@ -64,6 +65,7 @@ class CustomerController extends Controller
         $customer->tax = $request->tax;
         $customer->details = $request->details;
         $customer->previous_balance = $request->previous_balance ?? 0;
+        $customer->status = $request->status;
         $customer->save();
 
         return redirect()->route('customer.index')->with('message', 'Customer added successfully');
@@ -112,6 +114,7 @@ class CustomerController extends Controller
             ],
             'details' => 'required|min:3',
             'previous_balance' => 'nullable|numeric|min:0',
+            'status'  => 'required'
         ]);
 
         $customer = Customer::findOrFail($id);
@@ -121,6 +124,7 @@ class CustomerController extends Controller
         $customer->tax = $request->tax;
         $customer->details = $request->details;
         $customer->previous_balance = $request->previous_balance ?? 0;
+        $customer->status = $request->status ?? 0;
         $customer->save();
 
         return redirect()->route('customer.index')->with('message', 'Customer updated successfully.');

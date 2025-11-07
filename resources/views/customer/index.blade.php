@@ -58,6 +58,7 @@
                                 <th>Email</th>
                                 <th>Tax No.</th>
                                 <th>Details</th>
+                                <th>Status</th>
                                 <th>Created At</th>
                                 <th>Updated At</th>
                                 <th>Action</th>
@@ -73,6 +74,11 @@
                                 <td>{{ $customer->email }}</td>
                                 <td>{{ $customer->tax }}</td>
                                 <td>{{ $customer->details }}</td>
+                                <td>
+                                    <span class="badge {{ $customer->status == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $customer->status == 1 ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
                                 <td>{{ \Carbon\Carbon::parse($customer->created_at)->format('M d, Y') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($customer->updated_at)->format('M d, Y') }}</td>
                                 <td>

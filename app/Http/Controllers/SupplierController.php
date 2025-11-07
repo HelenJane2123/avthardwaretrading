@@ -51,6 +51,7 @@ class SupplierController extends Controller
             'details' => 'required|min:3',
             'previous_balance' => 'nullable|numeric',
             'item_image.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'status' => 'required|boolean',
         ]);
 
         // ✅ Step 1: Check for duplicates within the form itself
@@ -73,6 +74,7 @@ class SupplierController extends Controller
             'tax' => $request->tax,
             'email' => $request->email,
             'previous_balance' => $request->previous_balance ?? 0,
+            'status' => $request->status
         ]);
 
         // ✅ Step 3: Check for duplicates in DB before inserting new items
@@ -196,6 +198,7 @@ class SupplierController extends Controller
             'address' => $request->address,
             'tax' => $request->tax,
             'details' => $request->details,
+            'status' => $request->status
         ]);
 
         $supplierCode = $supplier->supplier_code;

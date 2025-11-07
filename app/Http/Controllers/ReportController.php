@@ -63,10 +63,11 @@ class ReportController extends Controller
     {
         $customerId    = $request->input('customer_id') ?: null;
         $paymentModeId = $request->input('payment_mode_id') ?: null;
-        $asOfDate      = $request->input('as_of_date') 
-                        ? \Carbon\Carbon::parse($request->input('as_of_date'))->toDateString() 
+        $asOfDate      = $request->input('as_of_date')
+                        ? \Carbon\Carbon::parse($request->input('as_of_date'))->toDateString()
                         : now()->toDateString();
 
+        // === Call your stored procedure ===
         $results = DB::select(
             'CALL get_ar_aging(:customerId, :paymentModeId, :asOfDate)',
             [
@@ -79,16 +80,17 @@ class ReportController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // === Header ===
+        // === HEADER TITLE ===
         $this->addHeader($sheet, 'AR Aging Report');
         $headerRow = 6;
 
-        // === Table Headers ===
+        // === TABLE HEADERS ===
         $headers = [
             'Customer Code','Customer','Invoice #','Invoice Date','Due Date',
-            'Invoice Amount','Outstanding','Amount Paid','Collection Date',
-            'Remarks','Payment Method','Payment Term','Aging Bucket',
-            'Payment Status','Invoice Status'
+            'Invoice Amount','Adjustment Type','Adjustment Amount',
+            'Outstanding Balance','Adjusted Outstanding',
+            'Amount Paid','Collection Date',
+            'Payment Method','Payment Status','Invoice Status'
         ];
 
         $col = 'A';
@@ -99,31 +101,31 @@ class ReportController extends Controller
             $col++;
         }
 
-        // === Sort results ===
+        // === SORT RESULTS ===
         usort($results, fn($a, $b) => strcmp($a->customer_name, $b->customer_name));
 
-        // === Initialize ===
         $row = $headerRow + 1;
         $currentCustomer = null;
-        $subtotalInvoice = $subtotalPaid = $subtotalOutstanding = 0;
-        $grandInvoice = $grandPaid = $grandOutstanding = 0;
+        $subtotalInvoice = $subtotalAdjust = $subtotalPaid = $subtotalOutstanding = $subtotalAdjusted = 0;
+        $grandInvoice = $grandAdjust = $grandPaid = $grandOutstanding = $grandAdjusted = 0;
 
         foreach ($results as $record) {
-            // Subtotal row per customer
             if ($currentCustomer && $currentCustomer !== $record->customer_name) {
                 $sheet->setCellValue("C{$row}", "Subtotal for $currentCustomer");
                 $sheet->setCellValue("F{$row}", $subtotalInvoice);
-                $sheet->setCellValue("G{$row}", $subtotalOutstanding);
-                $sheet->setCellValue("H{$row}", $subtotalPaid);
+                $sheet->setCellValue("H{$row}", $subtotalAdjust);
+                $sheet->setCellValue("I{$row}", $subtotalOutstanding);
+                $sheet->setCellValue("J{$row}", $subtotalAdjusted);
+                $sheet->setCellValue("K{$row}", $subtotalPaid);
                 $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
                 $row++;
 
-                $subtotalInvoice = $subtotalPaid = $subtotalOutstanding = 0;
+                $subtotalInvoice = $subtotalAdjust = $subtotalPaid = $subtotalOutstanding = $subtotalAdjusted = 0;
             }
 
             $currentCustomer = $record->customer_name;
 
-            // === Row Values ===
+            // === DATA ROW ===
             $sheet->setCellValue("A{$row}", $record->customer_code ?? '');
             $sheet->setCellValue("B{$row}", $record->customer_name ?? '');
             $sheet->setCellValue("C{$row}", $record->invoice_number ?? '');
@@ -139,81 +141,73 @@ class ReportController extends Controller
                 ));
             }
             if (!empty($record->collection_date)) {
-                $sheet->setCellValue("I{$row}", \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(
+                $sheet->setCellValue("L{$row}", \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(
                     \Carbon\Carbon::parse($record->collection_date)->toDateTime()
                 ));
             }
 
             $sheet->setCellValue("F{$row}", $record->invoice_amount ?? 0);
-            $sheet->setCellValue("H{$row}", $record->amount_paid ?? 0);
-            $sheet->setCellValue("G{$row}", "=F{$row}-H{$row}");
-            $sheet->setCellValue("J{$row}", $record->collection_remarks ?? '');
-            $sheet->setCellValue("K{$row}", $record->payment_method ?? '');
-            $sheet->setCellValue("L{$row}", $record->payment_term ?? '');
-            $sheet->setCellValue("M{$row}", $record->aging_bucket ?? '');
+            $sheet->setCellValue("G{$row}", $record->entry_type ?? '');
+            $sheet->setCellValue("H{$row}", $record->adjustment_amount ?? 0);
+            $sheet->setCellValue("I{$row}", $record->outstanding_balance ?? 0);
+            $sheet->setCellValue("J{$row}", $record->adjusted_outstanding_balance ?? 0);
+            $sheet->setCellValue("K{$row}", $record->amount_paid ?? 0);
+            $sheet->setCellValue("M{$row}", $record->payment_method ?? '');
             $sheet->setCellValue("N{$row}", $record->payment_status ?? '');
             $sheet->setCellValue("O{$row}", $record->invoice_status ?? '');
 
-            // === Optional Color Coding for Payment Status ===
-            $statusCell = "N{$row}";
-            switch (strtolower($record->payment_status)) {
-                case 'paid':
-                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FF008000'); // green
-                    break;
-                case 'overdue':
-                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FFFF0000'); // red
-                    break;
-                case 'partially paid':
-                    $sheet->getStyle($statusCell)->getFont()->getColor()->setARGB('FFFFA500'); // orange
-                    break;
-            }
+            // === SUBTOTALS ===
+            $subtotalInvoice    += $record->invoice_amount ?? 0;
+            $subtotalAdjust     += $record->adjustment_amount ?? 0;
+            $subtotalOutstanding+= $record->outstanding_balance ?? 0;
+            $subtotalAdjusted   += $record->adjusted_outstanding_balance ?? 0;
+            $subtotalPaid       += $record->amount_paid ?? 0;
 
-            // === Subtotals ===
-            $subtotalInvoice += $record->invoice_amount ?? 0;
-            $subtotalPaid += $record->amount_paid ?? 0;
-            $subtotalOutstanding += ($record->invoice_amount ?? 0) - ($record->amount_paid ?? 0);
-
-            $grandInvoice += $record->invoice_amount ?? 0;
-            $grandPaid += $record->amount_paid ?? 0;
-            $grandOutstanding += ($record->invoice_amount ?? 0) - ($record->amount_paid ?? 0);
+            $grandInvoice    += $record->invoice_amount ?? 0;
+            $grandAdjust     += $record->adjustment_amount ?? 0;
+            $grandOutstanding+= $record->outstanding_balance ?? 0;
+            $grandAdjusted   += $record->adjusted_outstanding_balance ?? 0;
+            $grandPaid       += $record->amount_paid ?? 0;
 
             $row++;
         }
 
-        // === Final subtotal ===
+        // === FINAL SUBTOTAL ===
         if ($currentCustomer) {
             $sheet->setCellValue("C{$row}", "Subtotal for $currentCustomer");
             $sheet->setCellValue("F{$row}", $subtotalInvoice);
-            $sheet->setCellValue("G{$row}", $subtotalOutstanding);
-            $sheet->setCellValue("H{$row}", $subtotalPaid);
+            $sheet->setCellValue("H{$row}", $subtotalAdjust);
+            $sheet->setCellValue("I{$row}", $subtotalOutstanding);
+            $sheet->setCellValue("J{$row}", $subtotalAdjusted);
+            $sheet->setCellValue("K{$row}", $subtotalPaid);
             $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
             $row++;
         }
 
-        // === Grand Totals ===
+        // === GRAND TOTAL ===
         $sheet->setCellValue("C{$row}", "GRAND TOTAL");
         $sheet->setCellValue("F{$row}", $grandInvoice);
-        $sheet->setCellValue("G{$row}", $grandOutstanding);
-        $sheet->setCellValue("H{$row}", $grandPaid);
+        $sheet->setCellValue("H{$row}", $grandAdjust);
+        $sheet->setCellValue("I{$row}", $grandOutstanding);
+        $sheet->setCellValue("J{$row}", $grandAdjusted);
+        $sheet->setCellValue("K{$row}", $grandPaid);
         $sheet->getStyle("A{$row}:O{$row}")->getFont()->setBold(true);
 
         $lastRow = $row;
 
-        // === Format date columns ===
-        foreach (['D','E','I'] as $col) {
+        // === DATE FORMATS ===
+        foreach (['D','E','L'] as $col) {
             $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
-                ->getNumberFormat()
-                ->setFormatCode('[$-en-US]mmmm d, yyyy');
+                ->getNumberFormat()->setFormatCode('[$-en-US]mmmm d, yyyy');
         }
 
-        // === Format amounts ===
-        foreach (['F','G','H'] as $col) {
+        // === NUMBER FORMATS ===
+        foreach (['F','H','I','J','K'] as $col) {
             $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
-                ->getNumberFormat()
-                ->setFormatCode('#,##0.00');
+                ->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
-        // === Borders ===
+        // === BORDER STYLE ===
         $sheet->getStyle("A{$headerRow}:O{$lastRow}")->applyFromArray([
             'borders' => [
                 'allBorders' => [
@@ -223,7 +217,7 @@ class ReportController extends Controller
             ],
         ]);
 
-        // === Export ===
+        // === EXPORT FILE ===
         $fileName = 'ar_aging_report_'.now()->format('Ymd_His').'.xlsx';
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
@@ -232,7 +226,6 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
 
 
     /**
@@ -1236,7 +1229,7 @@ class ReportController extends Controller
         $startDate  = $request->input('start_date') ?? null;
         $endDate    = $request->input('end_date') ?? null;
 
-        // Call stored procedure (with filters)
+        // Call stored procedure
         $collections = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
             $salesman,
             $customerId,
@@ -1252,7 +1245,7 @@ class ReportController extends Controller
 
         // Header info
         $sheet->setCellValue('A1', 'AVT Hardware Trading');
-        $sheet->setCellValue('A2', 'Collection Report');
+        $sheet->setCellValue('A2', 'Collection Report with Adjustments');
         $sheet->setCellValue('A3', 'Date Generated: ' . now()->format('M d, Y'));
         $sheet->getStyle('A1:A3')->getFont()->setBold(true);
         $sheet->getStyle('A1')->getFont()->setSize(14);
@@ -1271,7 +1264,11 @@ class ReportController extends Controller
             'Payment Status',
             'Remarks',
             'Outstanding Balance',
-            'Amount Collected (₱)'
+            'Amount Collected (₱)',
+            'Adjustment Type',
+            'Adjustment Amount (₱)',
+            'Adjustment Date',
+            'Adjustment Remarks'
         ];
 
         $col = 'A';
@@ -1310,6 +1307,12 @@ class ReportController extends Controller
                 $sheet->setCellValue("L{$row}", number_format($record->outstanding_balance ?? 0, 2));
                 $sheet->setCellValue("M{$row}", number_format($record->amount_collected ?? 0, 2));
 
+                // New Adjustment Fields
+                $sheet->setCellValue("N{$row}", $record->adjustment_type ?? '-');
+                $sheet->setCellValue("O{$row}", number_format($record->adjustment_amount ?? 0, 2));
+                $sheet->setCellValue("P{$row}", $record->adjustment_date ? \Carbon\Carbon::parse($record->adjustment_date)->format('M d, Y') : '-');
+                $sheet->setCellValue("Q{$row}", $record->adjustment_remarks ?? '-');
+
                 $invoiceTotal += $record->amount_collected ?? 0;
                 $row++;
             }
@@ -1324,12 +1327,12 @@ class ReportController extends Controller
         }
 
         // Grand total
-        $sheet->setCellValue("L{$row}", "Grand Total:");
-        $sheet->setCellValue("M{$row}", number_format($grandTotal, 2));
-        $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
+        // $sheet->setCellValue("L{$row}", "Grand Total:");
+        // $sheet->setCellValue("M{$row}", number_format($grandTotal, 2));
+        // $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
 
         // Borders
-        $lastCol = 'M';
+        $lastCol = 'Q';
         $lastRow = $row;
         $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")->applyFromArray([
             'borders' => [

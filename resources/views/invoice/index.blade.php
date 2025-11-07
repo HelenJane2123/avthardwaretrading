@@ -54,6 +54,7 @@
                                     <th>Subtotal</th>
                                     <th>Discount Type</th>
                                     <th>Grand Total</th>
+                                    <th>Outstanding Balance</th>
                                     <th>Status</th>
                                     <th>Payment Status</th>
                                     <th>Action</th>
@@ -81,6 +82,7 @@
                                             @endif
                                         </td>
                                         <td>{{ number_format($invoice->grand_total, 2) }}</td>
+                                        <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
                                         <td>
                                             <span class="badge 
                                                 @if($invoice->invoice_status == 'approved') bg-success

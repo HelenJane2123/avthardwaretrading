@@ -156,7 +156,7 @@ class PurchaseController extends Controller
                 'supplier_id'        => $request->supplier_id,
                 'date'               => $request->date,
                 'po_number'          => $request->po_number,
-                'salesman_id'           => $request->salesman_id,
+                'salesman_id'        => $request->salesman_id,
                 'payment_id'         => $request->payment_id,
                 'discount_type'      => $request->discount_type,
                 'discount_value'     => $request->discount_value ?? 0,

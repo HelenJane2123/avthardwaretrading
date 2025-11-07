@@ -27,7 +27,7 @@
 
     <div class="mb-3">
         <a class="btn btn-outline-primary shadow-sm" href="{{ route('customer.index') }}">
-            <i class="fa fa-list"></i> Manage Cusomer
+            <i class="fa fa-list"></i> Manage Customer
         </a>
     </div>
 
@@ -96,7 +96,7 @@
                             </div>
 
                             <!-- Details -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label fw-bold">Additional Details</label>
                                 <textarea name="details"
                                     class="form-control @error('details') is-invalid @enderror"
@@ -107,7 +107,7 @@
                             </div>
 
                             <!-- Tax ID -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label fw-bold">Tax ID</label>
                                 <input name="tax"
                                     class="form-control @error('tax') is-invalid @enderror"
@@ -115,6 +115,15 @@
                                 @error('tax')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
+                            </div>
+
+                            <!-- Status -->
+                            <div class="form-group col-md-4">
+                                <label for="status">Status</label>
+                                <select name="status" id="status" class="form-control col-md-20">
+                                    <option value="1">Active</option>
+                                    <option value="2">Inactive</option>
+                                </select>
                             </div>
                         </div>
 

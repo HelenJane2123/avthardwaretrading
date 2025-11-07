@@ -10,7 +10,7 @@ class Purchase extends Model
     protected $fillable = [
         'supplier_id',
         'po_number',
-        'salesman',
+        'salesman_id',
         'payment_id',
         'gcash_number',
         'gcash_name',

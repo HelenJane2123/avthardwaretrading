@@ -60,6 +60,7 @@
                                         <th>Email</th>
                                         <th>Tax</th>
                                         <th>Details</th>
+                                        <th>Status</th>
                                         <th>Date Created</th>
                                         <th>Date Updated</th>
                                         <th class="text-center">Actions</th>
@@ -75,6 +76,11 @@
                                         <td>{{ $supplier->email }}</td>
                                         <td>{{ $supplier->tax }}</td>
                                         <td>{{ $supplier->details }}</td>
+                                        <td>
+                                            <span class="badge {{ $supplier->status == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                                {{ $supplier->status == 1 ? 'Active' : 'Inactive' }}
+                                            </span>
+                                        </td>
                                         <td>{{\Carbon\Carbon::parse($supplier->created_at)->format('M d, Y')}}</td>
                                         <td>{{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y') }}</td>
                                         <td class="text-center">

@@ -74,7 +74,6 @@
                                     <span class="badge {{ $salesman->status == 1 ? 'bg-success' : 'bg-secondary' }}">
                                         {{ $salesman->status == 1 ? 'Active' : 'Inactive' }}
                                     </span>
-
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($salesman->created_at)->format('M d, Y') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($salesman->updated_at)->format('M d, Y') }}</td>

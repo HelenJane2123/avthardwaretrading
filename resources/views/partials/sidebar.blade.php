@@ -24,14 +24,14 @@
     </div>
 
     <ul class="app-menu">
-        {{-- 📊 Dashboard --}}
+        {{-- Dashboard --}}
         <li>
             <a class="app-menu__item {{ request()->is('/') ? 'active' : ''}}" href="/">
                 <i class="app-menu__icon fa fa-dashboard"></i><span class="app-menu__label">Dashboard</span>
             </a>
         </li>
 
-        {{-- 📦 Inventory --}}
+        {{-- Inventory --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Inventory —</li>
 
         {{-- Product --}}
@@ -46,7 +46,7 @@
             </ul>
         </li>
 
-        {{-- 📑 Transactions --}}
+        {{-- Transactions --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Transactions —</li>
 
         {{-- Invoice --}}
@@ -80,7 +80,7 @@
 
         {{-- Collection --}}
         <li class="treeview">
-            <a class="app-menu__item {{ request()->is('collection*') ? 'active' : ''}}" href="#" data-toggle="treeview">
+            <a class="app-menu__item {{ request()->is('collection*') ? 'active' : '' }}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-money"></i>
                 <span class="app-menu__label">Collection</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
@@ -88,6 +88,18 @@
             <ul class="treeview-menu">
                 <li><a class="treeview-item" href="{{ route('collection.create') }}"><i class="icon fa fa-plus"></i> Create Collection</a></li>
                 <li><a class="treeview-item" href="{{ route('collection.index') }}"><i class="icon fa fa-edit"></i> Manage Collection</a></li>
+            </ul>
+        </li>
+
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('adjustment_collection*') ? 'active' : '' }}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-exchange"></i>
+                <span class="app-menu__label">Collection Adjustment</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('adjustment_collection.create') }}"><i class="icon fa fa-plus"></i> Create Adjustment</a></li>
+                <li><a class="treeview-item" href="{{ route('adjustment_collection.index') }}"><i class="icon fa fa-edit"></i> Manage Adjustment</a></li>
             </ul>
         </li>
 

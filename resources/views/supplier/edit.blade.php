@@ -62,14 +62,22 @@
                                     <input class="form-control" type="text" name="tax" value="{{ $supplier->tax }}">
                                 </div>
 
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label>Address</label>
                                     <textarea class="form-control" name="address">{{ $supplier->address }}</textarea>
                                 </div>
 
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label>Details</label>
                                     <textarea class="form-control" name="details">{{ $supplier->details }}</textarea>
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label for="status">Status</label>
+                                    <select name="status" id="term" class="form-control col-md-20">
+                                        <option value="1" {{ old('status', $supplier->status) == 'Active' ? 'selected' : '' }}>Active</option>
+                                        <option value="2" {{ old('status', $supplier->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -103,7 +111,7 @@
                                         </td>
 
                                         <td>
-                                            <select name="category_id[]" class="form-control">
+                                            <select name="category_id[]" class="form-control item-category">
                                                 <option value="">Select</option>
                                                 @foreach ($categories as $cat)
                                                     <option value="{{ $cat->id }}"
@@ -112,11 +120,17 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <small class="text-danger category-desc d-block mt-1">
+                                                {{ $item->category ? 'Category selected: ' . $item->category->name : '' }}
+                                            </small>
                                         </td>
 
                                         <td>
-                                            <input type="text" name="item_description[]" class="form-control"
+                                            <input type="text" name="item_description[]" class="form-control item-name"
                                                    value="{{ $item->item_description }}">
+                                            <small class="text-danger item-desc d-block mt-1">
+                                                {{ $item->item_description ? 'Description: ' . $item->item_description : '' }}
+                                            </small>
                                         </td>
 
                                         <td>
@@ -256,12 +270,11 @@
                         <input type="text" name="item_code[]" class="form-control" value="${itemCode}" readonly>
                     </td>
                     <td>
-                        <select name="category_id[]" class="form-control">
-                            <option value="">Select</option>
-                            ${categoryOptions}
-                        </select>
+                        <select name="category_id[]" class="form-control item-category">
+                            <option value="">Select</option>${categoryOptions}
+                        </select><small class="text-danger category-desc d-block mt-1"></small>
                     </td>
-                    <td><input type="text" name="item_description[]" class="form-control"></td>
+                    <td><input type="text" name="item_description[]" class="form-control item-name" placeholder="Enter item name"><small class="text-danger item-desc d-block mt-1"></small></td>
                     <td><input type="number" name="item_qty[]" class="form-control qty" min="0"></td>
                     <td>
                         <select name="unit_id[]" class="form-control">
@@ -285,6 +298,28 @@
         $(document).on('click', '.remove-row', function () {
             $(this).closest('tr').remove();
             updateTotalAmount();
+        });
+
+        $(document).on('input', '.item-name', function () {
+            const itemName = $(this).val().trim();
+            const descElement = $(this).closest('td').find('.item-desc');
+
+            if (itemName) {
+                descElement.text(`Description: ${itemName}`);
+            } else {
+                descElement.text('');
+            }
+        });
+
+        $(document).on('change', '.item-category', function () {
+            const selectedCategory = $(this).find('option:selected').text();
+            const descElement = $(this).closest('td').find('.category-desc');
+
+            if (selectedCategory && selectedCategory !== 'Select') {
+                descElement.text(`Category selected: ${selectedCategory}`);
+            } else {
+                descElement.text('');
+            }
         });
 
         // Update on Qty/Price change

@@ -89,6 +89,11 @@
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th>Amount Collected(₱)</th>
+                                        <th>Adjustment</th>
+                                        <th>Adjustment Name</th>
+                                        <th>Adjustment Date</th>
+                                        <th>Adjustment Amount</th>
+                                        <th>Adjustment Remarks</th>
                                         <th>Payment Mode</th>
                                     </tr>
                                 </thead>
@@ -103,6 +108,11 @@
                                             <td>{{ $collection->product_name }}</td>
                                             <td>{{ $collection->qty }}</td>
                                             <td>{{ number_format($collection->amount_collected, 2) }}</td>
+                                            <td>{{ $collection->adjustment_type }}</td>
+                                            <td>{{ $collection->adjustment_name }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($collection->adjustment_date)->format('M d, Y') }}</td>
+                                            <td>{{ number_format($collection->adjustment_amount, 2) }}</td>
+                                            <td>{{ $collection->adjustment_remarks }}</td>
                                             <td>{{ $collection->payment_mode }}</td>
                                         </tr>
                                     @empty

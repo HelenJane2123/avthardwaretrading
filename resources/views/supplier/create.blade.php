@@ -106,7 +106,7 @@
                                 </div>
 
                                 <!-- Address -->
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label class="control-label">Address</label>
                                     <textarea name="address" 
                                               class="form-control @error('address') is-invalid @enderror" 
@@ -117,7 +117,7 @@
                                 </div>
 
                                 <!-- Details -->
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-4">
                                     <label class="control-label">Details</label>
                                     <textarea name="details" 
                                               class="form-control @error('details') is-invalid @enderror" 
@@ -125,6 +125,13 @@
                                     @error('details')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                     @enderror
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label for="status">Status</label>
+                                    <select name="status" id="status" class="form-control col-md-20">
+                                        <option value="1">Active</option>
+                                        <option value="2">Inactive</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -154,14 +161,18 @@
                                         <tr>
                                             <td><input type="text" name="item_code[]" class="form-control" readonly></td>
                                             <td>
-                                                <select name="item_category[]" class="form-control">
+                                                <select name="item_category[]" class="form-control item-category">
                                                     <option value="">Select Category</option>
                                                     @foreach($categories as $category)
                                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                                                     @endforeach
                                                 </select>
+                                                <small class="text-danger category-desc d-block mt-1"></small>
                                             </td>
-                                            <td><input type="text" name="item_description[]" class="form-control"></td>
+                                            <td>
+                                                <input type="text" name="item_description[]" class="form-control item-name">
+                                                <small class="text-danger item-desc d-block mt-1"></small>
+                                            </td>
                                             <td><input type="number" name="item_qty[]" class="form-control item-qty"></td>
                                             <td>
                                                 <select name="unit_id[]" class="form-control">
@@ -258,8 +269,8 @@
 
                 table.row.add([
                     `<input type="text" name="item_code[]" class="form-control" value="${itemCode}" readonly>`,
-                    `<select name="item_category[]" class="form-control"><option value="">Select Category</option>${categoryOptions}</select>`,
-                    `<input type="text" name="item_description[]" class="form-control">`,
+                    `<select name="item_category[]" class="form-control item-category"><option value="">Select Category</option>${categoryOptions}</select><small class="text-danger category-desc d-block mt-1"></small>`,
+                    `<input type="text" name="item_description[]" class="form-control item-name"><small class="text-danger item-desc d-block mt-1"></small>`,
                     `<input type="number" name="item_qty[]" class="form-control item-qty">`,
                     `<select name="unit_id[]" class="form-control"><option value="">Select Unit</option>${unitOptions}</select>`,
                     `<input type="number" name="item_price[]" class="form-control item-price" step="0.01">`,
@@ -297,6 +308,27 @@
                 calculateTotalAmount();
             });
 
+            $(document).on('input', '.item-name', function () {
+                const itemName = $(this).val().trim();
+                const descElement = $(this).closest('td').find('.item-desc');
+
+                if (itemName) {
+                    descElement.text(`Description: ${itemName}`);
+                } else {
+                    descElement.text('');
+                }
+            });
+
+            $(document).on('change', '.item-category', function () {
+                const selectedCategory = $(this).find('option:selected').text();
+                const descElement = $(this).closest('td').find('.category-desc');
+
+                if (selectedCategory && selectedCategory !== 'Select Category') {
+                    descElement.text(`${selectedCategory}`);
+                } else {
+                    descElement.text('');
+                }
+            });
 
             //check if selected item is duplicate
             $(document).on('change', 'input[name="item_description[]"]', function () {

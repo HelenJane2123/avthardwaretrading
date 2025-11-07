@@ -101,7 +101,7 @@
                             </div>
 
                             <!-- Details -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Details / Notes</label>
                                 <textarea name="details" rows="2" 
                                           class="form-control @error('details') is-invalid @enderror"
@@ -112,7 +112,7 @@
                             </div>
 
                             <!-- Tax -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Tax ID</label>
                                 <input type="text" name="tax" 
                                        value="{{ $customer->tax }}" 
@@ -121,6 +121,14 @@
                                 @error('tax')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="status">Status</label>
+                                <select name="status" id="term" class="form-control col-md-20">
+                                    <option value="1" {{ old('status', $customer->status) == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="2" {{ old('status', $customer->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                </select>
                             </div>
 
                             <!-- Submit -->
