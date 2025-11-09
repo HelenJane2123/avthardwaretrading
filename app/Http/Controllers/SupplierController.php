@@ -51,7 +51,7 @@ class SupplierController extends Controller
             'details' => 'required|min:3',
             'previous_balance' => 'nullable|numeric',
             'item_image.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'status' => 'required|boolean',
+            'status' => 'required',
         ]);
 
         // ✅ Step 1: Check for duplicates within the form itself

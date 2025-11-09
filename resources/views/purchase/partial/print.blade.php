@@ -92,11 +92,10 @@
         <div style="display: flex; align-items: center;">
             <img src="{{ asset('images/avt_logo.png') }}" alt="Company Logo" style="height:60px; margin-right: 12px;">
             <div>
-                <p style="margin:0; font-weight:bold;">[Your Company Name]</p>
+                <p style="margin:0; font-weight:bold;">AVT HARDWARE TRADING</p>
                 <p style="margin:0; font-size:12px; line-height:1.4;">
-                    [Street Address]<br>
-                    Phone: (000) 000-0000<br>
-                    Website: www.company.com
+                    Wholesale of hardware, electricals, & plumbing supply etc.<br>
+                    Contact: 0936-8834-275 / 0999-3669-539                
                 </p>
             </div>
         </div>
@@ -113,9 +112,8 @@
         </td>
         <td>
             <strong>Ship To:</strong><br>
-            {{ $company->name ?? 'Company Name' }}<br>
-            {{ $company->address ?? 'Company Address' }}<br>
-            {{ $company->phone ?? 'Company Phone' }}
+            AVT HARDWARE TRADING<br>
+            0936-8834-275 / 0999-3669-539
         </td>
         <td>
             <strong>Date:</strong> {{ \Carbon\Carbon::parse($purchase->created_at)->format('m/d/Y') }}<br>
@@ -260,11 +258,11 @@
     <p style="margin-top: 15px; font-style: italic;">No payments recorded yet.</p>
 @endif
 
-<div style="clear: both;"></div>
+<!-- <div style="clear: both;"></div>
 <div class="footer">
     If you have any questions about this purchase order, please contact<br>
     [Name, Phone #, E-mail]
-</div>
+</div> -->
 
 </body>
 </html>

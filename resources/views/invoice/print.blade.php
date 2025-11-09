@@ -2,70 +2,174 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #{{ $invoice->invoice_number }}</title>
+    <title>DR #{{ $invoice->invoice_number }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-
     <style>
-        body { font-size: 14px; }
-        .invoice-box { max-width: 900px; margin: auto; padding: 30px; border: 1px solid #eee; }
-        .table th, .table td { vertical-align: middle; }
-        .no-border { border: none !important; }
-        .text-right { text-align: right; }
-        .btn-print { margin: 20px 0; }
-        .logo { max-height: 100px; }
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .invoice-box {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            margin-top: 15px;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            line-height: 1.1;
+            margin-bottom: 3px;
+        }
+
+        .header h4 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .header-contact {
+            font-size: 11px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        hr {
+            margin: 2px 0;
+            border: 0;
+            border-top: 1px solid #000;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm 15mm;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
             }
+            body {
+                margin: 0;
+            }
+            .invoice-box {
+                border: none;
+                padding: 0 10px;
+            }
         }
-        @page {
-            margin: 20mm; /* adjust as needed */
+
+        .table {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th,
+        .table td {
+            padding: 4px 5px;  /* less padding to save space */
+            vertical-align: middle;
+        }
+
+        .table th {
+            text-align: center;
+        }
+
+        .check-note {
+            text-align: left;
+            font-weight: 600;
+            margin: 10px 0 5px 0;
+        }
+
+        .wrapper {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin-top: 5px;
+        }
+
+        .item-box {
+            border: 2px solid #000;
+            border-radius: 6px;
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 55px;
+            font-size: 11px;
+        }
+
+        .item1,
+        .item2 {
+            border-bottom: 1px solid #000;
+            padding-bottom: 40px;
+            margin-bottom: 5px;
+        }
+
+        .signature-line {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .signature-label {
+            font-size: 10px;
+            font-style: italic;
+            margin-top: -15px;
+        }
+
+        .received-box {
+            min-height: 60px !important;
+            /* width:450px; */
+        }
+
+        .text-center {
+            text-align: center !important;
         }
     </style>
 </head>
 <body>
 <div class="invoice-box">
 
-    <!-- Header with Logo -->
-    <div class="d-flex justify-content-between mb-4 align-items-center">
-        <div class="text-end">
-            <h4><strong>AVT HARDWARE</strong></h4>
-            <p>
-                Test Address <br>
-                VAT Reg. TIN: 255-670-536-000 <br>
-                Contact: (053) 123-4567
-            </p>
-        </div>
-        <div>
-            <img src="{{ asset('images/avt_logo.png') }}" alt="Company Logo" class="logo">
-        </div>
+    <!-- Header -->
+    <div class="header text-center">
+        <h4>AVT HARDWARE TRADING</h4>
+        <p class="header-contact">
+            Wholesale of hardware, electricals, & plumbing supply etc.<br>
+            Contact: 0936-8834-275 / 0999-3669-539
+        </p>
     </div>
-
     <hr>
 
     <!-- Invoice Info -->
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex justify-content-between">
         <div>
-            <h5><strong>CUSTOMER DETAILS</strong></h5>
+            <h6><strong>DELIVERY RECEIPT</strong></h6>
             <p>
-                <strong>Sold to:</strong> {{ $invoice->customer->name ?? 'N/A' }} <br>
-                <strong>Address:</strong> {{ $invoice->customer->address ?? 'N/A' }} <br>
-                <strong>Contact:</strong> {{ $invoice->customer->phone ?? 'N/A' }}
+                CUSTOMER: {{ $invoice->customer->name ?? 'N/A' }} <br>
+                ADDRESS: {{ $invoice->customer->address ?? 'N/A' }} <br>
+                CONTACT NO: {{ $invoice->customer->phone ?? 'N/A' }}
             </p>
         </div>
-        <div class="text-end">
-            <h5><strong>SALES INVOICE DETAILS</strong></h5>
+        <div class="text-end" style="margin-right:20px;">
             <p>
-                <strong>Invoice #:</strong> {{ $invoice->invoice_number }} <br>
-                <strong>Date:</strong> {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }} <br>
-                <strong>Due:</strong> {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }} <br>
-                <strong>Payment Method:</strong> {{ $invoice->paymentMode->name ?? 'N/A' }}
+                DR #: {{ $invoice->invoice_number }} <br>
+                DR Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }} <br>
+                Due: {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }} <br>
+                Terms: {{ $invoice->paymentMode->name ?? 'N/A' }} ({{ $invoice->paymentMode->term ?? 'N/A' }} Days)
             </p>
         </div>
     </div>
-  <!-- Remarks -->
+    <hr>
+
+    <!-- Remarks -->
     @if(!empty($invoice->remarks))
-    <p><strong>Remarks:</strong> {{ $invoice->remarks }}</p>
+        <p style="margin:0 0 5px 0;">Remarks: {{ $invoice->remarks }}</p>
     @endif
 
     <!-- Products Table -->
@@ -74,9 +178,9 @@
             <tr>
                 <th>QTY</th>
                 <th>UNIT</th>
-                <th>PRODUCT</th>
-                <th>DISCOUNT</th>
+                <th>PRODUCT DESCRIPTION</th>
                 <th>UNIT PRICE</th>
+                <th>DISCOUNT</th>
                 <th>AMOUNT</th>
             </tr>
         </thead>
@@ -85,18 +189,19 @@
             <tr>
                 <td>{{ $item->qty }}</td>
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
-                <td>{{ $item->product->product_code . ' - ' . $item->product->product_name ?? 'N/A' }}</td>
-                <td>
+                <td>{{ $item->product->product_name ?? 'N/A' }}</td>
+                <td class="text-center">{{ number_format($item->price, 2) }}</td>
+                <td class="text-center" style="font-size:11px;"> 
                     @if($item->discounts->count() > 0)
+                        LESS
                         @foreach($item->discounts as $discount)
-                            <span class="badge bg-info text-dark">{{ $discount->discount_value }} %</span>
+                            {{ $discount->discount_value }}%
                         @endforeach
                     @else
                         -
                     @endif
                 </td>
-                <td class="text-end">{{ number_format($item->price, 2) }}</td>
-                <td class="text-end">{{ number_format($item->amount, 2) }}</td>
+                <td class="text-center">{{ number_format($item->amount, 2) }}</td>
             </tr>
         @empty
             <tr>
@@ -106,40 +211,55 @@
         </tbody>
     </table>
 
-    <!-- Totals -->
-    <table class="table">
-        <tr>
-            <td class="no-border text-end"><strong>Subtotal:</strong></td>
-            <td class="text-end">{{ number_format($invoice->subtotal, 2) }}</td>
-        </tr>
+    <!-- Totals Table -->
+    <table class="table" style="margin-top:0;">
         @if($invoice->discount_type === 'overall' && $invoice->discount_value > 0)
         <tr>
-            <td class="no-border text-end"><strong>Overall Discount:</strong></td>
-            <td class="text-end">{{ $invoice->discount_value }}%</td>
+            <td class="no-border text-end" style="width:80%;"><strong>Overall Discount:</strong></td>
+            <td class="text-center" style="width:20%;">{{ $invoice->discount_value }}%</td>
         </tr>
         @endif
         @if($invoice->shipping_fee > 0)
         <tr>
-            <td class="no-border text-end"><strong>Shipping Fee:</strong></td>
-            <td class="text-end">{{ number_format($invoice->shipping_fee, 2) }}</td>
+            <td class="no-border text-end" style="width:80%;"><strong>Shipping Fee:</strong></td>
+            <td class="text-center" style="width:20%;">{{ number_format($invoice->shipping_fee, 2) }}</td>
         </tr>
         @endif
         @if($invoice->other_charges > 0)
         <tr>
-            <td class="no-border text-end"><strong>Other Charges:</strong></td>
-            <td class="text-end">{{ number_format($invoice->other_charges, 2) }}</td>
+            <td class="no-border text-end" style="width:80%;"><strong>Other Charges:</strong></td>
+            <td class="text-center" style="width:20%;">{{ number_format($invoice->other_charges, 2) }}</td>
         </tr>
         @endif
         <tr>
-            <td class="no-border text-end"><strong>Grand Total:</strong></td>
-            <td class="text-end"><strong>{{ number_format($invoice->grand_total, 2) }}</strong></td>
+            <td class="no-border text-end" style="width:90%;"><strong>Total Amount Due:</strong></td>
+            <td class="text-center" style="width:30%;"><strong>{{ number_format($invoice->grand_total, 2) }}</strong></td>
         </tr>
     </table>
 
-    <!-- Print Button -->
+    <p class="check-note">PLEASE MAKE ALL CHECKS PAYABLE TO: <b>AVT HARDWARE TRADING</b></p>
+
+    <!-- Signature boxes -->
+    <div class="wrapper">
+        <div class="item-box">
+            <div class="item1">Prepared by:</div>
+        </div>
+        <div class="item-box">
+            <div class="item2">Checked by:</div>
+        </div>
+        <div class="item-box received-box">
+            <div class="item3">
+                <p>Received the above articles in good order and conditions.</p>
+                <p class="signature-line">By: ____________________________</p>
+                <p class="signature-label">(Authorized Signature over Printed Name)</p>
+            </div>
+        </div>
+    </div>
+
+    <br>
     <div class="text-center no-print">
         <button onclick="window.print()" class="btn btn-primary btn-print">
-            <i class="fa fa-print"></i> Print Invoice
+            <i class="fa fa-print"></i> Print DR
         </button>
     </div>
 

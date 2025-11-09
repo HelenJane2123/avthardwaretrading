@@ -11,7 +11,7 @@
         <table>
             <tr>
                 <td>
-                    <strong>[Company Name]</strong><br>
+                    <strong>AVT HARDWARE TRADING</strong><br>
                     [Street Address]<br>
                     Phone: (000) 000-0000<br>
                     Website: www.company.com
