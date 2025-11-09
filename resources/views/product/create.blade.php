@@ -156,11 +156,10 @@
                                             </span>
                                             @enderror
                                         </div>
-
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Unit</label>
                                             <select name="unit_id" class="form-control">
-                                                <option>---Select Unit---</option>
+                                                <option value="">---Select Unit---</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{$unit->id}}">{{$unit->name}}</option>
                                                 @endforeach
@@ -298,8 +297,9 @@
             });
 
             // Product suggestions (autocomplete)
-            $("#product_name").on("keyup", function () {
-                let query = $(this).val();
+             $("#product_name").on("keyup", function () {
+                let query = $(this).val().trim();
+
                 if (query.length > 1) {
                     $.ajax({
                         url: "{{ route('products.suggest') }}",
@@ -307,26 +307,22 @@
                         data: { query: query },
                         dataType: "json",
                         success: function (data) {
-                            console.log("RAW DATA:", data);
-                            console.log("IS ARRAY:", Array.isArray(data));
-
-                            let suggestions = "";
                             let list = Array.isArray(data) ? data : data.items;
+                            let suggestions = "";
 
-                            if (!list) {
-                                console.error("No array found in response:", data);
-                                return;
+                            if (list && list.length > 0) {
+                                list.forEach(function (item) {
+                                    suggestions += `
+                                        <div class="list-group-item list-group-item-action product-suggestion"
+                                            data-item='${JSON.stringify(item)}'
+                                            style="cursor:pointer;">
+                                            ${item.item_description}
+                                        </div>`;
+                                });
+                                $("#productSuggestions").html(suggestions).show();
+                            } else {
+                                $("#productSuggestions").hide();
                             }
-
-                            list.forEach(function (item) {
-                                suggestions += `<a href="#" class="list-group-item list-group-item-action product-suggestion"
-                                                    data-code="${item.item_code}" 
-                                                    data-name="${item.item_description}">
-                                                    ${item.item_code} - ${item.item_description}
-                                                </a>`;
-                            });
-
-                            $("#productSuggestions").html(suggestions).show();
                         },
                         error: function (xhr) {
                             console.error("AJAX Error:", xhr.responseText);
@@ -337,28 +333,36 @@
                 }
             });
 
-            $(document).on("click", ".product-suggestion", function (e) {
+             $(document).on("click", ".product-suggestion", function (e) {
                 e.preventDefault();
+                e.stopPropagation();
 
-                let code = $(this).data("code");
-                let name = $(this).data("name");
+                let item = $(this).data("item");
 
-                $("#product_name").val(name);
-                $("#supplier_product_code").val(code);
-                $("#productSuggestions").hide();
+                $("#product_name").val(item.item_description);
+                $("#supplier_product_code").val(item.item_code);
+                $("#productSuggestions").fadeOut(150);
 
+                // Fetch supplier info
                 $.ajax({
                     url: "{{ route('products.suppliers') }}",
                     type: "GET",
-                    data: { item_code: code },
+                    data: { item_code: item.item_code },
                     success: function (data) {
-                        console.log("Suppliers:", data); // 🔹 Check in console
-
                         if (Array.isArray(data) && data.length > 0) {
-                            let supplier = data[0]; // just take first one
+                            let supplier = data[0];
                             $("#supplier_id").val(supplier.id);
                             $("#supplier_name").val(supplier.name);
                             $("#supplier_price").val(supplier.item_price);
+
+                            console.log("supplier name",supplier.name);
+                            // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
+                            if (supplier.name.trim().toLowerCase().includes("1st tool")) {
+                                let currentProductText = $("#product_name").val();
+                                let updatedProductText = currentProductText.replace(/^PL/i, "AV");
+                                console.log("updated product name",updatedProductText)
+                                $("#product_name").val(updatedProductText);
+                            }
                         } else {
                             alert("No suppliers found for this product");
                         }
@@ -367,6 +371,11 @@
                         console.error("Supplier AJAX Error:", xhr.responseText);
                     }
                 });
+            });
+            $(document).on("click", function (e) {
+                if (!$(e.target).closest("#product_name, #productSuggestions").length) {
+                    $("#productSuggestions").fadeOut(150);
+                }
             });
         });
         function generateProductCode() {

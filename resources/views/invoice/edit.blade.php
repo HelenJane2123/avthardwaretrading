@@ -197,7 +197,7 @@
                                                         <select name="dis[{{ $loop->parent->index }}][]" class="form-control dis">
                                                             <option value="">---Select Discount---</option>
                                                             @foreach($taxes as $tax)
-                                                                <option value="{{ $tax->name }}" {{ $discount->discount_name == $tax->name ? 'selected' : '' }}>
+                                                                <option value="{{ $tax->name }}" {{ $discount->discount_value == $tax->name ? 'selected' : '' }}>
                                                                     {{ $tax->name }} %
                                                                 </option>
                                                             @endforeach
@@ -297,10 +297,9 @@
                     return '<option value="'.$product->id.'">'.$product->name.'</option>';
                 })->implode('') 
             !!}`;
-
+            let rowIndex = $('#po-body tr').length;
             function addRow() {
                 let options = `<option value="">Select Product</option>`;
-
                 @foreach($products as $product)
                     options += `<option value="{{ $product->id }}" 
                                     data-code="{{ $product->product_code }}" 
@@ -310,7 +309,6 @@
                                     {{ $product->product_name }}
                                 </option>`;
                 @endforeach
-
                 const newRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
@@ -334,9 +332,11 @@
                     <td>
                         <div class="discounts-wrapper">
                             <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                <select name="dis[0][]" class="form-control dis" disabled>
-                                    <option value="">---Select Discount---</option>
-                                    <option value="default">Default Discount</option>
+                               <select name="dis[${rowIndex}][]" class="form-control dis">
+                                    <option value="0">---Select Discount---</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{$tax->name}}">{{$tax->name}} %</option>
+                                    @endforeach
                                 </select>
                                 <button type="button" class="btn btn-success btn-sm add-discount" disabled>
                                     <i class="fa fa-plus"></i>
@@ -475,14 +475,14 @@
             const hasPerItemDiscount = $('.dis').toArray().some(inp => parseFloat($(inp).val()) > 0);
             const overallDiscount = parseFloat($('#discount').val()) || 0;
 
-            if (hasPerItemDiscount || overallDiscount > 0) {
-                formPendingSubmit = this; // store form for later submission
-                $("#adminPassword").val("");
-                $("#passwordError").addClass("d-none");
-                discountModal.show(); // <-- show modal here
-            } else {
+            // if (hasPerItemDiscount || overallDiscount > 0) {
+            //     formPendingSubmit = this; // store form for later submission
+            //     $("#adminPassword").val("");
+            //     $("#passwordError").addClass("d-none");
+            //     discountModal.show(); // <-- show modal here
+            // } else {
                 this.submit(); // no discount → submit immediately
-            }
+            // }
         });
 
         // Disable all discount fields by default

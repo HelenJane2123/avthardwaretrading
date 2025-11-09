@@ -17,7 +17,8 @@ class AdjustmentCollection extends Model
         'account_name',   
         'amount',  
         'remarks',           
-        'amount'
+        'amount',
+        'is_approved'
     ];
 
     public function invoice()

@@ -17,6 +17,7 @@ class Collection extends Model
         'last_paid_amount',
         'amount_paid',
         'remarks',
+        'is_approved'
     ];
 
     // A collection belongs to an invoice

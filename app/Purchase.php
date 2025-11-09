@@ -23,7 +23,8 @@ class Purchase extends Model
         'shipping',
         'other_charges',
         'remarks',
-        'grand_total'
+        'grand_total',
+        'is_approved'
     ];
 
     public function supplier()

@@ -472,6 +472,7 @@ class InvoiceController extends Controller
 
         // Approve the invoice
         $invoice->invoice_status = 'approved';
+        $invoice->discount_approved = 1;
         $invoice->save();
 
         return response()->json(['success' => 'Invoice approved successfully!']);
