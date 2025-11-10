@@ -231,7 +231,7 @@
                     <div class="product-name">{{ $rp->product_name }}</div>
                     <div class="product-category">{{ $rp->category->name ?? 'Uncategorized' }}</div>
                 </div>
-                <div class="product-price">₱{{ number_format($rp->sales_price, 2) }}</div>
+                <div class="product-price">₱{{ number_format(floatval($rp->sales_price), 2) }}</div>     
                 </li>
                 @endforeach
             </ul>

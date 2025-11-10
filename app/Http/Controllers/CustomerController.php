@@ -46,12 +46,12 @@ class CustomerController extends Controller
 
         $request->validate([
             'customer_code' => 'required|unique:customers,customer_code',
-            'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:customers,name',
+            'name' => 'required|min:3|regex:/^[a-zA-Z0-9 .\'\-\\\\&\/]+$/|unique:customers,name',
             'address' => 'required|min:3',
-            'mobile' => 'required|digits:11|unique:customers,mobile',
-            'email' => 'required|email|unique:customers,email',
-            'tax' => 'required|regex:/^\d{3}-\d{3}-\d{3}-\d{3}$/|unique:customers',
-            'details' => 'required|min:3',
+            'mobile' => 'nullable|digits:11|unique:customers,mobile',
+            'email' => 'nullable|email|unique:customers,email',
+            'tax' => 'nullable|regex:/^\d{3}-\d{3}-\d{3}-\d{3}$/|unique:customers',
+            'details' => 'nullable|min:3',
             'previous_balance' => 'nullable|numeric|min:0',
             'status' => 'required|boolean',
         ]);
@@ -104,15 +104,15 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
          $request->validate([
-            'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
+           // 'name' => 'required|min:3|regex:/^[a-zA-Z0-9 .\-\\\\&]+$/|unique:customers,name',
             'address' => 'required|min:3',
-            'mobile' => 'required|min:3|digits:11',
+            'mobile' => 'nullable|min:3|digits:11',
             'tax' => [
-                'required',
+                'nullable',
                 'regex:/^\d{3}-\d{3}-\d{3}-\d{3}$/',
                 Rule::unique('customers', 'tax')->ignore($id),
             ],
-            'details' => 'required|min:3',
+            'details' => 'nullable|min:3',
             'previous_balance' => 'nullable|numeric|min:0',
             'status'  => 'required'
         ]);
