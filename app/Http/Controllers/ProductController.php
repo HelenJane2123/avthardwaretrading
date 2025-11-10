@@ -33,6 +33,7 @@ class ProductController extends Controller
 
         return view('product.index', compact('additional'));
     }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -44,8 +45,8 @@ class ProductController extends Controller
         $categories = Category::all();
         $taxes = Tax::all();
         $units = Unit::all();
-
-        return view('product.create', compact('categories','taxes','units','suppliers'));
+        $product_code = $this->generateProductCode();
+        return view('product.create', compact('product_code','categories','taxes','units','suppliers'));
     }
 
     /**
@@ -79,7 +80,7 @@ class ProductController extends Controller
         ]);
 
         $product = new Product();
-        $product->product_code = $request->product_code;
+        $product->product_code = $this->generateProductCode();
         $product->supplier_product_code = $request->supplier_product_code;
         $product->product_name = $request->product_name;
         $product->serial_number = $request->serial_number;
@@ -372,5 +373,22 @@ class ProductController extends Controller
                     ->get();
 
         return response()->json($products);
+    }
+
+    private function generateProductCode() {
+        $prefix = "AVT";
+
+        $lastProduct = Product::orderBy('id', 'desc')->first();
+
+        if (!$lastProduct) {
+            $nextNumber = 1;
+        } else {
+            $lastNumber = (int) str_replace($prefix, '', $lastProduct->product_code);
+            $nextNumber = $lastNumber + 1;
+        }
+
+        $paddedNumber = str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+
+        return $prefix . $paddedNumber;
     }
 }

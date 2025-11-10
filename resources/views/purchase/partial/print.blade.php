@@ -211,53 +211,6 @@
     </tr>
 </table>
 
-{{-- ✅ PAYMENT SUMMARY --}}
-<table width="100%" style="margin-top: 20px; border: 1px solid #000; border-collapse: collapse;">
-    <tr style="background-color: #004080; color: #fff;">
-        <th colspan="4" style="padding: 8px; text-align: left;">PAYMENT SUMMARY</th>
-    </tr>
-    <tr>
-        <td><strong>Total Amount:</strong></td>
-        <td>₱{{ number_format($purchase->grand_total, 2) }}</td>
-        <td><strong>Total Paid:</strong></td>
-        <td>₱{{ number_format($totalPaid, 2) }}</td>
-    </tr>
-    <tr>
-        <td><strong>Outstanding Balance:</strong></td>
-        <td>₱{{ number_format($outstanding, 2) }}</td>
-        <td><strong>Status:</strong></td>
-        <td style="font-weight:bold; color:
-            {{ $paymentStatus === 'Fully Paid' ? 'green' : ($paymentStatus === 'Partial Payment' ? 'orange' : 'red') }}">
-            {{ $paymentStatus }}
-        </td>
-    </tr>
-</table>
-
-{{-- ✅ PAYMENT HISTORY --}}
-@if($purchase->payments->count() > 0)
-    <table width="100%" style="margin-top: 15px; border: 1px solid #000; border-collapse: collapse;">
-        <tr style="background-color: #004080; color: #fff;">
-            <th colspan="4" style="padding: 8px; text-align: left;">PAYMENT HISTORY</th>
-        </tr>
-        <tr>
-            <th style="width: 20%;">Date</th>
-            <th style="width: 30%;">Amount Paid</th>
-            <th style="width: 25%;">Outstanding Balance</th>
-            <th style="width: 25%;">Payment Status</th>
-        </tr>
-        @foreach($purchase->payments as $payment)
-            <tr>
-                <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('m/d/Y') }}</td>
-                <td>₱{{ number_format($payment->amount_paid, 2) }}</td>
-                <td>₱{{ number_format($payment->outstanding_balance, 2) }}</td>
-                <td>{{ ucfirst($payment->payment_status) }}</td>
-            </tr>
-        @endforeach
-    </table>
-@else
-    <p style="margin-top: 15px; font-style: italic;">No payments recorded yet.</p>
-@endif
-
 <!-- <div style="clear: both;"></div>
 <div class="footer">
     If you have any questions about this purchase order, please contact<br>

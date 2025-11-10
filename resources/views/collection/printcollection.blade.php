@@ -102,6 +102,18 @@
                 <td><strong>Mobile:</strong> {{ $collection->invoice->customer->mobile ?? '-' }}</td>
                 <td><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($collection->invoice->invoice_date)->format('M d, Y') }}</td>
             </tr>
+            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['PDC/Check']))
+                <tr>
+                    <td><strong>Check Number:</strong> {{ $collection->check_number ?? '-' }}</td>
+                    <td><strong>Check Date:</strong> {{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('M d, Y') : '-' }}</td>
+                </tr>
+            @endif
+            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['GCash']))
+                <tr>
+                    <td><strong>GCash Name:</strong> {{ $collection->gcash_name ?? '-'}}</td>
+                    <td><strong>GCash Number:</strong> {{ $collection->gcash_number ?? '-' }}</td>
+                </tr>
+            @endif
         </table>
 
         <h3>Payment History</h3>

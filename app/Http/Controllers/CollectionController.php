@@ -34,6 +34,7 @@ class CollectionController extends Controller
             'amount_paid'  => 'required|numeric|min:0.01',
             'payment_date' => 'required|date',
             'remarks'      => 'nullable|string|max:255',
+            'check_date'   => 'required|date',
             'check_number' => 'nullable|string|max:100',
             'gcash_name'   => 'nullable|string|max:100',
             'gcash_mobile' => 'nullable|string|max:20',
@@ -45,7 +46,6 @@ class CollectionController extends Controller
         $paymentMode = strtolower(trim($invoice->paymentMode->name ?? ''));
 
         DB::transaction(function () use ($request, $invoice, $paymentMode, &$newTotalPaid, &$balance, &$paymentStatus, &$invoiceStatus) {
-
             $collectionData = [
                 'collection_number' => $request->collection_number,
                 'invoice_id'        => $invoice->id,
@@ -56,12 +56,13 @@ class CollectionController extends Controller
                 'remarks'           => $request->remarks,
             ];
 
-            // ✅ Match exact database name "PDC/Check" (case-insensitive)
+            // Match exact database name "PDC/Check" (case-insensitive)
             if ($paymentMode === 'pdc/check') {
+                $collectionData['check_date'] = $request->check_date;
                 $collectionData['check_number'] = $request->check_number;
             }
 
-            // ✅ Handle GCash mode
+            // Handle GCash mode
             if ($paymentMode === 'gcash') {
                 $collectionData['gcash_name']   = $request->gcash_name;
                 $collectionData['gcash_number'] = $request->gcash_number;
@@ -127,6 +128,7 @@ class CollectionController extends Controller
             'payment_date'   => 'required|date',
             'payment_status' => 'required|string',
             'remarks'        => 'nullable|string|max:255',
+            'check_date'   => 'required|date',
             'check_number'   => 'nullable|string|max:100',
             'gcash_name'     => 'nullable|string|max:100',
             'gcash_mobile'   => 'nullable|string|max:20',
@@ -147,6 +149,7 @@ class CollectionController extends Controller
 
         // Conditional fields based on payment mode
         if ($paymentMode === 'pdc/check') {
+            $updateData['check_date'] = $request->check_date;
             $updateData['check_number'] = $request->check_number;
             $updateData['gcash_name']   = null;
             $updateData['gcash_number'] = null;
@@ -154,11 +157,13 @@ class CollectionController extends Controller
             $updateData['gcash_name']   = $request->gcash_name;
             $updateData['gcash_number'] = $request->gcash_number;
             $updateData['check_number'] = null;
+            $updateData['check_date'] = null;
         } else {
             // For cash or others, clear all optional fields
             $updateData['check_number'] = null;
             $updateData['gcash_name']   = null;
             $updateData['gcash_number'] = null;
+            $updateData['check_date'] = null;
         }
 
         // Update collection

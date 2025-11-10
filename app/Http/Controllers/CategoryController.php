@@ -46,7 +46,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|min:3|unique:categories|regex:/^[a-zA-Z ]+$/',
+            'name' => 'required|min:3|unique:categories|regex:/^[a-zA-Z0-9\s\-\&\(\)\.,\'\/]+$/',
         ]);
 
         $category = new Category();
@@ -91,7 +91,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
+            'name' => 'required|min:3|unique:categories|regex:/^[a-zA-Z0-9\s\-\&\(\)\.,\'\/]+$/',
         ]);
 
         $category = Category::findOrFail($id);

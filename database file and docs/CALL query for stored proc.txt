@@ -1,0 +1,7 @@
+CALL sp_generate_estimated_income_report(
+    'weekly',
+    '2025-11-10',  
+    NULL,          -- end date not used for weekly
+    NULL,          -- all customers
+    NULL           -- all products
+);

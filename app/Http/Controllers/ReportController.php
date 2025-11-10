@@ -1002,13 +1002,16 @@ class ReportController extends Controller
             'Date',
             'Customer',
             'Product',
+            'Supplier',         
             'Qty Sold',
             'Qty Purchased',
             'Sales Price',
             'Purchase Price',
             'Total Sales',
             'Estimated Income (₱)',
+            'Profit %',        
         ];
+
 
         $col = 'A';
         foreach ($headers as $header) {
@@ -1029,12 +1032,14 @@ class ReportController extends Controller
             $sheet->setCellValue("C{$row}", $record->invoice_date ?? '');
             $sheet->setCellValue("D{$row}", $record->customer_name ?? '');
             $sheet->setCellValue("E{$row}", $record->product_name ?? '');
-            $sheet->setCellValue("F{$row}", $record->quantity_sold ?? 0);
-            $sheet->setCellValue("G{$row}", $record->quantity_purchased ?? 0);
-            $sheet->setCellValue("H{$row}", $record->sales_price ?? 0);
-            $sheet->setCellValue("I{$row}", $record->purchase_price ?? 0);
-            $sheet->setCellValue("J{$row}", $record->total_sales ?? 0);
-            $sheet->setCellValue("K{$row}", $record->estimated_income ?? 0);
+            $sheet->setCellValue("F{$row}", $record->supplier_name ?? '');
+            $sheet->setCellValue("G{$row}", $record->quantity_sold ?? 0);
+            $sheet->setCellValue("H{$row}", $record->quantity_purchased ?? 0);
+            $sheet->setCellValue("I{$row}", $record->sales_price ?? 0);
+            $sheet->setCellValue("J{$row}", $record->purchase_price ?? 0);
+            $sheet->setCellValue("K{$row}", $record->total_sales ?? 0);
+            $sheet->setCellValue("L{$row}", $record->estimated_income ?? 0);
+            $sheet->setCellValue("M{$row}", $record->profit_percentage ?? 0);
 
             $totalSales += $record->total_sales ?? 0;
             $totalIncome += $record->estimated_income ?? 0;
@@ -1053,7 +1058,7 @@ class ReportController extends Controller
         $sheet->getStyle("J{$row}:K{$row}")->getFont()->setBold(true);
 
         // Apply borders
-        $sheet->getStyle("A{$headerRow}:K{$row}")->applyFromArray([
+        $sheet->getStyle("A{$headerRow}:M{$row}")->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,

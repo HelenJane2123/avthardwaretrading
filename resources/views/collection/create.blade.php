@@ -112,6 +112,10 @@
                                 <input type="number" step="0.01" name="amount_paid" class="form-control" required>
                             </div>
                             <!-- Extra Fields Based on Payment Method -->
+                            <div id="pdcCheck" class="mb-3" style="display: none;">
+                                <label>Check Date</label>
+                                <input type="date" name="check_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            </div>
                             <div id="pdcFields" class="mb-3" style="display: none;">
                                 <label>Check Number</label>
                                 <input type="text" name="check_number" class="form-control" placeholder="Enter check number">
@@ -194,10 +198,12 @@
     $(document).ready(function () {
         function togglePaymentFields(mode) {
             $('#pdcFields').hide();
+            $('#pdcCheck').hide();
             $('#gcashFields').hide();
 
             if (mode.toLowerCase() === 'pdc/check') {
                 $('#pdcFields').show();
+                $('#pdcCheck').show();
             } else if (mode.toLowerCase() === 'gcash') {
                 $('#gcashFields').show();
             }

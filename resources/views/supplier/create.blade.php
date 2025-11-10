@@ -48,6 +48,22 @@
             <div class="col-md-12">
                 <!-- Supplier Form -->
                 <div class="tile shadow-sm rounded">
+                    @if(auth()->user()->user_role === 'super_admin')
+                        <hr/>
+                        <div class="col-md-12">
+                            <div class="tile-body">
+                                <h3 class="tile-title">Import Bulk Supplier</h3>
+                                <small class="text-muted">Use this field only to import bulk supplier items and supplier details</small>
+                                <form action="{{ route('import.supplier') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label>Select Excel File:</label>
+                                    <input type="file" name="file" class="form-control" required><br/>
+                                    <button type="submit" class="btn btn-primary">Import</button>
+                                </form>
+                            </div>
+                        </div>
+                        <hr/>
+                    @endif
                     <h3 class="tile-title">Supplier Details</h3>
                     <small class="text-muted">Fields marked with <span class="text-danger">*</span> are required</small>
                     <div class="tile-body">

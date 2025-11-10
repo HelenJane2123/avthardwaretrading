@@ -21,6 +21,7 @@ use App\Http\Controllers\PurchasePaymentController;
 use App\Http\Controllers\SalesmenController;
 use App\Http\Controllers\AdjustmentCollectionController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ImportController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -77,9 +78,11 @@ Route::get('/products/suppliers', [ProductController::class, 'suppliers'])->name
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/details', [ProductController::class, 'getProductDetails'])->name('products.details');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::post('/import-product', [ImportController::class, 'import_product'])->name('import.product');
 
 //get supplier information and items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
+Route::post('/import-supplier', [ImportController::class, 'import'])->name('import.supplier');
 
 //get customer information
 Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation']);

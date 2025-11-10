@@ -119,7 +119,11 @@
                             <input type="number" step="0.01" name="amount_paid" class="form-control" 
                                    required>
                         </div>
-
+                        <div id="pdcCheck" class="mb-3" style="display: none;">
+                            <label>Check Date</label>
+                            <input type="date" name="payment_date" class="form-control" 
+                                   value="{{ \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') }}" required>
+                        </div>
                         <div id="pdcFields" class="mb-3" style="display: none;">
                             <label>Check Number</label>
                             <input type="text" name="check_number" class="form-control"
@@ -181,10 +185,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Hide all first
     document.getElementById('pdcFields').style.display = 'none';
+    document.getElementById('pdcCheck').style.display = 'none';
     document.getElementById('gcashFields').style.display = 'none';
 
     // Show based on payment method
     if (paymentMode === 'pdc/check') {
+        document.getElementById('pdcCheck').style.display = 'block';
         document.getElementById('pdcFields').style.display = 'block';
     } else if (paymentMode === 'gcash') {
         document.getElementById('gcashFields').style.display = 'block';

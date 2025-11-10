@@ -40,10 +40,25 @@
             </a>
         </div>
         <div class="row mt-2">
-
             <div class="clearix"></div>
             <div class="col-md-12">
                 <div class="tile">
+                    @if(auth()->user()->user_role === 'super_admin')
+                        <hr/>
+                        <div class="col-md-12">
+                            <div class="tile-body">
+                                <h3 class="tile-title">Import Bulk Products</h3>
+                                <small class="text-muted">Use this field only to import bulk product items and product supplier details</small>
+                                <form action="{{ route('import.product') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label>Select Excel File:</label>
+                                    <input type="file" name="file" class="form-control" required><br/>
+                                    <button type="submit" class="btn btn-primary">Import</button>
+                                </form>
+                            </div>
+                        </div>
+                        <hr/>
+                    @endif
                     <h3 class="tile-title">Product</h3>
                     <div class="tile-body">
                         @if ($errors->any())
@@ -96,7 +111,8 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Product Code</label>
-                                            <input name="product_code" id="product_code" class="form-control" type="text" readonly>
+                                            <input name="product_code" id="product_code" class="form-control" type="text" value="{{ $product_code }}" readonly>
+                                            <!-- <input name="product_code" id="product_code" class="form-control" type="text" readonly> -->
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Supplier Product Code</label>
@@ -378,12 +394,12 @@
                 }
             });
         });
-        function generateProductCode() {
-            const prefix = "AVT";
-            const timestamp = Date.now().toString().slice(-6); // last 6 digits of timestamp
-            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            return prefix + timestamp + random;
-        }
+        // function generateProductCode() {
+        //     const prefix = "AVT";
+        //     const timestamp = Date.now().toString().slice(-6); // last 6 digits of timestamp
+        //     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        //     return prefix + timestamp + random;
+        // }
 
         // Set it when the page loads
         $('#product_code').val(generateProductCode());

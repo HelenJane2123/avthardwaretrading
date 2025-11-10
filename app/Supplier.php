@@ -20,7 +20,9 @@ class Supplier extends Model
         'address',
         'details',
         'tax',
-        'email'
+        'email',
+        'previous_balance',
+        'status'
     ];
 
     /**
