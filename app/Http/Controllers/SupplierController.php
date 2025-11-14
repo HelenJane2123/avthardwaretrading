@@ -6,6 +6,7 @@ use App\Supplier;
 use App\SupplierItem;
 use App\Unit;
 use App\Category;
+use App\Tax;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,8 @@ class SupplierController extends Controller
     {
         $categories = Category::all();
         $units = Unit::all();
-        return view('supplier.create', compact('categories', 'units'));
+        $discounts = Tax::all();
+        return view('supplier.create', compact('categories', 'units','discounts'));
     }
 
     /**
@@ -54,7 +56,7 @@ class SupplierController extends Controller
             'status' => 'required',
         ]);
 
-        // ✅ Step 1: Check for duplicates within the form itself
+        //Step 1: Check for duplicates within the form itself
         if ($request->has('item_description')) {
             $descriptions = array_map('strtolower', array_filter($request->item_description));
             if (count($descriptions) !== count(array_unique($descriptions))) {
@@ -64,7 +66,7 @@ class SupplierController extends Controller
             }
         }
 
-        // ✅ Step 2: Create supplier
+        // Step 2: Create supplier
         $supplier = Supplier::create([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
@@ -77,7 +79,7 @@ class SupplierController extends Controller
             'status' => $request->status
         ]);
 
-        // ✅ Step 3: Check for duplicates in DB before inserting new items
+        // Step 3: Check for duplicates in DB before inserting new items
         if ($request->has('item_description')) {
             foreach ($request->item_description as $desc) {
                 if (!empty($desc)) {
@@ -97,7 +99,7 @@ class SupplierController extends Controller
             }
         }
 
-        // ✅ Step 4: Save items if all checks passed
+        // Step 4: Save items if all checks passed
         if ($request->has('item_code')) {
             foreach ($request->item_code as $index => $code) {
                 if ($code !== null && $code !== '') {
@@ -118,6 +120,7 @@ class SupplierController extends Controller
                         'item_amount' => $request->item_amount[$index] ?? 0,
                         'unit_id' => $request->unit_id[$index] ?? null,
                         'item_qty' => $request->item_qty[$index] ?? 0,
+                        'discount' => $request->discount[$index] ?? null,
                         'item_image' => $imagePath,
                         'volume_less' => $request->volume_less[$index] ?? null,
                         'regular_less' => $request->regular_less[$index] ?? null,
@@ -149,11 +152,11 @@ class SupplierController extends Controller
      */
     public function edit($id)
     {
-         $supplier = Supplier::with('items')->findOrFail($id);
+        $supplier = Supplier::with('items')->findOrFail($id);
         $categories = Category::all(); 
         $units = Unit::all();        
-
-        return view('supplier.edit', compact('supplier', 'categories', 'units'));
+        $discounts = Tax::all();
+        return view('supplier.edit', compact('supplier', 'categories', 'units','discounts'));
     }
 
     /**

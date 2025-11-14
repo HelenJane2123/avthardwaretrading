@@ -84,100 +84,107 @@
                             <h5 class="mt-4">Item Details</h5>
                             <table class="table table-bordered" id="supplierEditTable">
                                 <thead>
-                                <tr>
-                                    <th>Item Code</th>
-                                    <th>Category</th>
-                                    <th>Description</th>
-                                    <th>Qty</th>
-                                    <th>Unit</th>
-                                    <th>Price</th>
-                                    <th>Volume Less</th>
-                                    <th>Regular Less</th>
-                                    <th>Image</th>
-                                    <th>
-                                        <button type="button" class="btn btn-sm btn-primary" id="add-row">
-                                            Add Item
-                                        </button>
-                                    </th>
-                                </tr>
+                                    <tr>
+                                        <th>Item Code</th>
+                                        <th>Category</th>
+                                        <th>Description</th>
+                                        <!-- <th>Qty</th> -->
+                                        <th>Unit</th>
+                                        <th>Price</th>
+                                        <th>Discount</th>
+                                        <th>Volume Less</th>
+                                        <th>Regular Less</th>
+                                        <th>Image</th>
+                                        <th>
+                                            <button type="button" class="btn btn-sm btn-primary" id="add-row">
+                                                Add Item
+                                            </button>
+                                        </th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                @foreach ($supplier->items as $key => $item)
-                                    <tr>
-                                        <td>
-                                            <input type="hidden" name="item_ids[]" value="{{ $item->id }}">
-                                            <input type="text" name="item_code[]" class="form-control"
-                                                   value="{{ $item->item_code }}" readonly>
-                                        </td>
+                                    @foreach ($supplier->items as $item)
+                                        <tr>
+                                            <td>
+                                                <input type="hidden" name="item_ids[]" value="{{ $item->id }}">
+                                                <span class="d-none">{{ $item->item_code }}</span>
+                                                <input type="text" name="item_code[]" class="form-control"
+                                                    value="{{ $item->item_code }}" readonly>
+                                            </td>
 
-                                        <td>
-                                            <select name="category_id[]" class="form-control item-category">
-                                                <option value="">Select</option>
-                                                @foreach ($categories as $cat)
-                                                    <option value="{{ $cat->id }}"
-                                                            {{ $cat->id == $item->category_id ? 'selected' : '' }}>
-                                                        {{ $cat->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <small class="text-danger category-desc d-block mt-1">
-                                                {{ $item->category ? 'Category selected: ' . $item->category->name : '' }}
-                                            </small>
-                                        </td>
+                                            <td>
+                                                <select name="category_id[]" class="form-control item-category">
+                                                    <option value="">Select</option>
+                                                    @foreach ($categories as $cat)
+                                                        <option value="{{ $cat->id }}"
+                                                                {{ $cat->id == $item->category_id ? 'selected' : '' }}>
+                                                            {{ $cat->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <small class="text-danger category-desc d-block mt-1">
+                                                    {{ $item->category ? 'Category selected: ' . $item->category->name : '' }}
+                                                </small>
+                                            </td>
 
-                                        <td>
-                                            <input type="text" name="item_description[]" class="form-control item-name"
-                                                   value="{{ $item->item_description }}">
-                                            <small class="text-danger item-desc d-block mt-1">
-                                                {{ $item->item_description ? 'Description: ' . $item->item_description : '' }}
-                                            </small>
-                                        </td>
+                                            <td>
+                                                <input type="text" name="item_description[]" class="form-control item-name"
+                                                    value="{{ $item->item_description }}">
+                                                <small class="text-danger item-desc d-block mt-1">
+                                                    {{ $item->item_description ? 'Description: ' . $item->item_description : '' }}
+                                                </small>
+                                            </td>
 
-                                        <td>
-                                            <input type="number" name="item_qty[]" class="form-control qty"
-                                                   value="{{ $item->item_qty }}">
-                                        </td>
+                                            <td>
+                                                <select name="unit_id[]" class="form-control">
+                                                    <option value="">Select</option>
+                                                    @foreach ($units as $unit)
+                                                        <option value="{{ $unit->id }}"
+                                                                {{ $unit->id == $item->unit_id ? 'selected' : '' }}>
+                                                            {{ $unit->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
 
-                                        <td>
-                                            <select name="unit_id[]" class="form-control">
-                                                <option value="">Select</option>
-                                                @foreach ($units as $unit)
-                                                    <option value="{{ $unit->id }}"
-                                                            {{ $unit->id == $item->unit_id ? 'selected' : '' }}>
-                                                        {{ $unit->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
+                                            <td>
+                                                <input type="number" name="item_price[]" class="form-control price"
+                                                    step="0.01" value="{{ $item->item_price }}">
+                                            </td>
 
-                                        <td>
-                                            <input type="number" name="item_price[]" class="form-control price"
-                                                   step="0.01" value="{{ $item->item_price }}">
-                                        </td>
+                                            <td>
+                                                <select name="discount[]" class="form-control">
+                                                    <option value="">Select Discount</option>
+                                                    @foreach($discounts as $discount)
+                                                        <option value="{{ $discount->id }}"
+                                                                {{ $discount->id == $item->discount ? 'selected' : '' }}>
+                                                            {{ $discount->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
 
-                                       <td>
-                                            <textarea name="volume_less[]" 
-                                                class="form-control">{{ $item->volume_less }}</textarea>
-                                        </td>
-                                        <td>
-                                            <textarea name="regular_less[]" 
-                                                class="form-control" >{{ $item->regular_less }}</textarea>
-                                        </td>
-                                        <td>
-                                            @if($item->item_image)
-                                                <img src="{{ asset('storage/' . $item->item_image) }}" width="60" class="mb-1">
-                                            @endif
-                                            <input type="file" name="item_image[]" class="form-control" accept="image/*">
-                                        </td>
+                                            <td>
+                                                <textarea name="volume_less[]" class="form-control">{{ $item->volume_less }}</textarea>
+                                            </td>
 
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-danger remove-row">
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
+                                            <td>
+                                                <textarea name="regular_less[]" class="form-control">{{ $item->regular_less }}</textarea>
+                                            </td>
+
+                                            <td>
+                                                @if($item->item_image)
+                                                    <img src="{{ asset('storage/' . $item->item_image) }}" width="60" class="mb-1">
+                                                @endif
+                                                <input type="file" name="item_image[]" class="form-control" accept="image/*">
+                                            </td>
+
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-danger remove-row">Delete</button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
                                 <!-- <tfoot>
                                 <tr>
                                     <td colspan="6" class="text-end fw-bold">Total Amount:</td>
@@ -211,13 +218,15 @@
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         let table = $('#supplierEditTable').DataTable({
-            paging: false,
-            searching: true,  // ✅ search enabled
-            ordering: false   // (optional: disable sorting if not needed for inputs)
+            pageLength: 100,
+            ordering: true,
+            lengthChange: true,
+            searching: true
         });
-        let itemCount = {{ isset($supplier->items) ? count($supplier->items) + 1 : 1 }};
+        let itemCount = {{ $supplier->items->count() + 1 }};
         const categories = @json($categories);
         const units = @json($units);
+        const discounts = @json($discounts);
 
         // Generate Supplier Code
         function generateSupplierCode(name) {
@@ -262,27 +271,36 @@
 
             let unitOptions = units.map(unit =>
                 `<option value="${unit.id}">${unit.name}</option>`).join('');
+            
+            let discountOptions = discounts.map(discount =>
+                `<option value="${discount.id}">${discount.name}</option>`).join('');
 
             let row = `
                 <tr>
                     <td>
                         <input type="hidden" name="item_ids[]" value="">
+                        <span class="d-none">{{ $item->item_code }}</span>
                         <input type="text" name="item_code[]" class="form-control" value="${itemCode}" readonly>
                     </td>
                     <td>
                         <select name="category_id[]" class="form-control item-category">
-                            <option value="">Select</option>${categoryOptions}
+                            <option value="">Select Category</option>${categoryOptions}
                         </select><small class="text-danger category-desc d-block mt-1"></small>
                     </td>
                     <td><input type="text" name="item_description[]" class="form-control item-name" placeholder="Enter item name"><small class="text-danger item-desc d-block mt-1"></small></td>
-                    <td><input type="number" name="item_qty[]" class="form-control qty" min="0"></td>
                     <td>
                         <select name="unit_id[]" class="form-control">
-                            <option value="">Select</option>
+                            <option value="">Select Unit</option>
                             ${unitOptions}
                         </select>
                     </td>
                     <td><input type="number" name="item_price[]" class="form-control price" step="0.01" min="0"></td>
+                    <td>
+                        <select name="discount[]" class="form-control">
+                            <option value="">Select Discount</option>
+                            ${discountOptions}
+                        </select>
+                    </td>
                     <td><textarea name="volume_less[]" class="form-control"></textarea></td>
                     <td><textarea name="regular_less[]" class="form-control"></textarea></td>
                     <td><input type="file" name="item_image[]" class="form-control" accept="image/*"></td>

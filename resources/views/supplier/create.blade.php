@@ -159,10 +159,11 @@
                                         <tr>
                                             <th>Item Code</th>
                                             <th>Category</th>
-                                            <th>Item Name</th>
-                                            <th>Qty</th>
+                                            <th>Description</th>
+                                            <!-- <th>Qty</th> -->
                                             <th>Unit</th>
                                             <th>Price</th>
+                                            <th>Discount</th>
                                             <th>Volume Less</th>
                                             <th>Regular Less</th>
                                             <th>Image</th>
@@ -189,7 +190,7 @@
                                                 <input type="text" name="item_description[]" class="form-control item-name">
                                                 <small class="text-danger item-desc d-block mt-1"></small>
                                             </td>
-                                            <td><input type="number" name="item_qty[]" class="form-control item-qty"></td>
+                                            <!-- <td><input type="number" name="item_qty[]" class="form-control item-qty"></td> -->
                                             <td>
                                                 <select name="unit_id[]" class="form-control">
                                                     <option value="">Select Unit</option>
@@ -199,6 +200,14 @@
                                                 </select>
                                             </td>
                                             <td><input type="number" name="item_price[]" class="form-control item-price" step="0.01"></td>
+                                            <td>
+                                                <select name="discount[]" class="form-control">
+                                                    <option value="">Select Discount</option>
+                                                    @foreach($discounts as $discount)
+                                                        <option value="{{ $discount->id }}">{{ $discount->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
                                             <td>
                                                 <textarea name="volume_less[]" 
                                                     class="form-control"></textarea>
@@ -275,6 +284,7 @@
             // Add Row
             const categories = @json($categories);
             const units = @json($units);
+            const discounts = @json($discounts);
             $('#add-row').click(function () {
                 const supplierCode = $('#supplier_code').val() || 'SUP-000';
                 const paddedCount = String(itemCount).padStart(3, '0');
@@ -282,14 +292,16 @@
 
                 const categoryOptions = categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
                 const unitOptions = units.map(unit => `<option value="${unit.id}">${unit.name}</option>`).join('');
+                const discountOptions = discounts.map(discount => `<option value="${discount.id}">${discount.name}</option>`).join('');
 
                 table.row.add([
                     `<input type="text" name="item_code[]" class="form-control" value="${itemCode}" readonly>`,
                     `<select name="item_category[]" class="form-control item-category"><option value="">Select Category</option>${categoryOptions}</select><small class="text-danger category-desc d-block mt-1"></small>`,
                     `<input type="text" name="item_description[]" class="form-control item-name"><small class="text-danger item-desc d-block mt-1"></small>`,
-                    `<input type="number" name="item_qty[]" class="form-control item-qty">`,
+                    // `<input type="number" name="item_qty[]" class="form-control item-qty">`,
                     `<select name="unit_id[]" class="form-control"><option value="">Select Unit</option>${unitOptions}</select>`,
                     `<input type="number" name="item_price[]" class="form-control item-price" step="0.01">`,
+                    `<select name="discount[]" class="form-control"><option value="">Select Discount</option>${discountOptions}</select>`,
                     `<textarea name="volume_less[]" class="form-control"></textarea>`,
                     `<textarea name="regular_less[]" class="form-control"></textarea>`,
                     `<input type="file" name="item_image[]" class="form-control" accept="image/*">`,
