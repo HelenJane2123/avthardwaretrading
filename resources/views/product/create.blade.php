@@ -119,6 +119,24 @@
                                             <input name="supplier_product_code" id="supplier_product_code" class="form-control" type="text" readonly>
                                         </div>
                                         <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Product Description</label>
+                                            <textarea name="description"
+                                                class="form-control"
+                                                rows="2"></textarea>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Volume Less</label>
+                                            <textarea name="volume_less"
+                                                class="form-control"
+                                                rows="2"></textarea>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Regular Less</label>
+                                            <textarea name="regular_less"
+                                                class="form-control"
+                                                rows="2"></textarea>
+                                        </div>
+                                        <div class="form-group col-md-4">
                                             <label class="control-label">Serial Number</label>
                                             <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
                                             @error('serial_number')

@@ -83,6 +83,7 @@ class ProductController extends Controller
         $product->product_code = $this->generateProductCode();
         $product->supplier_product_code = $request->supplier_product_code;
         $product->product_name = $request->product_name;
+        $product->description = $request->description;
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
         $product->category_id = $request->category_id;
@@ -92,6 +93,8 @@ class ProductController extends Controller
         $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
         $product->tax_id = $request->tax_id;
         $product->threshold = 0;
+        $product->volume_less = $request->volume_less;
+        $product->regular_less = $request->regular_less;
 
         // Set stock status
         if ($product->quantity <= 0) {
@@ -230,6 +233,7 @@ class ProductController extends Controller
             'serial_number' => $request->serial_number,
             'supplier_product_code' => $request->supplier_product_code,
             'product_name' => $request->product_name,
+            'description' => $request->description,
             'category_id' => $request->category_id,
             'model' => $request->model,
             'quantity' => $request->quantity,
@@ -239,6 +243,8 @@ class ProductController extends Controller
             'tax_id' => $request->tax_id,
             'threshold' => $threshold,
             'status' => $status,
+            'volume_less' => $request->volume_less,
+            'regular_less' => $request->regular_less
         ]);
 
         // Handle image update if uploaded

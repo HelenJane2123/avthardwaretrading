@@ -58,6 +58,7 @@
                                     <th>Product</th>
                                     <th>Available Quantity</th>
                                     <th>Quantity on Hand</th>
+                                    <th>Sales Price</th>
                                     <th>Supplier Item Code</th>
                                     <th>Supplier</th>
                                     <th>Threshold</th>
@@ -72,6 +73,7 @@
                                         <td>{{ $add->product->product_name }}</td>
                                         <td>{{ $add->product->quantity }}</td>
                                         <td>{{ $add->product->remaining_stock }}</td>
+                                        <td>{{ $add->product->sales_price }}</td>
                                         <td>{{ $add->product->supplier_product_code }}</td>
                                         <td>{{ $add->supplier->name }}</td>
                                         <td>{{ $add->product->threshold }}</td>

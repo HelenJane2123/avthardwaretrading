@@ -57,7 +57,7 @@
                                 <label class="form-label">Invoice Due Date <span class="text-danger">*</span></label>
                                 <input type="date" name="due_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label">Invoice Number</label>
                                 <input type="text" name="invoice_number" id="invoice_number" class="form-control" readonly>
                             </div>
@@ -73,12 +73,23 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                                 <select id="discount_type" name="discount_type" class="form-control">
                                     <option value="" selected>Select Type of Discount</option>
                                     <option value="per_item" >Per Item</option>
                                     <option value="overall">Overall</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Salesman</label>
+                               <select name="salesman_id" id="salesman_id" class="form-control" required>
+                                    <option value="">-- Select Salesman --</option>
+                                    @foreach($salesman as $salesmen)
+                                        <option value="{{ $salesmen->id }}">
+                                            {{ $salesmen->salesman_name }} 
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -306,7 +317,7 @@
 
                 $('#po-body').append(newRow);
 
-                // ✅ Apply same behavior based on current discount type
+                // Apply same behavior based on current discount type
                 const discountType = $('#discount_type').val();
 
                 if (discountType === "per_item") {
@@ -482,7 +493,7 @@
             });
             
             // get the latest Invoice number in database
-            let randomInvoice = 'INV-' + Math.floor(100000 + Math.random() * 900000);
+            let randomInvoice = 'DR-' + Math.floor(100000 + Math.random() * 900000);
             $('#invoice_number').val(randomInvoice);
         });
 

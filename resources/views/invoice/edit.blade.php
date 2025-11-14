@@ -66,12 +66,23 @@
                                 value="{{ \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') }}" required>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label">Invoice Number</label>
                             <input type="text" name="invoice_number" class="form-control" 
                                 value="{{ $invoice->invoice_number }}" readonly>
                         </div>
-
+                        <div class="col-md-4 form-group">
+                            <label for="salesman">Salesman</label>
+                            <select name="salesman_id" id="salesman_id" class="form-control" required>
+                                <option value="">-- Select Salesman --</option>
+                                @foreach($salesman as $salesmen)
+                                    <option value="{{ $salesmen->id }}" 
+                                        {{ $salesmen->id == $invoice->salesman_id ? 'selected' : '' }}>
+                                        {{ $salesmen->salesman_name }} 
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-3">
                             <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
                             <select name="payment_mode_id" class="form-control" required>
@@ -454,7 +465,7 @@
             });
             
             // get the latest Invoice number in database
-            let randomInvoice = 'INV-' + Math.floor(100000 + Math.random() * 900000);
+            let randomInvoice = 'DR-' + Math.floor(100000 + Math.random() * 900000);
             $('#invoice_number').val(randomInvoice);
         });
 

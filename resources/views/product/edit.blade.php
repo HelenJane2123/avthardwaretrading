@@ -78,7 +78,24 @@
                                                 id="supplier_product_code" value="{{ $product->supplier_product_code }}" readonly>
                                         </div>
                                     </div>
-
+                                    <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Product Description</label>
+                                            <textarea name="description"
+                                                class="form-control"
+                                                rows="2">{{ $product->description }}</textarea>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="control-label fw-bold">Volume Less</label>
+                                        <textarea name="volume_less"
+                                            class="form-control"
+                                            rows="2">{{ $product->volume_less }}</textarea>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label class="control-label fw-bold">Regular Less</label>
+                                        <textarea name="regular_less"
+                                            class="form-control"
+                                            rows="2">{{ $product->regular_less }}</textarea>
+                                    </div>
                                     <div class="row g-3 mt-2">
                                         <div class="col-md-3">
                                             <label>Serial Number</label>

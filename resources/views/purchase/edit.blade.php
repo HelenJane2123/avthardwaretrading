@@ -55,20 +55,19 @@
                                 <input type="text" name="po_number" id="po_number" 
                                     class="form-control" value="{{ $purchase->po_number }}" readonly>
                             </div>
-                             {{-- Salesman --}}
+                            {{-- Salesman --}}
                             <div class="col-md-4 form-group">
                                 <label for="salesman">Salesman</label>
                                 <select name="salesman_id" id="salesman_id" class="form-control" required>
-                                <option value="">-- Select Salesman --</option>
-                                @foreach($salesman as $salesmen)
-                                    <option value="{{ $salesmen->id }}" 
-                                        {{ $salesmen->id == $purchase->salesman_id ? 'selected' : '' }}>
-                                        {{ $salesmen->salesman_name }} 
-                                    </option>
-                                @endforeach
-                            </select>
+                                    <option value="">-- Select Salesman --</option>
+                                    @foreach($salesman as $salesmen)
+                                        <option value="{{ $salesmen->id }}" 
+                                            {{ $salesmen->id == $purchase->salesman_id ? 'selected' : '' }}>
+                                            {{ $salesmen->salesman_name }} 
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
-
                             {{-- Payment Term --}}
                             <div class="form-group">
                                 <label for="payment_id">Mode of Payment</label>

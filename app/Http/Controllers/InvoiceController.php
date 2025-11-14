@@ -17,6 +17,7 @@ use App\User;
 use App\Collection;
 use App\Tax;
 use App\InvoiceSalesDiscount;
+use App\Salesman;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceController extends Controller
@@ -55,15 +56,15 @@ class InvoiceController extends Controller
         // Also load a flat products list (fallback or for other places in the form)
         $products = Product::select('id','product_name','product_code','sales_price','remaining_stock','category_id')->get();
 
-        $customers = Customer::all();
+        $customers = Customer::where('status', 1)->get();
         $products = Product::all();
         $units = Unit::all();
         $taxes = Tax::all();
 
         // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
-
-        return view('invoice.create', compact('customers','products','paymentModes','units','taxes'));
+        $salesman = Salesman::where('status',1)->get();
+        return view('invoice.create', compact('customers','products','paymentModes','units','taxes','salesman'));
     }
 
     public function getCustomerInformation($id)
@@ -220,8 +221,10 @@ class InvoiceController extends Controller
         $units = Unit::all();
         $paymentModes = ModeofPayment::all();
         $taxes = Tax::all(); // If you’re using discount options from $taxes in the form
+        //get salesman
+        $salesman = Salesman::where('status',1)->get();
 
-        return view('invoice.edit', compact('invoice', 'customers', 'products', 'units', 'paymentModes', 'taxes'));
+        return view('invoice.edit', compact('invoice', 'customers', 'products', 'units', 'paymentModes', 'taxes','salesman'));
     }
 
     /**
