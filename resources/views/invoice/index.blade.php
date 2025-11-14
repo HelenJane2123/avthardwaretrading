@@ -122,9 +122,11 @@
                                                 <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
-                                                    <i class="fa fa-check"></i> Approve
-                                                </button>
+                                                @if(auth()->user()->user_role === 'super_admin')
+                                                    <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
+                                                        <i class="fa fa-check"></i> Approve
+                                                    </button>
+                                                @endif
                                             @endif
 
                                             <button class="btn btn-danger btn-sm" onclick="deleteTag({{ $invoice->id }})">
@@ -222,9 +224,9 @@
         function approveInvoice(id) {
             swal({
                 title: 'Confirm Approval',
-                text: 'Only Super Admin can approve invoices.',
+                text: 'Only Admin can approve invoices.',
                 input: 'password',
-                inputPlaceholder: 'Enter Super Admin password',
+                inputPlaceholder: 'Enter Admin password',
                 showCancelButton: true,
                 confirmButtonText: 'Approve',
                 confirmButtonColor: '#28a745',
@@ -261,7 +263,7 @@
                 if (result && result.value && result.value.success) {
                     swal({
                         type: 'success',
-                        title: 'Approved!',
+                        title: 'Invoice has been approved!',
                         text: result.value.success,
                         timer: 1500,
                         showConfirmButton: false

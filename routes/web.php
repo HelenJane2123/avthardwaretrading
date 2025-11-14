@@ -89,6 +89,7 @@ Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation
 
 //get purchase details
 Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
+Route::put('/purchase/{id}/approve', [PurchaseController::class, 'approve'])->name('purchase.approve');
 
 //get invoice details
 Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->name('invoice.details');
@@ -101,6 +102,7 @@ Route::put('/invoice/{id}/approve', [InvoiceController::class, 'approve'])->name
 Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])
     ->name('collection.details');
 Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceipt'])->name('collection.receipt');
+Route::put('/collection/{id}/approve', [CollectionController::class, 'approve'])->name('collection.approve');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');

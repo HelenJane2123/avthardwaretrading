@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Collection;
 use App\Invoice;
 use App\ModeofPayment;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,6 +55,7 @@ class CollectionController extends Controller
                 'last_paid_amount'  => $request->amount_paid,
                 'amount_paid'       => $request->amount_paid,
                 'remarks'           => $request->remarks,
+                'is_approved'        => 0
             ];
 
             // Match exact database name "PDC/Check" (case-insensitive)
@@ -222,5 +224,40 @@ class CollectionController extends Controller
         return view('collection.printcollection', compact(
             'collection', 'invoice', 'customer', 'paymentMode', 'allPayments', 'balance', 'isLatest'
         ));
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $collection = Collection::findOrFail($id);
+
+        // Find the super admin record
+        $user = User::where('user_role', 'super_admin')->first();
+
+        // Check if super admin record exists
+        if (!$user) {
+            return response()->json(['error' => 'Super Admin account not found.'], 404);
+        }
+
+        // Validate password input
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        // Check password match
+        if (!\Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Incorrect password.'], 403);
+        }
+
+        \Log::info('Approval attempt:', [
+            'user_found' => $user ? true : false,
+            'role' => $user->user_role ?? 'none',
+            'entered_password' => $request->password,
+        ]);
+
+        // Approve the invoice
+        $collection->is_approved = 1;
+        $collection->save();
+
+        return response()->json(['success' => 'Purchase approved successfully!']);
     }
 }

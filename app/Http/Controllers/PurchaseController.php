@@ -13,6 +13,7 @@ use App\PurchaseDetail;
 use App\ModeofPayment;
 use App\Unit;
 use App\Salesman;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -166,6 +167,7 @@ class PurchaseController extends Controller
                 'other_charges'      => $request->other_charges ?? 0,
                 'remarks'            => $request->remarks,
                 'grand_total'        => $request->grand_total ?? 0,
+                'is_approved'        => 0
             ]);
 
             foreach ($request->product_id as $index => $supplierItemId) {
@@ -374,5 +376,38 @@ class PurchaseController extends Controller
         return $pdf->download('PO-'.$purchase->po_number.'.pdf');
     }
 
-    
+    public function approve(Request $request, $id)
+    {
+        $purchase = Purchase::findOrFail($id);
+
+        // Find the super admin record
+        $user = User::where('user_role', 'super_admin')->first();
+
+        // Check if super admin record exists
+        if (!$user) {
+            return response()->json(['error' => 'Super Admin account not found.'], 404);
+        }
+
+        // Validate password input
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        // Check password match
+        if (!\Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Incorrect password.'], 403);
+        }
+
+        \Log::info('Approval attempt:', [
+            'user_found' => $user ? true : false,
+            'role' => $user->user_role ?? 'none',
+            'entered_password' => $request->password,
+        ]);
+
+        // Approve the invoice
+        $purchase->is_approved = 1;
+        $purchase->save();
+
+        return response()->json(['success' => 'Purchase approved successfully!']);
+    }
 }

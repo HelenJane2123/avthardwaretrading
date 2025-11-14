@@ -52,6 +52,7 @@
                                 <th>Discount Type</th>
                                 <th>Total Purchased</th>
                                 <th>Payment Status</th>
+                                <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -98,6 +99,13 @@
                                             <span class="badge bg-info ms-2">No Payment yet</span>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if ($purchase->is_approved === 1)
+                                            <span class="badge bg-success">Approved</span>
+                                        @else
+                                            <span class="badge bg-warning">Pending</span>
+                                        @endif
+                                    </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
                                             {{-- View Details --}}
@@ -107,18 +115,27 @@
                                                 <i class="fa fa-eye"></i>
                                             </button>
                                             {{-- Print --}}
-                                            <a href="{{ route('purchase.print', $purchase->id) }}" 
-                                               target="_blank" 
-                                               class="btn btn-secondary btn-sm" 
-                                               title="Print PO">
-                                                <i class="fa fa-print"></i>
-                                            </a>
+                                            @if ($purchase->is_approved === 1)
+                                                <a href="{{ route('purchase.print', $purchase->id) }}" 
+                                                    target="_blank" 
+                                                    class="btn btn-secondary btn-sm" 
+                                                    title="Print PO">
+                                                        <i class="fa fa-print"></i>
+                                                </a>
+                                            @endif
                                             {{-- Edit --}}
-                                            <a class="btn btn-primary btn-sm" 
-                                               href="{{ route('purchase.edit', $purchase->id) }}" 
-                                               title="Edit">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
+                                            @if ($purchase->is_approved !== 1)
+                                                <a class="btn btn-primary btn-sm" 
+                                                href="{{ route('purchase.edit', $purchase->id) }}" 
+                                                title="Edit">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                            @endif
+                                            @if(auth()->user()->user_role === 'super_admin')
+                                                <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
+                                                    <i class="fa fa-check"></i> Approve
+                                                </button>
+                                            @endif
                                             {{-- Delete --}}
                                             <button class="btn btn-danger btn-sm" 
                                                     onclick="deleteTag({{ $purchase->id }})"
@@ -328,7 +345,59 @@
 
             $("#makePaymentModal").modal("show");
         });
-    });
+        function approvePurchase(id) {
+            swal({
+                title: 'Confirm Approval',
+                text: 'Only Admin can approve purchases.',
+                input: 'password',
+                inputPlaceholder: 'Enter Admin password',
+                showCancelButton: true,
+                confirmButtonText: 'Approve',
+                confirmButtonColor: '#28a745',
+                cancelButtonText: 'Cancel',
+                preConfirm: function (password) {
+                    return new Promise(function (resolve, reject) {
+                        if (!password) {
+                            reject('Please enter your password');
+                            return;
+                        }
 
+                        $.ajax({
+                            url: `/purchase/${id}/approve`,
+                            type: 'PUT',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                password: password
+                            },
+                            success: function (response) {
+                                console.log("test response",response);
+                                if (response.error) {
+                                    reject(response.error);
+                                } else {
+                                    resolve(response);
+                                }
+                            },
+                            error: function () {
+                                reject('An error occurred during approval.');
+                            }
+                        });
+                    });
+                }
+            }).then(function (result) {
+                if (result && result.value && result.value.success) {
+                    swal({
+                        type: 'success',
+                        title: 'Purchase has been approved!',
+                        text: result.value.success,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                }
+            }).catch(function (error) {
+                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
+            });
+        }
+    });
 </script>
 @endpush

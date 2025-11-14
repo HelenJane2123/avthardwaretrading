@@ -46,6 +46,7 @@
                                     <th>Amount Paid</th>
                                     <th>Outstanding Balance</th>
                                     <th>Payment Status</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -81,14 +82,27 @@
                                             @endif
                                         </td>
                                         <td>
+                                            @if ($collection->is_approved === 1)
+                                                <span class="badge bg-success">Approved</span>
+                                            @else
+                                                <span class="badge bg-warning">Pending</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <button class="btn btn-primary btn-sm view-collection" 
                                                     data-url="{{ route('collection.details', $collection->id) }}">
                                                 <i class="fa fa-eye"></i>
                                             </button>
-                                            <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-
+                                            @if ($collection->is_approved !== 1)
+                                                <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                            @endif
+                                            @if(auth()->user()->user_role === 'super_admin')
+                                                <button class="btn btn-success btn-sm" onclick="approveCollection({{ $collection->id }})">
+                                                    <i class="fa fa-check"></i> Approve
+                                                </button>
+                                            @endif
                                             @if($collection->invoice->invoice_status == 'approved')
                                                 {{-- Only allow print if partial OR this is the latest payment when fully paid --}}
                                                 @if($collection->invoice->payment_status != 'paid' || $isLatest)
@@ -181,6 +195,60 @@
                     }
                 });
             });
+
+            function approveCollection(id) {
+                swal({
+                    title: 'Confirm Approval',
+                    text: 'Only Admin can approve purchases.',
+                    input: 'password',
+                    inputPlaceholder: 'Enter Admin password',
+                    showCancelButton: true,
+                    confirmButtonText: 'Approve',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonText: 'Cancel',
+                    preConfirm: function (password) {
+                        return new Promise(function (resolve, reject) {
+                            if (!password) {
+                                reject('Please enter your password');
+                                return;
+                            }
+
+                            $.ajax({
+                                url: `/collection/${id}/approve`,
+                                type: 'PUT',
+                                data: {
+                                    _token: '{{ csrf_token() }}',
+                                    password: password
+                                },
+                                success: function (response) {
+                                    console.log("test response",response);
+                                    if (response.error) {
+                                        reject(response.error);
+                                    } else {
+                                        resolve(response);
+                                    }
+                                },
+                                error: function () {
+                                    reject('An error occurred during approval.');
+                                }
+                            });
+                        });
+                    }
+                }).then(function (result) {
+                    if (result && result.value && result.value.success) {
+                        swal({
+                            type: 'success',
+                            title: 'Collection has been approved!',
+                            text: result.value.success,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                }).catch(function (error) {
+                    swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
+                });
+            }
         });
     </script>
 @endpush
