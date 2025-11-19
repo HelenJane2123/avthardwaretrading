@@ -22,6 +22,7 @@ use App\Http\Controllers\SalesmenController;
 use App\Http\Controllers\AdjustmentCollectionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\PDCCollectionController;
  // Don’t forget this too if you're using it
 use Illuminate\Support\Facades\Log;
 /*
@@ -35,10 +36,13 @@ use Illuminate\Support\Facades\Log;
 |
 */
 
+Route::get('/', function () {
+    return view('landing'); 
+});
 
 Auth::routes();
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('/edit_profile', [HomeController::class, 'edit_profile'])->name('edit_profile');
 Route::post('/update_profile/{id}', [HomeController::class, 'update_profile'])->name('update_profile');
@@ -61,7 +65,7 @@ Route::resource('modeofpayment', ModeofPaymentController::class);
 Route::resource('collection', CollectionController::class);
 Route::resource('salesmen', SalesmenController::class);
 Route::resource('adjustment_collection', AdjustmentCollectionController::class);
-
+Route::resource('pdc', PDCCollectionController::class);
 
 Route::get('/sales', [SalesController::class, 'index'])->name('sales.index');
 Route::get('/findPrice', [InvoiceController::class, 'findPrice'])->name('findPrice');
@@ -117,7 +121,6 @@ Route::get('/export/collection', [ExportController::class, 'exportCollections'])
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
 Route::get('purchase/{purchase}/payment-info', [PurchasePaymentController::class, 'paymentInfo'])->name('purchase.payment.info');
 Route::post('purchase/{purchase}/payment-store', [PurchasePaymentController::class, 'store'])->name('purchase.payment.store');
-
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
 
 

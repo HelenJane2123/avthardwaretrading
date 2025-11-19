@@ -15,7 +15,6 @@ class AdjustmentCollectionController extends Controller
         $this->middleware('auth');
     }
 
-
     public function index()
     {
         $adjustments = AdjustmentCollection::orderBy('created_at', 'desc')->get();

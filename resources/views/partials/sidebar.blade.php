@@ -26,7 +26,7 @@
     <ul class="app-menu">
         {{-- Dashboard --}}
         <li>
-            <a class="app-menu__item {{ request()->is('/') ? 'active' : ''}}" href="/">
+            <a class="app-menu__item {{ request()->is('/home') ? 'active' : ''}}" href="/home">
                 <i class="app-menu__icon fa fa-dashboard"></i><span class="app-menu__label">Dashboard</span>
             </a>
         </li>
@@ -62,11 +62,6 @@
         </li>
 
         {{-- View Sales --}}
-        <!-- <li>
-            <a class="app-menu__item {{ request()->is('sales') ? 'active' : ''}}" href="/sales">
-                <i class="app-menu__icon fa fa-dollar"></i><span class="app-menu__label">View Sales</span>
-            </a>
-        </li> -->
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('purchase*') ? 'active' : ''}}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-shopping-cart"></i><span class="app-menu__label">Purchase Order</span>
@@ -100,6 +95,18 @@
             <ul class="treeview-menu">
                 <li><a class="treeview-item" href="{{ route('adjustment_collection.create') }}"><i class="icon fa fa-plus"></i> Create Adjustment</a></li>
                 <li><a class="treeview-item" href="{{ route('adjustment_collection.index') }}"><i class="icon fa fa-edit"></i> Manage Adjustment</a></li>
+            </ul>
+        </li>
+
+        <li class="treeview">
+            <a class="app-menu__item {{ request()->is('pdc_collection*') ? 'active' : '' }}" href="#" data-toggle="treeview">
+                <i class="app-menu__icon fa fa-exchange"></i>
+                <span class="app-menu__label">Collection PDC</span>
+                <i class="treeview-indicator fa fa-angle-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                <li><a class="treeview-item" href="{{ route('pdc.create') }}"><i class="icon fa fa-plus"></i> Create Adjustment</a></li>
+                <li><a class="treeview-item" href="{{ route('pdc.index') }}"><i class="icon fa fa-edit"></i> Manage Adjustment</a></li>
             </ul>
         </li>
 
