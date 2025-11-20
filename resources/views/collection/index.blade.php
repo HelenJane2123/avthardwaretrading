@@ -98,12 +98,12 @@
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                             @endif
-                                            @if(auth()->user()->user_role === 'super_admin')
+                                            @if(auth()->user()->user_role === 'super_admin' && $collection->is_approved !== 1)
                                                 <button class="btn btn-success btn-sm" onclick="approveCollection({{ $collection->id }})">
                                                     <i class="fa fa-check"></i> Approve
                                                 </button>
                                             @endif
-                                            @if($collection->invoice->invoice_status == 'approved')
+                                            @if($collection->invoice->invoice_status == 'approved' && $collection->is_approved === 1)
                                                 {{-- Only allow print if partial OR this is the latest payment when fully paid --}}
                                                 @if($collection->invoice->payment_status != 'paid' || $isLatest)
                                                     <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
@@ -195,8 +195,8 @@
                     }
                 });
             });
-
-            function approveCollection(id) {
+        });
+        function approveCollection(id) {
                 swal({
                     title: 'Confirm Approval',
                     text: 'Only Admin can approve purchases.',
@@ -249,6 +249,5 @@
                     swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
                 });
             }
-        });
     </script>
 @endpush

@@ -23,9 +23,11 @@ class CollectionController extends Controller
 
     public function create()
     {
-        $invoices = Invoice::with('customer')->get();
+        $invoices = Invoice::with('customer', 'paymentMode')->get();
         $paymentModes = ModeofPayment::all();
-        return view('collection.create', compact('invoices','paymentModes'));
+        
+        // You don't have a collection yet because this is "create"
+        return view('collection.create', compact('invoices', 'paymentModes'));
     }
 
     public function store(Request $request)
@@ -37,6 +39,8 @@ class CollectionController extends Controller
             'remarks'      => 'nullable|string|max:255',
             'check_date'   => 'required|date',
             'check_number' => 'nullable|string|max:100',
+            'check_amount' => 'nullable|string|max:100',
+            'bank_name'    => 'nullable|string|max:100',
             'gcash_name'   => 'nullable|string|max:100',
             'gcash_mobile' => 'nullable|string|max:20',
         ]);
@@ -62,6 +66,8 @@ class CollectionController extends Controller
             if ($paymentMode === 'pdc/check') {
                 $collectionData['check_date'] = $request->check_date;
                 $collectionData['check_number'] = $request->check_number;
+                $collectionData['check_amount'] = $request->check_amount;
+                $collectionData['bank_name'] = $request->bank_name;
             }
 
             // Handle GCash mode
@@ -259,5 +265,14 @@ class CollectionController extends Controller
         $collection->save();
 
         return response()->json(['success' => 'Purchase approved successfully!']);
+    }
+
+    public function getInvoiceCollections($invoiceId)
+    {
+        $collections = Collection::where('invoice_id', $invoiceId)
+            ->orderBy('payment_date', 'asc')
+            ->get();
+
+        return response()->json($collections);
     }
 }

@@ -117,7 +117,8 @@
                         <div class="mb-3">
                             <label>Amount Paid</label>
                             <input type="number" step="0.01" name="amount_paid" class="form-control" 
-                                   required>
+                                value="{{ old('last_paid_amount', $collection->last_paid_amount ?? '') }}"
+                                required>
                         </div>
                         <div id="pdcCheck" class="mb-3" style="display: none;">
                             <label>Check Date</label>

@@ -46,7 +46,7 @@
                                 <div class="input-group">
                                     <input type="text" id="invoiceSearch" class="form-control" placeholder="Search Invoice..." readonly>
                                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#invoiceModal">
-                                    Search Invoice
+                                        Search Invoice
                                     </button>
                                 </div>
                                 <input type="hidden" name="invoice_id" id="invoiceId">
@@ -97,30 +97,74 @@
                                         </tr>
                                     </tbody>
                                 </table>
+
+                                <!-- Collapsible Payment History -->
+                                <div class="mt-4">
+                                    <button class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#paymentHistoryWrapper" aria-expanded="false" aria-controls="paymentHistoryWrapper">
+                                        Show Previous Payments
+                                    </button>
+
+                                    <div class="collapse mt-3" id="paymentHistoryWrapper">
+                                        <h5>Previous Payments</h5>
+                                        <table class="table table-bordered table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Bank</th>
+                                                    <th>Check #</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="paymentHistoryBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- /Payment History -->
+
                             </div>
+
                             <div class="mb-3">
                                 <label>Collection Number</label>
                                 <input type="text" name="collection_number" class="form-control" id="collectionNumber" readonly>
                             </div>
+                            
                             <div class="mb-3">
                                 <label>Payment Date</label>
                                 <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
-
+                        
                             <div class="mb-3">
-                                <label>Amount Paid</label>
-                                <input type="number" step="0.01" name="amount_paid" class="form-control" required>
+                                <label>Last Amount Paid</label>
+                                <!-- renamed ID to avoid duplicate with the invoice balance span -->
+                                <input type="number" step="0.01" name="last_paid_amount" class="form-control" id="lastPaidAmountField" readonly>
                             </div>
+                                    
                             <!-- Extra Fields Based on Payment Method -->
+                            <div id="pdcBankName" class="mb-3" style="display: none;">
+                                <label>Bank Name</label>
+                                <input type="text" name="bank_name" class="form-control" placeholder="Enter Bank Name">
+                            </div>
+
                             <div id="pdcCheck" class="mb-3" style="display: none;">
                                 <label>Check Date</label>
-                                <input type="date" name="check_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="check_date" class="form-control" value="{{ date('Y-m-d') }}">
                             </div>
+
                             <div id="pdcFields" class="mb-3" style="display: none;">
                                 <label>Check Number</label>
                                 <input type="text" name="check_number" class="form-control" placeholder="Enter check number">
                             </div>
 
+                            <div id="pdcCheckAmount" class="mb-3" style="display: none;">
+                                <label>Check Amount</label>
+                                <input type="text" name="check_amount" class="form-control" placeholder="Enter check total Check Amount">
+                            </div>
+
+                            <div class="mb-3">
+                                <label>Amount to Pay</label>
+                                <input type="number" step="0.01" name="amount_paid" class="form-control" required>
+                            </div>
+                            
                             <div id="gcashFields" style="display: none;">
                                 <div class="mb-3">
                                     <label>GCash Name</label>
@@ -131,22 +175,6 @@
                                     <input type="text" name="gcash_number" class="form-control" placeholder="Enter mobile number">
                                 </div>
                             </div>
-
-                            <!-- <div class="mb-3">
-                                <label>Balance</label>
-                                <input type="number" step="0.01" name="balance" id="balanceField" class="form-control" readonly>
-                            </div>
-
-                            <div class="mb-3">
-                                <label>Payment Status</label>
-                                <select name="payment_status" class="form-control" required>
-                                    <option value="pending">Pending</option>
-                                    <option value="partial">Partial</option>
-                                    <option value="paid">Paid</option>
-                                    <option value="overdue">Overdue</option>
-                                    <option value="approved">Approved</option>
-                                </select>
-                            </div> -->
 
                             <div class="mb-3">
                                 <label>Remarks</label>
@@ -161,6 +189,7 @@
         </div>
     </div>
 </main>
+
 <!-- Invoice Modal -->
 <div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -197,13 +226,18 @@
 <script>
     $(document).ready(function () {
         function togglePaymentFields(mode) {
+            $('#pdcBankName').hide();
             $('#pdcFields').hide();
             $('#pdcCheck').hide();
+            $('#pdcCheckAmount').hide();
             $('#gcashFields').hide();
 
+            if (!mode) return;
             if (mode.toLowerCase() === 'pdc/check') {
                 $('#pdcFields').show();
                 $('#pdcCheck').show();
+                $('#pdcCheckAmount').show();
+                $('#pdcBankName').show();
             } else if (mode.toLowerCase() === 'gcash') {
                 $('#gcashFields').show();
             }
@@ -245,70 +279,111 @@
             dom: 'frtip'
         });
 
-    // Reload invoices when modal opens
-    $('#invoiceModal').on('shown.bs.modal', function () {
-        table.ajax.reload();
-    });
-
-    // Handle Select button
-    $(document).on('click', '.select-invoice', function () {
-        const paymentMode = $(this).data("modeofpayment") || "N/A";
-        
-        $('#invoiceId').val($(this).data('id'));
-        $('#customerId').val($(this).data('customer'));
-        $('#invoiceSearch').val($(this).data('number'));
-
-        // Show details in table format
-        $("#invoiceDetails").show();
-        $("#detailInvoiceNumber").text($(this).data("number"));
-        $("#detailGrandTotal").text(parseFloat($(this).data("total")).toFixed(2));
-        $("#detailBalance").text(parseFloat($(this).data("balance")).toFixed(2));
-        $("#detailCustomerName").text($(this).data("name"));
-        $("#detailCustomerEmail").text($(this).data("email") || "N/A");
-        $("#detailCustomerPhone").text($(this).data("phone") || "N/A");
-        $("#detailCustomerAddress").text($(this).data("address") || "N/A");
-        $("#ModeofPayment").text(paymentMode);
-
-        // Show appropriate extra fields
-        togglePaymentFields(paymentMode);
-
-        // Close modal safely
-        $('#invoiceModal').modal('hide');
-        $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open');
-    });
-});
-function generateCollectionNumber() {
-    // Format: COL-YYYYMMDD-RANDOM
-    const date = new Date();
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
-    return `COL-${y}${m}${d}-${random}`;
-}
-
-// Set number when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    const collectionNumberField = document.getElementById('collectionNumber');
-    collectionNumberField.value = generateCollectionNumber();
-});
-
-// Validation: Prevent overpayment
-$(document).on("submit", "form", function (e) {
-    const balanceText = $("#detailBalance").text().trim();
-    const amountPaid = parseFloat($("input[name='amount_paid']").val()) || 0;
-    const balance = parseFloat(balanceText.replace(/,/g, "")) || 0;
-
-    if (amountPaid > balance) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "error",
-            title: "Invalid Payment",
-            text: `The amount paid (₱${amountPaid.toFixed(2)}) cannot exceed the balance (₱${balance.toFixed(2)}).`,
-            confirmButtonColor: "#d33",
+        // Reload invoices when modal opens
+        $('#invoiceModal').on('shown.bs.modal', function () {
+            table.ajax.reload();
         });
+
+        // Handle Select button
+        $(document).on('click', '.select-invoice', function () {
+            const paymentMode = $(this).data("modeofpayment") || "";
+            const invoiceId = $(this).data('id');
+            
+            $('#invoiceId').val(invoiceId);
+            $('#customerId').val($(this).data('customer'));
+            $('#invoiceSearch').val($(this).data('number'));
+
+            // Show details in table format
+            $("#invoiceDetails").show();
+            $("#detailInvoiceNumber").text($(this).data("number"));
+            $("#detailGrandTotal").text(parseFloat($(this).data("total")).toFixed(2));
+            $("#detailBalance").text(parseFloat($(this).data("balance")).toFixed(2));
+            $("#detailCustomerName").text($(this).data("name"));
+            $("#detailCustomerEmail").text($(this).data("email") || "N/A");
+            $("#detailCustomerPhone").text($(this).data("phone") || "N/A");
+            $("#detailCustomerAddress").text($(this).data("address") || "N/A");
+            $("#ModeofPayment").text(paymentMode);
+
+            // Show appropriate extra fields
+            togglePaymentFields(paymentMode);
+
+            // Load previous payments via AJAX and populate collapsible table
+            $.ajax({
+                url: `/invoice/${invoiceId}/collections`,
+                method: 'GET',
+                success: function (data) {
+                    const tbody = $("#paymentHistoryBody");
+                    tbody.empty();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        tbody.append(`<tr><td colspan="5" class="text-center">No previous payments found.</td></tr>`);
+                    } else {
+                        data.forEach(row => {
+                            const payDate = row.payment_date ? row.payment_date : '';
+                            const amount = row.amount_paid ? parseFloat(row.amount_paid).toFixed(2) : '0.00';
+                            // const mode = row.payment_mode ? row.payment_mode : '';
+                            const bank = row.bank_name ? row.bank_name : '';
+                            const checkNo = row.check_number ? row.check_number : '';
+
+                            tbody.append(`
+                                <tr>
+                                    <td>${payDate}</td>
+                                    <td>₱${amount}</td>
+                                    <td>${bank}</td>
+                                    <td>${checkNo}</td>
+                                </tr>
+                            `);
+                        });
+                    }
+
+                    // Expand the collapsible so user sees history immediately
+                    if (!$('#paymentHistoryWrapper').hasClass('show')) {
+                        $('#paymentHistoryWrapper').collapse('show');
+                    }
+                },
+                error: function () {
+                    console.error('Failed to load payment history');
+                }
+            });
+
+            // Close modal safely
+            $('#invoiceModal').modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+        });
+    });
+
+    function generateCollectionNumber() {
+        // Format: COL-YYYYMMDD-RANDOM
+        const date = new Date();
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+        return `COL-${y}${m}${d}-${random}`;
     }
-});
+
+    // Set number when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const collectionNumberField = document.getElementById('collectionNumber');
+        if (collectionNumberField) collectionNumberField.value = generateCollectionNumber();
+    });
+
+    // Validation: Prevent overpayment
+    $(document).on("submit", "form", function (e) {
+        const balanceText = $("#detailBalance").text().trim();
+        const amountPaid = parseFloat($("input[name='amount_paid']").val()) || 0;
+        const balance = parseFloat(balanceText.replace(/,/g, "")) || 0;
+
+        if (amountPaid > balance) {
+            e.preventDefault();
+            Swal.fire({
+                icon: "error",
+                title: "Invalid Payment",
+                text: `The amount paid (₱${amountPaid.toFixed(2)}) cannot exceed the balance (₱${balance.toFixed(2)}).`,
+                confirmButtonColor: "#d33",
+            });
+        }
+    });
 </script>
 @endpush

@@ -10,14 +10,19 @@ class Collection extends Model
         'collection_number',
         'invoice_id',
         'customer_id',
+        'check_date',
         'check_number',
+        'check_amount',
+        'bank_name',
         'gcash_number',
         'gcash_name',
         'payment_date',
         'last_paid_amount',
         'amount_paid',
         'remarks',
-        'is_approved'
+        'is_approved',
+        'created_at',
+        'updated_at'
     ];
 
     // A collection belongs to an invoice

@@ -38,6 +38,15 @@
                         @csrf
                         <div class="row g-3">
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Search Collection</label>
+                                <div class="input-group">
+                                    <input type="text" id="searchCollection" class="form-control" placeholder="Enter Invoice # or Collection #">
+                                    <button type="button" class="btn btn-outline-primary" id="btnSearchInvoice">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Customer Name</label>
                                 <input type="text" name="client_name" class="form-control" required>
                             </div>
@@ -130,7 +139,37 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
     $(document).ready(function () {
-        
+        $("#btnSearchInvoice").on("click", function () {
+            let searchText = $("#searchCollection").val();
+
+            if (searchText.trim() === "") {
+                Swal.fire("Required!", "Please enter invoice or collection #", "warning");
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('pdc.search') }}",
+                method: "GET",
+                data: { search: searchText },
+                success: function (res) {
+
+                    // Fill fields
+                    $("input[name='client_name']").val(res.client_name);
+
+                    // Auto-set terms
+                    $("select[name='term_days']").val(res.payment_terms);
+
+                    Swal.fire("Success!", "Invoice loaded successfully", "success");
+                },
+                error: function (xhr) {
+                    if (xhr.status === 404) {
+                        Swal.fire("Not Found", "No matching invoice.", "error");
+                    } else {
+                        Swal.fire("Invalid", "Invoice is not PDC / Check payment.", "error");
+                    }
+                }
+            });
+        });
     });
 </script>
 @endpush

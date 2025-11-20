@@ -107,6 +107,8 @@ Route::get('/collection/{id}/details', [CollectionController::class, 'showDetail
     ->name('collection.details');
 Route::get('collection/{id}/receipt', [CollectionController::class, 'printReceipt'])->name('collection.receipt');
 Route::put('/collection/{id}/approve', [CollectionController::class, 'approve'])->name('collection.approve');
+Route::get('/invoice/{id}/collections', [CollectionController::class, 'getInvoiceCollections'])
+     ->name('invoice.collections');
 
 //Export data to excel
 Route::get('/export/customers', [ExportController::class, 'exportCustomers'])->name('export.customers');
@@ -123,6 +125,7 @@ Route::get('purchase/{purchase}/payment-info', [PurchasePaymentController::class
 Route::post('purchase/{purchase}/payment-store', [PurchasePaymentController::class, 'store'])->name('purchase.payment.store');
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
 
+Route::get('/search-pdc', [PDCCollectionController::class, 'searchPdc'])->name('pdc.search');
 
 Route::prefix('reports')->group(function () {
     // AR Aging Report (view in Blade)

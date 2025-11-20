@@ -98,7 +98,7 @@
             </ul>
         </li>
 
-        <li class="treeview">
+        <!--<li class="treeview">
             <a class="app-menu__item {{ request()->is('pdc_collection*') ? 'active' : '' }}" href="#" data-toggle="treeview">
                 <i class="app-menu__icon fa fa-exchange"></i>
                 <span class="app-menu__label">Collection PDC</span>
@@ -108,7 +108,7 @@
                 <li><a class="treeview-item" href="{{ route('pdc.create') }}"><i class="icon fa fa-plus"></i> Create Adjustment</a></li>
                 <li><a class="treeview-item" href="{{ route('pdc.index') }}"><i class="icon fa fa-edit"></i> Manage Adjustment</a></li>
             </ul>
-        </li>
+        </li>-->
 
         {{-- Contacts --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Contacts —</li>

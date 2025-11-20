@@ -46,23 +46,20 @@ class PDCCollectionController extends Controller
             'payment_date'  => 'required|date',
             'amount_paid'   => 'required|numeric|min:0',
             'remarks'       => 'nullable|string',
+            'received_date' => 'required|date',
         ]);
 
-        // Auto-generate collection number
-        $nextNumber = PdcCollection::max('id') + 1;
-        $collectionNumber = "COL-" . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-
-        PdcCollection::create([
+        $collection = PdcCollection::create([
             'collection_number' => $collectionNumber,
-            'pdc_id'            => $request->pdc_id,
-            'payment_date'      => $request->payment_date,
-            'amount_paid'       => $request->amount_paid,
+            'amount'            => $request->amount_paid,     // total amount
+            'received_date'     => $request->received_date,   // from user
             'remarks'           => $request->remarks,
         ]);
 
         return redirect()->route('collection.pdc.index')
-                         ->with('success', 'PDC Collection added successfully.');
+                        ->with('success', 'PDC Collection added successfully.');
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -108,14 +105,39 @@ class PDCCollectionController extends Controller
         return back()->with('success', 'PDC Collection deleted successfully.');
     }
 
-    public function getPdcCollections()
+    public function searchPdc(Request $request)
     {
-        $collections = Collection::with(['invoice.paymentMode', 'payment'])
-            ->whereHas('invoice.paymentMode', function($q) {
-                $q->where('name', 'PDC/Check');
-            })
-            ->get();
+        $search = $request->input('search');
 
-        return response()->json($collections);
+        // Get collection + join invoice + payment mode
+        $collection = Collection::with(['invoice.paymentMode'])
+            ->where('collection_number', $search)
+            ->first();
+
+        if (!$collection) {
+            return response()->json(['error' => 'Collection not found'], 404);
+        }
+
+        // Check if collection has an invoice
+        if (!$collection->invoice) {
+            return response()->json(['error' => 'No invoice linked to this collection'], 404);
+        }
+
+        $invoice = $collection->invoice;
+
+        // Check if payment mode is PDC/CHECK
+        if ($invoice->paymentMode->name !== 'pdc/check') {
+            return response()->json(['error' => 'Payment mode is not PDC/Check'], 400);
+        }
+
+        return response()->json([
+            'collection_number' => $collection->collection_number,
+            'invoice_number' => $invoice->invoice_number,
+            'client_name' => $invoice->client_name,
+            'payment_terms' => $invoice->terms,
+            'invoice_total' => $invoice->total,
+            'invoice_balance' => $invoice->balance,
+        ]);
     }
+
 }
