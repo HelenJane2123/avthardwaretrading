@@ -60,7 +60,7 @@
                             @foreach($purchases as $purchase)
                                 <tr>
                                     @php
-                                        $totalPaid = $purchase->payments->sum('amount_paid');
+                                        $totalPaid= $purchase->payments->sum('amount_paid');
                                         $outstanding = $purchase->grand_total - $totalPaid;
 
                                         if ($totalPaid == 0) {
@@ -126,29 +126,30 @@
                                             {{-- Edit --}}
                                             @if ($purchase->is_approved !== 1)
                                                 <a class="btn btn-primary btn-sm" 
-                                                href="{{ route('purchase.edit', $purchase->id) }}" 
-                                                title="Edit">
-                                                    <i class="fa fa-edit"></i>
+                                                    href="{{ route('purchase.edit', $purchase->id) }}" 
+                                                    title="Edit">
+                                                        <i class="fa fa-edit"></i>
                                                 </a>
+                                                 @if(auth()->user()->user_role === 'super_admin')
+                                                    <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
+                                                        <i class="fa fa-check"></i> Approve
+                                                    </button>
+                                                @endif
+                                            @else
+                                                @if($status !== 'paid')
+                                                    {{-- Not fully paid, show Make Payment button --}}
+                                                    <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
+                                                        <i class="fa fa-credit-card"></i> Make Payment
+                                                    </button>
+                                                @endif
                                             @endif
-                                            @if(auth()->user()->user_role === 'super_admin')
-                                                <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
-                                                    <i class="fa fa-check"></i> Approve
-                                                </button>
-                                            @endif
+
                                             {{-- Delete --}}
                                             <button class="btn btn-danger btn-sm" 
                                                     onclick="deleteTag({{ $purchase->id }})"
                                                     title="Delete">
                                                 <i class="fa fa-trash"></i>
                                             </button>
-                                        
-                                            @if($status !== 'paid')
-                                                {{-- Not fully paid, show Make Payment button --}}
-                                                <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
-                                                    <i class="fa fa-credit-card"></i> Make Payment
-                                                </button>
-                                            @endif
                                         </div>
 
                                         {{-- Hidden Delete Form --}}
@@ -345,59 +346,59 @@
 
             $("#makePaymentModal").modal("show");
         });
-        function approvePurchase(id) {
-            swal({
-                title: 'Confirm Approval',
-                text: 'Only Admin can approve purchases.',
-                input: 'password',
-                inputPlaceholder: 'Enter Admin password',
-                showCancelButton: true,
-                confirmButtonText: 'Approve',
-                confirmButtonColor: '#28a745',
-                cancelButtonText: 'Cancel',
-                preConfirm: function (password) {
-                    return new Promise(function (resolve, reject) {
-                        if (!password) {
-                            reject('Please enter your password');
-                            return;
-                        }
-
-                        $.ajax({
-                            url: `/purchase/${id}/approve`,
-                            type: 'PUT',
-                            data: {
-                                _token: '{{ csrf_token() }}',
-                                password: password
-                            },
-                            success: function (response) {
-                                console.log("test response",response);
-                                if (response.error) {
-                                    reject(response.error);
-                                } else {
-                                    resolve(response);
-                                }
-                            },
-                            error: function () {
-                                reject('An error occurred during approval.');
-                            }
-                        });
-                    });
-                }
-            }).then(function (result) {
-                if (result && result.value && result.value.success) {
-                    swal({
-                        type: 'success',
-                        title: 'Purchase has been approved!',
-                        text: result.value.success,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    setTimeout(() => location.reload(), 1500);
-                }
-            }).catch(function (error) {
-                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
-            });
-        }
     });
+    function approvePurchase(id) {
+        swal({
+            title: 'Confirm Approval',
+            text: 'Only Admin can approve purchases.',
+            input: 'password',
+            inputPlaceholder: 'Enter Admin password',
+            showCancelButton: true,
+            confirmButtonText: 'Approve',
+            confirmButtonColor: '#28a745',
+            cancelButtonText: 'Cancel',
+            preConfirm: function (password) {
+                return new Promise(function (resolve, reject) {
+                    if (!password) {
+                        reject('Please enter your password');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: `/purchase/${id}/approve`,
+                        type: 'PUT',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            password: password
+                        },
+                        success: function (response) {
+                            console.log("test response",response);
+                            if (response.error) {
+                                reject(response.error);
+                            } else {
+                                resolve(response);
+                            }
+                        },
+                        error: function () {
+                            reject('An error occurred during approval.');
+                        }
+                    });
+                });
+            }
+        }).then(function (result) {
+            if (result && result.value && result.value.success) {
+                swal({
+                    type: 'success',
+                    title: 'Purchase has been approved!',
+                    text: result.value.success,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                setTimeout(() => location.reload(), 1500);
+            }
+        }).catch(function (error) {
+            swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
+        });
+    }
 </script>
 @endpush

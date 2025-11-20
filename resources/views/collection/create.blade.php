@@ -109,8 +109,8 @@
                                         <table class="table table-bordered table-sm">
                                             <thead>
                                                 <tr>
-                                                    <th>Date</th>
-                                                    <th>Amount</th>
+                                                    <th>Payment Date</th>
+                                                    <th>Last Amount Paid</th>
                                                     <th>Bank</th>
                                                     <th>Check #</th>
                                                 </tr>
@@ -120,7 +120,6 @@
                                     </div>
                                 </div>
                                 <!-- /Payment History -->
-
                             </div>
 
                             <div class="mb-3">
@@ -133,11 +132,10 @@
                                 <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
                         
-                            <div class="mb-3">
+                            <!-- <div class="mb-3">
                                 <label>Last Amount Paid</label>
-                                <!-- renamed ID to avoid duplicate with the invoice balance span -->
                                 <input type="number" step="0.01" name="last_paid_amount" class="form-control" id="lastPaidAmountField" readonly>
-                            </div>
+                            </div> -->
                                     
                             <!-- Extra Fields Based on Payment Method -->
                             <div id="pdcBankName" class="mb-3" style="display: none;">

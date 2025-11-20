@@ -88,6 +88,29 @@
                                 </tbody>
                             </table>
                         </div>
+                        <!-- Collapsible Payment History -->
+                        <div class="mt-4">
+                            <button class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#paymentHistoryWrapper" aria-expanded="false" aria-controls="paymentHistoryWrapper">
+                                Show Previous Payments
+                            </button>
+
+                            <div class="collapse mt-3" id="paymentHistoryWrapper">
+                                <h5>Previous Payments</h5>
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Payment Date</th>
+                                            <th>Last Amount Paid</th>
+                                            <th>Bank</th>
+                                            <th>Check #</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="paymentHistoryBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- /Payment History -->
+                    </div>
 
                         {{-- Editable Fields --}}
                         <div class="mb-3">
@@ -98,8 +121,8 @@
 
                         <div class="mb-3">
                             <label>Last Payment Date</label>
-                            <input type="date" name="payment_date" class="form-control" 
-                                   value="{{ \Carbon\Carbon::parse($collection->updated_at)->format('Y-m-d') }}" required disabled>
+                            <input type="date" class="form-control"
+                                value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" disabled>
                         </div>
 
                         <div class="mb-3">
@@ -122,8 +145,8 @@
                         </div>
                         <div id="pdcCheck" class="mb-3" style="display: none;">
                             <label>Check Date</label>
-                            <input type="date" name="payment_date" class="form-control" 
-                                   value="{{ \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') }}" required>
+                            <input type="date" name="check_date" class="form-control" 
+                                value="{{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') : '' }}">
                         </div>
                         <div id="pdcFields" class="mb-3" style="display: none;">
                             <label>Check Number</label>
@@ -196,6 +219,46 @@ document.addEventListener('DOMContentLoaded', function () {
     } else if (paymentMode === 'gcash') {
         document.getElementById('gcashFields').style.display = 'block';
     }
+    
+    const invoiceId = "{{ $collection->invoice_id }}";
+    $.ajax({
+        url: `/invoice/${invoiceId}/collections`,
+        method: 'GET',
+        success: function (data) {
+            const tbody = $("#paymentHistoryBody");
+            tbody.empty();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                tbody.append(`<tr><td colspan="5" class="text-center">No previous payments found.</td></tr>`);
+            } else {
+                data.forEach(row => {
+                    const payDate = row.payment_date ? row.payment_date : '';
+                    const amount = row.amount_paid ? parseFloat(row.amount_paid).toFixed(2) : '0.00';
+                    // const mode = row.payment_mode ? row.payment_mode : '';
+                    const bank = row.bank_name ? row.bank_name : '';
+                    const checkNo = row.check_number ? row.check_number : '';
+
+                    tbody.append(`
+                        <tr>
+                            <td>${payDate}</td>
+                            <td>₱${amount}</td>
+                            <td>${bank}</td>
+                            <td>${checkNo}</td>
+                        </tr>
+                    `);
+                });
+            }
+
+            // Expand the collapsible so user sees history immediately
+            if (!$('#paymentHistoryWrapper').hasClass('show')) {
+                $('#paymentHistoryWrapper').collapse('show');
+            }
+        },
+        error: function () {
+            console.error('Failed to load payment history');
+        }
+    });
+
 });
 
 $(document).on("submit", "form", function (e) {

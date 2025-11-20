@@ -44,7 +44,7 @@
                 <td>{{ $item->product_code }}</td>
                 <td>{{ $item->supplierItem->item_description ?? 'N/A' }}</td>
                 <td style="text-align: center;">{{ $item->qty }}</td>
-                <td style="text-align: center;">{{ $item->discount }}%</td>
+                <td style="text-align: center;">Less {{ $item->discount }}%</td>
                 <td style="text-align: right;">₱{{ number_format($item->unit_price, 2) }}</td>
                 <td style="text-align: right;">₱{{ number_format($item->total, 2) }}</td>
             </tr>
@@ -93,6 +93,18 @@
         <th colspan="4" style="padding: 8px; text-align: left;">PAYMENT SUMMARY</th>
     </tr>
     <tr>
+        @php
+            $totalPaid= $purchase->payments->sum('amount_paid');
+            $outstanding = $purchase->grand_total - $totalPaid;
+
+            if ($totalPaid == 0) {
+                $status = 'none'; // No payment yet
+            } elseif ($totalPaid < $purchase->grand_total) {
+                $status = 'partial';
+            } else {
+                $status = 'paid';
+            }
+        @endphp
         <td><strong>Total Amount:</strong></td>
         <td>₱{{ number_format($purchase->grand_total, 2) }}</td>
         <td><strong>Total Paid:</strong></td>
@@ -103,8 +115,8 @@
         <td>₱{{ number_format($outstanding, 2) }}</td>
         <td><strong>Status:</strong></td>
         <td style="font-weight:bold; color:
-            {{ $paymentStatus === 'Fully Paid' ? 'green' : ($paymentStatus === 'Partial Payment' ? 'orange' : 'red') }}">
-            {{ $paymentStatus }}
+            {{ $status === 'Fully Paid' ? 'green' : ($status === 'Partial Payment' ? 'orange' : 'red') }}">
+            {{ $status }}
         </td>
     </tr>
 </table>
