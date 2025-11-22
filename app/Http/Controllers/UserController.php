@@ -41,10 +41,10 @@ class UserController extends Controller
             'f_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
             'l_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/',
             'email' => 'required|email|unique:users',
-            'contact' => 'required|digits:11',
+            'contact' => 'nullable|digits:11',
             'password' => 'required|min:6',
-           'user_role' => 'required|in:super_admin,admin,staff',
-                'user_status' => 'required|in:active,inactive',
+            'user_role' => 'required|in:super_admin,admin,staff',
+            'user_status' => 'required|in:active,inactive',
         ]);
 
         $user = new User();

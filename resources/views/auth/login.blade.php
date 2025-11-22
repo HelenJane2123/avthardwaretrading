@@ -9,7 +9,7 @@
             <img src="{{ asset('images/avt_logo.png') }}" alt="Logo" style="height: 130px; margin-right: 15px;">
             <div>
                 <h1 class="mb-0">AVT Hardware Trading</h1>
-                <h5 class="mb-0">Sales and Inventory System</h5>
+                <h5 class="mb-0">Wholesale of hardware, electricals, & plumbing supply etc.</h5>
             </div>
         </div>
 

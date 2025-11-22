@@ -1,0 +1,61 @@
+html {
+    scroll-behavior: smooth;
+}
+body { font-family: 'Poppins', sans-serif; }
+.navbar-brand { color: #facc15 !important; font-weight: 700; }
+.feature-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+#contact { background: #000; color: #fff; }
+#heroSlider .carousel-item img {
+    height: 500px; /* adjust height as needed */
+    object-fit: cover; /* ensures image covers the container without stretching */
+}
+
+/* Optional: adjust caption position */
+#heroSlider .carousel-caption {
+    bottom: 20px; /* move captions a bit up from the bottom */
+}
+
+@media (max-width: 768px) {
+    #heroSlider .carousel-item img {
+        height: 250px; /* smaller height on mobile */
+    }
+}
+/* Navbar link hover */
+.navbar-nav .nav-link {
+    color: #000 !important; /* default link color */
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+/* Change color on hover */
+.navbar-nav .nav-link:hover {
+    color: #dc2626 !important; /* red on hover */
+}
+
+/* Optional: add underline animation */
+.navbar-nav .nav-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #dc2626;
+    transition: width 0.3s;
+    margin-top: 5px;
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 100%;
+}
+
+.sticky-top {
+    transition: box-shadow 0.3s;
+}
+
+.sticky-top.scrolled {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}

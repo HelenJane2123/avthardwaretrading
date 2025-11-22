@@ -81,8 +81,8 @@
        <div class="header">
             <img src="{{ public_path('images/avt_logo.png') }}" alt="Company Logo" style="max-height: 80px; margin-bottom: 10px;">
             <h2>AVT Hardware</h2>
-            <p>Company ID: 123456789</p>
-            <p>Address: 123 Business St., City, Country</p>
+            <p>Wholesale of hardware, electricals, & plumbing supply etc.</p>
+            <p>Contact: 0936-8834-275 / 0999-3669-539</p>
             <hr style="margin: 10px 0; border: 0; border-top: 1px solid #004085;">
             <h3>Collection Receipt</h3>
             <p>Receipt #: {{ $collection->collection_number }}</p>

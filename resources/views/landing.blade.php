@@ -3,69 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Essential Meta Tags -->
+    <meta name="description" content="AVT Hardware Trading offers high-quality power tools, construction materials, plumbing supplies, and electrical items at competitive wholesale and retail prices. Your trusted hardware supplier in the Philippines.">
+    <meta name="keywords" content="Wholesale of hardware, electricals, & plumbing supply etc., hardware store philippines, power tools, construction materials, plumbing supplies, electrical supplies, wholesale hardware, AVT Hardware, hardware trading, hardware, wholesale">
+    <meta name="author" content="AVT Hardware Trading">
+
+    <!-- Open Graph for Facebook / Messenger / Viber -->
+    <meta property="og:title" content="AVT Hardware Trading - Quality Hardware, Tools & Construction Supplies">
+    <meta property="og:description" content="Discover premium tools, plumbing supplies, electrical items, and construction materials. Wholesale & retail hardware supplier you can trust.">
+    <meta property="og:image" content="{{ asset('images/avt_logo.png') }}">
+    <meta property="og:url" content="https://www.avthardware.com">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AVT Hardware Trading">
+    <meta name="twitter:description" content="Your trusted hardware supplier for tools, electricals, plumbing, and construction materials.">
+    <meta name="twitter:image" content="{{ asset('images/avt_logo.png') }}">
+
+    <!-- Mobile & Browser -->
+    <meta name="theme-color" content="#dc2626">
+    <meta name="robots" content="index, follow">
+
     <title>AVT Hardware Trading</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Poppins', sans-serif; }
-        .navbar-brand { color: #facc15 !important; font-weight: 700; }
-        .feature-box {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-        }
-        #contact { background: #000; color: #fff; }
-        #heroSlider .carousel-item img {
-            height: 500px; /* adjust height as needed */
-            object-fit: cover; /* ensures image covers the container without stretching */
-        }
-
-        /* Optional: adjust caption position */
-        #heroSlider .carousel-caption {
-            bottom: 20px; /* move captions a bit up from the bottom */
-        }
-
-        @media (max-width: 768px) {
-            #heroSlider .carousel-item img {
-                height: 250px; /* smaller height on mobile */
-            }
-        }
-        /* Navbar link hover */
-        .navbar-nav .nav-link {
-            color: #000 !important; /* default link color */
-            position: relative;
-            transition: color 0.3s ease;
-        }
-
-        /* Change color on hover */
-        .navbar-nav .nav-link:hover {
-            color: #dc2626 !important; /* red on hover */
-        }
-
-        /* Optional: add underline animation */
-        .navbar-nav .nav-link::after {
-            content: '';
-            display: block;
-            width: 0;
-            height: 2px;
-            background: #dc2626;
-            transition: width 0.3s;
-            margin-top: 5px;
-        }
-
-        .navbar-nav .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .sticky-top {
-            transition: box-shadow 0.3s;
-        }
-
-        .sticky-top.scrolled {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/landing.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
 </head>
@@ -76,8 +39,15 @@
             <a class="navbar-brand d-flex align-items-center" href="#" style="color: #dc2626 !important;">
                 <img src="{{ asset('images/avt_logo.png') }}" alt="AVT Logo"
                     style="height: 45px; width: auto; margin-right: 10px;">
-                AVT Hardware Trading
+
+                <div class="d-flex flex-column">
+                    <span class="fw-bold">AVT Hardware Trading</span>
+                    <small class="text-muted" style="margin-top: -3px;font-size:11px;">
+                        Wholesale of hardware, electricals, & plumbing supply etc.
+                    </small>
+                </div>
             </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -85,6 +55,7 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="#features">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact Us</a></li>
                 </ul>
             </div>
         </div>
@@ -151,7 +122,7 @@
 
     <!-- PRODUCTS SECTION -->
     <section id="features" class="py-5 bg-light">
-        <div class="container">
+        <div class="container" data-aos="fade-up">
             <h2 class="text-center fw-bold mb-5" data-aos="fade-up">Our Products</h2>
             <div class="row g-4">
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
@@ -184,6 +155,45 @@
             </div>
         </div>
     </section>
+    <section id="contact" class="py-5 bg-light">
+        <div class="container" data-aos="fade-up">
+            <h2 class="text-center fw-bold mb-3 text-dark">
+                <i class="bi bi-chat-dots me-2 text-danger"></i>Get in Touch With Us
+            </h2>
+            <p class="text-center mb-5 lead text-dark">
+                Have questions, need a quote, or looking for a reliable hardware supplier?  
+                We're here to help! Whether you're a contractor, business owner, or homeowner,  
+                AVT Hardware Trading is ready to provide the tools, supplies, and support you need.
+            </p>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow-sm border-0 p-4">
+                        <h5 class="fw-bold mb-3">What We Can Offer</h5>
+                        <ul class="mb-4">
+                            <li>Wholesale and retail pricing for tools, plumbing, and electrical supplies</li>
+                            <li>Reliable sourcing for construction materials</li>
+                            <li>Bulk order support for contractors and businesses</li>
+                            <li>Fast response for inquiries and quotations</li>
+                        </ul>
+
+                        <div class="text-center mt-4">
+                            <a href="tel:09368834275" class="btn btn-danger px-4 py-2 me-2">
+                                <i class="bi bi-telephone me-1"></i> Call Us
+                            </a>
+                            <a href="mailto:avthardware@yahoo.com" class="btn btn-outline-danger px-4 py-2">
+                                <i class="bi bi-envelope me-1"></i> Email Us
+                            </a>
+                        </div>
+
+                        <p class="text-center mt-4 mb-0 text-muted">
+                            We’d love to assist you with your hardware and construction supply needs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- FOOTER -->
     <footer class="bg-dark text-white pt-5 pb-3">
@@ -192,7 +202,12 @@
                 <!-- Left column: Logo and Brand -->
                 <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
                     <img src="{{ asset('images/avt_logo.png') }}" alt="AVT Logo" style="height: 50px; width: auto; margin-right: 10px;">
-                    <span class="fs-5 fw-bold">AVT Hardware Trading</span>
+                    <div class="d-flex flex-column">
+                        <span class="fw-bold">AVT Hardware Trading</span>
+                        <small class="text-muted" style="margin-top: -3px;font-size:11px;color:white!important;">
+                            Wholesale of hardware, electricals, & plumbing supply etc.
+                        </small>
+                    </div>
                 </div>
 
                 <!-- Right column: Links and Contact -->
@@ -210,10 +225,10 @@
                         <!-- Contact Info -->
                         <div class="col-6 mb-3">
                             <h6 class="text-uppercase fw-bold">Contact</h6>
-                            <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Brgy. Example, City, Philippines</p>
-                            <p class="mb-1"><i class="bi bi-telephone me-2"></i>0912-345-6789</p>
-                            <p class="mb-1"><i class="bi bi-envelope me-2"></i>avthardware@email.com</p>
-                            <p class="mb-0"><i class="bi bi-globe me-2"></i>www.avthardware.com</p>
+                            <!-- <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Brgy. Example, City, Philippines</p> -->
+                            <p class="mb-1"><i class="bi bi-telephone me-2"></i>0936-8834-275 / 0999-3669-539</p>
+                            <p class="mb-1"><i class="bi bi-envelope me-2"></i>avthardware@yahoo.com</p>
+                            <p class="mb-0"><i class="bi bi-globe me-2"></i>www.avthardwaretrading.com</p>
                         </div>
                     </div>
                 </div>
@@ -230,14 +245,17 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 900, once: true });
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.sticky-top');
-            if(window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+        AOS.init({
+            duration: 900,
+            once: false // allow animations to replay
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function () {
+                setTimeout(() => {
+                    AOS.refresh();
+                }, 500);
+            });
         });
     </script>
 </body>

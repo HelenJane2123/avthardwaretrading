@@ -35,7 +35,6 @@
             <div class="col-md-12">
                 <div class="tile shadow-sm">
                     <h3 class="tile-title mb-4"><i class="fa fa-file-text"></i> Invoice</h3>
-
                     <form method="POST" action="{{ route('invoice.store') }}">
                         @csrf
                         {{-- Customer Details --}}
@@ -83,7 +82,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                               <select name="salesman_id" id="salesman_id" class="form-control" required>
+                               <select name="salesman" id="salesman_id" class="form-control" required>
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}">
@@ -245,8 +244,20 @@
 @endsection
 
 @push('js')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            $('.productname').select2({
+                placeholder: "Select Product",
+                allowClear: true,
+                width: '400px'
+            });
+            $('#customerSelect').select2({
+                placeholder: "Select Customer",
+                allowClear: true,
+                width: 'resolve'
+            });
             // Disable all Add Discount buttons initially
             $('.add-discount').prop('disabled', true);
 
@@ -274,7 +285,6 @@
                                     {{ $product->product_name }}
                                 </option>`;
                 @endforeach
-
                 const newRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
@@ -317,6 +327,13 @@
 
                 $('#po-body').append(newRow);
 
+                // Re-initialize Select2 for the new row
+                $('#po-body tr:last .productname').select2({
+                    placeholder: "Select Product",
+                    allowClear: true,
+                    width: '400px'
+                });
+
                 // Apply same behavior based on current discount type
                 const discountType = $('#discount_type').val();
 
@@ -334,6 +351,7 @@
                     $('#po-body tr:last .add-discount').prop('disabled', true);
                 }
             }
+
 
             $(document).on('click', '.remove', function () {
                 var l = $('tbody tr').length;

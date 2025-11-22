@@ -202,15 +202,7 @@
 
                         <div class="mb-3">
                             <label for="mode_of_payment" class="form-label">Mode of Payment</label>
-                            <select name="payment_id" id="mode_of_payment" class="form-control" readonly>
-                                @foreach($paymentModes as $mode)
-                                    <option value="{{ $mode->id }}" 
-                                        {{ $mode->id == $purchase->payment_id ? 'selected' : '' }}>
-                                        {{ $mode->name }} 
-                                        @if($mode->term) ({{ $mode->term }} days) @endif
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control" id="mode_of_payment" readonly>
                         </div>
 
                         <div class="mb-3">

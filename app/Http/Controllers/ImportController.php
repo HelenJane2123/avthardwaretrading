@@ -14,71 +14,76 @@ class ImportController extends Controller
 {
     public function import(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
-        ]);
-
-        $file = $request->file('file');
-        $spreadsheet = IOFactory::load($file->getRealPath());
-
-        // --- SHEET 1: SUPPLIERS ---
-        $suppliersSheet = $spreadsheet->getSheetByName('Suppliers');
-        $suppliersData = $suppliersSheet->toArray(null, true, true, true);
-
-        foreach ($suppliersData as $index => $row) {
-            if ($index == 1) continue; // skip header
-
-            // Skip if supplier already exists
-            $existingSupplier = Supplier::where('supplier_code', $row['A'])->first();
-            if ($existingSupplier) continue;
-
-            Supplier::create([
-                'supplier_code'    => $row['A'],
-                'name'             => $row['B'],
-                'mobile'           => $row['C'],
-                'address'          => $row['D'],
-                'details'          => $row['E'],
-                'tax'              => $row['F'],
-                'email'            => $row['G'],
-                'previous_balance' => $row['H'],
-                'status'           => $row['I'],
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls'
             ]);
-        }
 
-        // --- SHEET 2: SUPPLIER ITEMS ---
-        $itemsSheet = $spreadsheet->getSheetByName('Supplier_Items');
-        $itemsData = $itemsSheet->toArray(null, true, true, true);
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
 
-        foreach ($itemsData as $index => $row) {
-            if ($index == 1) continue; // skip header
+            // --- SHEET 1: SUPPLIERS ---
+            $suppliersSheet = $spreadsheet->getSheetByName('Suppliers');
+            $suppliersData = $suppliersSheet->toArray(null, true, true, true);
 
-            $supplierId = (int) $row['A']; // use supplier_id from Excel
-            $supplier = Supplier::find($supplierId);
-            if (!$supplier) continue; // skip if supplier doesn't exist
+            foreach ($suppliersData as $index => $row) {
+                if ($index == 1) continue; // skip header
 
-            $itemCode = trim(explode('/', $row['B'])[0]);
+                // Skip if supplier already exists
+                $existingSupplier = Supplier::where('supplier_code', $row['A'])->first();
+                if ($existingSupplier) continue;
 
-            // Skip if item exists for this supplier
-            $existingItem = SupplierItem::where('supplier_id', $supplierId)
-                ->where('item_code', $itemCode)
-                ->first();
-            if ($existingItem) continue;
+                Supplier::create([
+                    'supplier_code'    => $row['A'],
+                    'name'             => $row['B'],
+                    'mobile'           => $row['C'],
+                    'address'          => $row['D'],
+                    'details'          => $row['E'],
+                    'tax'              => $row['F'],
+                    'email'            => $row['G'],
+                    'previous_balance' => $row['H'],
+                    'status'           => $row['I'],
+                ]);
+            }
 
-            SupplierItem::create([
-                'supplier_id'      => $supplierId,
-                'item_code'        => $itemCode,
-                'category_id'      => trim($row['C']),
-                'item_description' => trim($row['D']),
-                'item_price'       => trim($row['E']),
-                'item_amount'      => trim($row['F']),
-                'unit_id'          => trim($row['G']),
-                'item_qty'         => trim($row['H']),
-                'item_image'       => trim($row['I']),
-                'volume_less'      => trim($row['J']),
-                'regular_less'     => trim($row['K']),
-            ]);
-        }
-        return back()->with('message', 'Suppliers and Supplier Items imported successfully!');
+            // --- SHEET 2: SUPPLIER ITEMS ---
+            $itemsSheet = $spreadsheet->getSheetByName('Supplier_Items');
+            $itemsData = $itemsSheet->toArray(null, true, true, true);
+
+            foreach ($itemsData as $index => $row) {
+                if ($index == 1) continue; // skip header
+
+                $supplierId = (int) $row['A']; // use supplier_id from Excel
+                $supplier = Supplier::find($supplierId);
+                if (!$supplier) continue; // skip if supplier doesn't exist
+
+                $itemCode = trim(explode('/', $row['B'])[0]);
+
+                // Skip if item exists for this supplier
+                $existingItem = SupplierItem::where('supplier_id', $supplierId)
+                    ->where('item_code', $itemCode)
+                    ->first();
+                if ($existingItem) continue;
+
+                SupplierItem::create([
+                    'supplier_id'      => $supplierId,
+                    'item_code'        => $itemCode,
+                    'category_id'      => trim($row['C']),
+                    'item_description' => trim($row['D']),
+                    'item_price'       => trim($row['E']),
+                    'item_amount'      => trim($row['F']),
+                    'unit_id'          => trim($row['G']),
+                    'item_qty'         => trim($row['H']),
+                    'item_image'       => trim($row['I']),
+                    'volume_less'      => trim($row['J']),
+                    'regular_less'     => trim($row['K']),
+                ]);
+                return back()->with('message', 'Suppliers and Supplier Items imported successfully!');
+            }
+            } catch (\Exception $e) {
+                return back()->with('error', 'An error has occurred.');
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
     }
 
     public function import_product(Request $request)

@@ -24,6 +24,7 @@ class Invoice extends Model
         'outstanding_balance',
         'invoice_status',
         'payment_status',
+        'salesman',
         'remarks',
         'discount_approved'
     ];

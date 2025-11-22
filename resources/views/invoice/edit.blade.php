@@ -73,11 +73,11 @@
                         </div>
                         <div class="col-md-4 form-group">
                             <label for="salesman">Salesman</label>
-                            <select name="salesman_id" id="salesman_id" class="form-control" required>
+                            <select name="salesman" id="salesman_id" class="form-control" required>
                                 <option value="">-- Select Salesman --</option>
                                 @foreach($salesman as $salesmen)
                                     <option value="{{ $salesmen->id }}" 
-                                        {{ $salesmen->id == $invoice->salesman_id ? 'selected' : '' }}>
+                                        {{ $salesmen->id == $invoice->salesman ? 'selected' : '' }}>
                                         {{ $salesmen->salesman_name }} 
                                     </option>
                                 @endforeach
@@ -98,7 +98,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                             <select id="discount_type" name="discount_type" class="form-control">
                                 <option value="">Select Type of Discount</option>
@@ -184,6 +184,7 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <div class="text-muted small selected-product-info mt-1"></div>      
                                         </td>
                                         <td>
                                             <select name="unit[]" class="form-control unit">
@@ -198,33 +199,33 @@
                                         <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
                                         <td><input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item->price }}"></td>
                                         <td>
-                                            <div class="discounts-wrapper">
-                                                @php
-                                                    $discounts = $item->discounts ?? collect(); // Assuming relation: $item->discounts()
-                                                @endphp
+                                        <div class="discounts-wrapper">
+                                            @php
+                                                $discounts = $item->discounts ?? collect();
+                                            @endphp
 
-                                                @foreach($discounts as $discount)
-                                                    <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                                        <select name="dis[{{ $loop->parent->index }}][]" class="form-control dis">
-                                                            <option value="">---Select Discount---</option>
-                                                            @foreach($taxes as $tax)
-                                                                <option value="{{ $tax->name }}" {{ $discount->discount_value == $tax->name ? 'selected' : '' }}>
-                                                                    {{ $tax->name }} %
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <button type="button" class="btn btn-danger btn-sm remove-discount">
-                                                            <i class="fa fa-minus"></i>
-                                                        </button>
-                                                    </div>
-                                                @endforeach
+                                            @foreach($discounts as $discount)
+                                                <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                                                    <select name="dis[{{ $loop->parent->index }}][]" class="form-control dis">
+                                                        <option value="">---Select Discount---</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}" {{ $discount->discount_value == $tax->name ? 'selected' : '' }}>
+                                                                {{ $tax->name }} %
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-discount">
+                                                        <i class="fa fa-minus"></i>
+                                                    </button>
+                                                </div>
+                                            @endforeach
 
-                                                {{-- Add new discount button --}}
-                                                <button type="button" class="btn btn-success btn-sm add-discount">
-                                                    <i class="fa fa-plus"></i>
-                                                </button>
-                                            </div>
-                                        </td>
+                                            {{-- Add new discount button --}}
+                                            <button type="button" class="btn btn-success btn-sm add-discount">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                         <td><input type="number" step="0.01" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
@@ -297,8 +298,20 @@
 @endsection
 
 @push('js')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            $('.productname').select2({
+                placeholder: "Select Product",
+                allowClear: true,
+                width: '400px'
+            });
+            $('#customerSelect').select2({
+                placeholder: "Select Customer",
+                allowClear: true,
+                width: 'resolve'
+            });
             $('.addRow').on('click', function() {
                 addRow();
                 calculateTotals();
@@ -326,6 +339,7 @@
                         <select name="product_id[]" class="form-control productname">
                             ${options}
                         </select>
+                        <div class="text-muted small selected-product-info mt-1"></div>
                     </td>
                     <td>
                         <select name="unit[]" class="form-control unit">
@@ -341,18 +355,16 @@
                     </td>
                     <td><input type="text" name="price[]" class="form-control price"></td>
                     <td>
-                        <div class="discounts-wrapper">
-                            <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                               <select name="dis[${rowIndex}][]" class="form-control dis">
-                                    <option value="0">---Select Discount---</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{$tax->name}}">{{$tax->name}} %</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-success btn-sm add-discount" disabled>
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                            </div>
+                        <div class="discount-row mb-2">
+                            <select name="dis[${rowIndex}][]" class="form-control dis">
+                                <option value="0">---Select Discount---</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{$tax->name}}">{{$tax->name}} %</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-success btn-sm add-discount" disabled>
+                                <i class="fa fa-plus"></i>
+                            </button>
                         </div>
                     </td>
                     <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
@@ -360,6 +372,12 @@
                 </tr>`;
 
                 $('#po-body').append(newRow);
+                // Re-initialize Select2 for the new row
+                $('#po-body tr:last .productname').select2({
+                    placeholder: "Select Product",
+                    allowClear: true,
+                    width: '400px'
+                });
                 toggleDiscountControls(); // <- ensure correct button state when new row is added
             }
             $(document).on('click', '.remove', function () {
@@ -405,7 +423,7 @@
             $(document).on('change', '.productname', function () {
                 var $row = $(this).closest('tr');
                 var selected = $(this).find(':selected');
-
+                var productName = selected.val() ? selected.text().trim() : ''; 
                 var stock = selected.data('stock') || 0;
                 var unitId = selected.data('unit') || '';
 
@@ -429,6 +447,8 @@
                     $row.find('.dis').prop('disabled', true).val(0);
                     calculateTotals();
                 }
+                // Show selected product name below dropdown
+                $row.find('.selected-product-info').text(productName);
             });
 
             // Auto-compute due date based on mode of payment
@@ -606,19 +626,31 @@
             const wrapper = $(this).closest('.discounts-wrapper');
             const index = wrapper.closest('tr').index();
             const newRow = `
-                <div class="discount-row d-flex align-items-center gap-2 mb-2">
+                <div class="discount-row mb-2">
                     <select name="dis[${index}][]" class="form-control dis">
                         <option value="">---Select Discount---</option>
                         @foreach($taxes as $tax)
                             <option value="{{ $tax->name }}">{{ $tax->name }} %</option>
                         @endforeach
                     </select>
-                    <button type="button" class="btn btn-danger btn-sm remove-discount">
+                    <button type="button" class="btn btn-danger btn-sm remove-discount mt-1">
                         <i class="fa fa-minus"></i>
                     </button>
                 </div>
             `;
             $(this).before(newRow);
+        });
+        $('.productname').each(function() {
+            var $row = $(this).closest('tr');
+            var selected = $(this).find(':selected');
+            var productName = selected.val() ? selected.text().trim() : '';
+            $row.find('.selected-product-info').text(productName);
+
+            // Optional: set stock and unit if needed
+            $row.find('.available-stock').text("Available: " + (selected.data('stock') || 0));
+            if (selected.data('unit')) {
+                $row.find('.unit').val(selected.data('unit'));
+            }
         });
 
         // Remove a discount row

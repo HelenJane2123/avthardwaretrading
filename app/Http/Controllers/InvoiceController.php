@@ -95,6 +95,7 @@ class InvoiceController extends Controller
                 'invoice_date' => 'required|date',
                 'invoice_number' => 'required|unique:invoices,invoice_number',
                 'product_id' => 'required|array',
+                'salesman'  => 'required'
             ]);
 
             // Create the main invoice record
@@ -110,6 +111,7 @@ class InvoiceController extends Controller
             $invoice->subtotal = $request->subtotal ?? 0;
             $invoice->grand_total = $request->grand_total ?? 0;
             $invoice->discount_approved = $request->discount_approved ?? 0;
+            $invoice->salesman = $request->salesman;
             $invoice->remarks = $request->remarks;
             $invoice->save();
 
@@ -239,13 +241,12 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($request, $id) {
             $invoice = Invoice::findOrFail($id);
 
-            // ✅ 1. Restore previous stock before updating
+            // 1️⃣ Restore previous stock before updating
             foreach ($invoice->items as $oldItem) {
                 $product = Product::find($oldItem->product_id);
                 if ($product) {
-                    $product->quantity += $oldItem->qty; // restore stock
+                    $product->quantity += $oldItem->qty;
 
-                    // Update product status based on threshold
                     $threshold = $product->threshold ?? 0;
                     if ($product->quantity <= 0) {
                         $product->status = 'Out of Stock';
@@ -256,15 +257,25 @@ class InvoiceController extends Controller
                     }
                     $product->save();
                 }
-
-                // Delete old discounts
-                InvoiceSalesDiscount::where('invoice_sale_id', $oldItem->id)->delete();
             }
 
-            // Delete old invoice items
-            $invoice->items()->delete();
+            // 2️⃣ Determine removed products
+            $oldProductIds = $invoice->items->pluck('product_id')->toArray();
+            $newProductIds = $request->product_id ?? [];
+            $removedProductIds = array_diff($oldProductIds, $newProductIds);
 
-            // ✅ 2. Update main invoice details
+            // 3️⃣ Delete removed items and their discounts
+            if (!empty($removedProductIds)) {
+                $removedItems = InvoiceSales::where('invoice_id', $invoice->id)
+                    ->whereIn('product_id', $removedProductIds)
+                    ->pluck('id')
+                    ->toArray();
+
+                InvoiceSalesDiscount::whereIn('invoice_sale_id', $removedItems)->delete();
+                InvoiceSales::whereIn('id', $removedItems)->delete();
+            }
+
+            // 4️⃣ Update main invoice details
             $invoice->update([
                 'customer_id'    => $request->customer_id,
                 'invoice_number' => $request->invoice_number,
@@ -277,40 +288,49 @@ class InvoiceController extends Controller
                 'other_charges'  => $request->other_charges ?? 0,
                 'subtotal'       => $request->subtotal ?? 0,
                 'grand_total'    => $request->grand_total ?? 0,
+                'salesman'       => $request->salesman,
                 'remarks'        => $request->remarks,
             ]);
 
-            // ✅ 3. Re-insert updated items, discounts, and adjust stocks
+            // 5️⃣ Loop through each product to update or insert
             foreach ($request->product_id as $key => $productId) {
                 $qty = $request->qty[$key] ?? 0;
                 $price = $request->price[$key] ?? 0;
                 $amount = $request->amount[$key] ?? 0;
 
-                $invoiceSale = InvoiceSales::create([
-                    'invoice_id'   => $invoice->id,
-                    'product_id'   => $productId,
-                    'product_code' => $request->product_code[$key] ?? '',
-                    'unit_id'      => $request->unit[$key] ?? null,
-                    'qty'          => $qty,
-                    'price'        => $price,
-                    'amount'       => $amount,
-                ]);
+                // Update or create invoice item
+                $invoiceSale = InvoiceSales::updateOrCreate(
+                    [
+                        'invoice_id' => $invoice->id,
+                        'product_id' => $productId,
+                    ],
+                    [
+                        'product_code' => $request->product_code[$key] ?? '',
+                        'unit_id'      => $request->unit[$key] ?? null,
+                        'qty'          => $qty,
+                        'price'        => $price,
+                        'amount'       => $amount,
+                    ]
+                );
 
-                // ✅ Save multiple discounts (by name)
+                // Delete all previous discounts for this invoice item
+                InvoiceSalesDiscount::where('invoice_sale_id', $invoiceSale->id)->delete();
+
+                // Re-insert discounts from request
                 if (!empty($request->dis[$key]) && is_array($request->dis[$key])) {
-                    foreach ($request->dis[$key] as $discountName) {
+                    foreach ($request->dis[$key] as $discountValue) {
                         InvoiceSalesDiscount::create([
                             'invoice_sale_id' => $invoiceSale->id,
-                            'discount_name'   => $discountName,
+                            'discount_name'   => 'Discount',
+                            'discount_value'  => $discountValue,
                         ]);
                     }
                 }
 
-                // ✅ Deduct quantity and update product status
+                // Adjust product stock
                 $product = Product::find($productId);
                 if ($product) {
                     $product->quantity = max(0, $product->quantity - $qty);
-
                     $threshold = $product->threshold ?? 0;
                     if ($product->quantity <= 0) {
                         $product->status = 'Out of Stock';
@@ -326,7 +346,6 @@ class InvoiceController extends Controller
 
         return redirect()->route('invoice.index')->with('message', 'Invoice updated successfully.');
     }
-
 
 
     /**

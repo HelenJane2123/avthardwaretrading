@@ -121,7 +121,7 @@
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                                         <td>
-                                            <select name="product_id[]" class="form-control productname"></select>
+                                            <select name="product_id[]" class="form-control purchaseproduct"></select>
                                             <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
                                         </td>
                                         <td>
@@ -197,9 +197,20 @@
 @push('js')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-
+            $('.purchaseproduct').select2({
+                placeholder: "Select Product",
+                allowClear: true,
+                width: '400px'
+            });
+            $('#supplier_id').select2({
+                placeholder: "Select Customer",
+                allowClear: true,
+                width: 'resolve'
+            });
             $('.addRow').on('click', function() {
                 if (!window.supplierItems || window.supplierItems.length === 0) {
                     alert('Please select a supplier first.');
@@ -226,7 +237,7 @@
                 const addRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
-                        <select name="product_id[]" class="form-control productname">
+                        <select name="product_id[]" class="form-control purchaseproduct">
                             ${options}
                         </select>
                         <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
@@ -247,6 +258,12 @@
                 </tr>`;
 
                 $('#po-body').append(addRow);
+                $('.purchaseproduct').select2({
+                    placeholder: "Select Product",
+                    allowClear: true,
+                    width: '400px'
+                });
+
                 // DISABLE discount input if overall is selected
                 if ($('#discount_type').val() === 'overall') {
                     $('#po-body tr:last').find('.dis').prop('disabled', true);
@@ -286,7 +303,7 @@
                         $('#info-email').text(data.supplier.email);
 
                         // Update existing rows
-                        $('.productname').each(function () {
+                        $('.purchaseproduct').each(function () {
                             let options = '<option value="">Select Product</option>';
                             window.supplierItems.forEach(function(item){
                                 options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}" data-dis="${item.item_amount || 0}">
@@ -299,7 +316,7 @@
                 });
             });
 
-            $(document).on('change', '.productname', function () {
+            $(document).on('change', '.purchaseproduct', function () {
                 var $row = $(this).closest('tr');
                 var selected = $(this).find(':selected');
 
@@ -339,7 +356,7 @@
             });
         });
 
-        $('.productname').each(function() {
+        $('.purchaseproduct').each(function() {
             const $row = $(this).closest('tr');
             const selected = $(this).find(':selected');
             const name = selected.text().trim() || '';
@@ -370,7 +387,7 @@
                     dataType: 'json',
                     success: function (data) {
                         // update all product dropdowns
-                        $('.productname').each(function () {
+                        $('.purchaseproduct').each(function () {
                             var $dropdown = $(this);
                             $dropdown.empty().append('<option value="">Select Product</option>');
 
@@ -387,7 +404,7 @@
                     }
                 });
             } else {
-                $('.productname').empty().append('<option value="">Select Product</option>');
+                $('.purchaseproduct').empty().append('<option value="">Select Product</option>');
             }
 
             $('#discount_type').trigger('change');

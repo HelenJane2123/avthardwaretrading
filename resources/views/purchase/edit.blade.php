@@ -215,9 +215,20 @@
 @push('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.min.js"></script>
 <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-
+    $('.productname').select2({
+        placeholder: "Select Product",
+        allowClear: true,
+        width: '400px'
+    });
+    $('#supplier_id').select2({
+        placeholder: "Select Customer",
+        allowClear: true,
+        width: 'resolve'
+    });
     let supplierItems = @json($supplierItems);
 
     // Add Row
@@ -262,6 +273,11 @@ $(document).ready(function(){
         </tr>`;
 
         $('#po-body').append(newRow);
+        $('.productname').select2({
+            placeholder: "Select Product",
+            allowClear: true,
+            width: '400px'
+        });
     }
 
     // Remove row
