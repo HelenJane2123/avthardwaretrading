@@ -15302,3 +15302,100 @@ be a descendant of the grid when it is being dragged.
       min-height: 30px;
       resize: vertical;
   }
+
+  /* MOBILE FIXES FOR LOGIN PAGE */
+@media (max-width: 768px) {
+    .hero-right-image {
+        display: none;
+    }
+
+    /* Stack left + right */
+    .login-wrapper {
+        flex-direction: column !important;
+        height: auto !important;
+    }
+
+    /* Left Section */
+    .login-left {
+        width: 100% !important;
+        padding: 20px !important;
+        text-align: center !important;
+    }
+
+    /* Logo + text */
+    .login-left .logo {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .login-left .logo img {
+        height: 80px !important;    /* Scales logo properly */
+        margin: 0 0 10px 0 !important;
+    }
+
+    .login-left h1 {
+        font-size: 20px !important;
+        line-height: 1.2;
+    }
+
+    .login-left h5 {
+        font-size: 12px !important;
+        line-height: 1.3;
+        white-space: normal !important;   /* Allows wrapping */
+        max-width: 240px;
+        margin: 5px auto 0 auto;
+    }
+
+    /* Form */
+    .login-box {
+        width: 100% !important;
+        padding: 0 10px !important;
+    }
+
+    /* Right Section (Analytics) */
+    .login-right {
+        width: 100% !important;
+        padding: 20px !important;
+        text-align: center !important;
+        min-height: 250px;
+    }
+
+    .login-right img {
+        max-width: 70% !important;
+        height: auto !important;
+        margin-top: 15px !important;
+    }
+
+    .analytics-text h2 {
+        font-size: 20px !important;
+    }
+
+    .analytics-text p {
+        font-size: 14px !important;
+    }
+}
+
+/* EXTRA SMALL DEVICES FIX */
+@media (max-width: 480px) {
+    .login-left h1 {
+        font-size: 18px !important;
+    }
+
+    .hero-right-image {
+        display: none;
+    }
+
+    .login-left h5 {
+        font-size: 11px !important;
+        max-width: 200px;
+    }
+
+    .login-right img {
+        max-width: 60% !important;
+    }
+}
+
+.login-left, .login-right {
+    flex: 1;
+}

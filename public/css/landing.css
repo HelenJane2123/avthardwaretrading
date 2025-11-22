@@ -59,3 +59,101 @@ body { font-family: 'Poppins', sans-serif; }
 .sticky-top.scrolled {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
+
+/* General mobile fixes */
+@media (max-width: 576px) {
+
+    .navbar-brand {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+    }
+
+    .navbar-brand img {
+        height: 35px !important;
+        margin-right: 10px;
+    }
+
+    .navbar-brand span {
+        font-size: 14px !important;
+        line-height: 1.1;
+    }
+
+    .navbar-brand small {
+        font-size: 10px !important;
+        line-height: 1.2;
+        white-space: normal !important; /* Allow wrapping */
+        max-width: 150px; /* Keeps it clean */
+        display: block;
+    }
+    /* Carousel height control */
+    #heroSlider .carousel-item img {
+        height: 280px;
+        object-fit: cover;
+    }
+
+    /* Show captions on mobile */
+    .carousel-caption {
+        display: block !important;
+        text-align: left !important;
+        padding-bottom: 1.5rem;
+    }
+    .carousel-caption h3 {
+        font-size: 1.1rem;
+    }
+    .carousel-caption p {
+        font-size: 0.85rem;
+    }
+
+    /* Card adjustments */
+    .card img {
+        height: 180px;
+        object-fit: cover;
+    }
+    .card-title {
+        font-size: 1rem;
+    }
+
+    /* About icons smaller */
+    #about i {
+        font-size: 1.8rem !important;
+    }
+
+    /* Contact buttons full width */
+    #contact a.btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    footer .col-md-4,
+    footer .col-md-8 {
+        text-align: center !important;
+        margin-bottom: 20px;
+    }
+
+    footer img {
+        margin: 0 auto 10px auto;
+        display: block;
+        height: 40px !important;
+    }
+
+    footer small {
+        font-size: 10px !important;
+        display: block;
+        line-height: 1.3;
+    }
+
+    footer .row > div {
+        text-align: center !important;
+    }
+
+    /* Fix for footer links and contact info */
+    footer ul,
+    footer p {
+        text-align: center !important;
+    }
+
+    /* Ensure columns stack properly */
+    footer .col-6 {
+        width: 100% !important;
+    }
+}

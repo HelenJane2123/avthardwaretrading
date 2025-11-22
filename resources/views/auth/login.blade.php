@@ -102,7 +102,9 @@
         <div class="analytics-text text-white text-center">
             <h2>Track your Sales</h2>
             <p>Real-time Inventory Monitoring & Analytics</p>
-            <img src="{{ asset('images/data-analysis.png') }}" alt="Sales Analytics" class="img-fluid mt-4">
+            <div class="hero-right-image">
+                <img src="{{ asset('images/data-analysis.png') }}" alt="Sales Analytics" class="img-fluid mt-4">
+            </div>
         </div>
     </div>
 </section>

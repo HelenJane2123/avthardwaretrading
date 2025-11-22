@@ -66,21 +66,21 @@
         <div class="carousel-inner">
             <div class="carousel-item active">
                 <img src="{{ asset('images/slider/1.jpg') }}" class="d-block w-100" alt="Power tools">
-                <div class="carousel-caption d-none d-md-block text-start">
+                <div class="carousel-caption text-start">
                     <h3 class="fw-bold">High-Quality Power Tools</h3>
                     <p>Durable and reliable tools for every professional and DIY project.</p>
                 </div>
             </div>
             <div class="carousel-item">
                 <img src="{{ asset('images/slider/2.jpg') }}" class="d-block w-100" alt="Construction materials">
-                <div class="carousel-caption d-none d-md-block text-start">
+                <div class="carousel-caption text-start">
                     <h3 class="fw-bold">Premium Construction Materials</h3>
                     <p>Everything you need for building, painting, plumbing, and more.</p>
                 </div>
             </div>
             <div class="carousel-item">
                 <img src="{{ asset('images/slider/3.jpg') }}" class="d-block w-100" alt="Hardware tools">
-                <div class="carousel-caption d-none d-md-block text-start">
+                <div class="carousel-caption text-start">
                     <h3 class="fw-bold">Complete Hardware Solutions</h3>
                     <p>Tools, equipment, and supplies for professionals and homeowners.</p>
                 </div>
@@ -200,7 +200,7 @@
         <div class="container">
             <div class="row align-items-start">
                 <!-- Left column: Logo and Brand -->
-                <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+                <div class="col-md-4 text-center text-md-start mb-3">
                     <img src="{{ asset('images/avt_logo.png') }}" alt="AVT Logo" style="height: 50px; width: auto; margin-right: 10px;">
                     <div class="d-flex flex-column">
                         <span class="fw-bold">AVT Hardware Trading</span>
@@ -223,7 +223,7 @@
                         </div>
 
                         <!-- Contact Info -->
-                        <div class="col-6 mb-3">
+                        <div class="col-6 col-sm-6 col-12 mb-3 text-center text-md-start">
                             <h6 class="text-uppercase fw-bold">Contact</h6>
                             <!-- <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>Brgy. Example, City, Philippines</p> -->
                             <p class="mb-1"><i class="bi bi-telephone me-2"></i>0936-8834-275 / 0999-3669-539</p>
