@@ -50,7 +50,7 @@ Route::get('/password_change/', [HomeController::class, 'update_password'])->nam
 Route::post('/user/{id}/reset-password', [HomeController::class, 'resetPassword'])->name('user.resetPassword');
 Route::post('/signout', [LoginController::class, 'logout'])
     ->middleware('web')
-    ->name('logout');
+    ->name('signout');
     
 Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
