@@ -35,97 +35,98 @@
                 <div class="tile">
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Collection Records</h3>
                     <div class="tile-body">
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Collection #</th>
-                                    <th>Invoice #</th>
-                                    <th>Customer</th>
-                                    <th>Payment Date</th>
-                                    <th>Invoice Amount</th>
-                                    <th>Amount Paid</th>
-                                    <th>Outstanding Balance</th>
-                                    <th>Payment Status</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($collections as $collection)
-                                    @php
-                                        $latestPayment = $collection->invoice->collections->sortByDesc('payment_date')->first();
-                                        $isLatest = $collection->id === $latestPayment->id;
-                                    @endphp
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
                                     <tr>
-                                        <td><span class="badge badge-info">{{ $collection->collection_number }}</span></td>
-                                        <td>{{ $collection->invoice->invoice_number }}</td>
-                                        <td>{{ $collection->invoice->customer->name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</td>
-                                        <td>{{ number_format($collection->invoice->grand_total, 2) }}</td>
-                                        <td>{{ number_format($collection->amount_paid, 2) }}</td>
-                                        <td>{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
-                                        <td>
-                                            <span class="badge 
-                                                @if($collection->invoice->payment_status == 'paid') bg-success
-                                                @elseif($collection->invoice->payment_status == 'partial') bg-warning
-                                                @elseif($collection->invoice->payment_status == 'pending') bg-info
-                                                @elseif($collection->invoice->payment_status == 'overdue') bg-danger
-                                                @endif">
-                                                {{ ucfirst($collection->invoice->payment_status) }}
-                                            </span>
-
-                                            {{-- If invoice is fully paid but this is not the latest payment --}}
-                                            @if($collection->invoice->payment_status == 'paid' && !$isLatest)
-                                                <span class="text-danger small d-block mt-1">
-                                                    Covered by later receipt
+                                        <th>Collection #</th>
+                                        <th>Invoice #</th>
+                                        <th>Customer</th>
+                                        <th>Payment Date</th>
+                                        <th>Invoice Amount</th>
+                                        <th>Amount Paid</th>
+                                        <th>Outstanding Balance</th>
+                                        <th>Payment Status</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($collections as $collection)
+                                        @php
+                                            $latestPayment = $collection->invoice->collections->sortByDesc('payment_date')->first();
+                                            $isLatest = $collection->id === $latestPayment->id;
+                                        @endphp
+                                        <tr>
+                                            <td><span class="badge badge-info">{{ $collection->collection_number }}</span></td>
+                                            <td>{{ $collection->invoice->invoice_number }}</td>
+                                            <td>{{ $collection->invoice->customer->name }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($collection->payment_date)->format('M d, Y') }}</td>
+                                            <td>{{ number_format($collection->invoice->grand_total, 2) }}</td>
+                                            <td>{{ number_format($collection->amount_paid, 2) }}</td>
+                                            <td>{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    @if($collection->invoice->payment_status == 'paid') bg-success
+                                                    @elseif($collection->invoice->payment_status == 'partial') bg-warning
+                                                    @elseif($collection->invoice->payment_status == 'pending') bg-info
+                                                    @elseif($collection->invoice->payment_status == 'overdue') bg-danger
+                                                    @endif">
+                                                    {{ ucfirst($collection->invoice->payment_status) }}
                                                 </span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($collection->is_approved === 1)
-                                                <span class="badge bg-success">Approved</span>
-                                            @else
-                                                <span class="badge bg-warning">Pending</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-primary btn-sm view-collection" 
-                                                    data-url="{{ route('collection.details', $collection->id) }}">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-                                            @if ($collection->is_approved !== 1)
-                                                <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-                                            @endif
-                                            @if(auth()->user()->user_role === 'super_admin' && $collection->is_approved !== 1)
-                                                <button class="btn btn-success btn-sm" onclick="approveCollection({{ $collection->id }})">
-                                                    <i class="fa fa-check"></i> Approve
+
+                                                {{-- If invoice is fully paid but this is not the latest payment --}}
+                                                @if($collection->invoice->payment_status == 'paid' && !$isLatest)
+                                                    <span class="text-danger small d-block mt-1">
+                                                        Covered by later receipt
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($collection->is_approved === 1)
+                                                    <span class="badge bg-success">Approved</span>
+                                                @else
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-primary btn-sm view-collection" 
+                                                        data-url="{{ route('collection.details', $collection->id) }}">
+                                                    <i class="fa fa-eye"></i>
                                                 </button>
-                                            @endif
-                                            @if($collection->invoice->invoice_status == 'approved' && $collection->is_approved === 1)
-                                                {{-- Only allow print if partial OR this is the latest payment when fully paid --}}
-                                                @if($collection->invoice->payment_status != 'paid' || $isLatest)
-                                                    <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
-                                                        <i class="fa fa-print"></i>
+                                                @if ($collection->is_approved !== 1)
+                                                    <a class="btn btn-info btn-sm" href="{{ route('collection.edit', $collection->id) }}">
+                                                        <i class="fa fa-edit"></i>
                                                     </a>
                                                 @endif
-                                            @endif
+                                                @if(auth()->user()->user_role === 'super_admin' && $collection->is_approved !== 1)
+                                                    <button class="btn btn-success btn-sm" onclick="approveCollection({{ $collection->id }})">
+                                                        <i class="fa fa-check"></i> Approve
+                                                    </button>
+                                                @endif
+                                                @if($collection->invoice->invoice_status == 'approved' && $collection->is_approved === 1)
+                                                    {{-- Only allow print if partial OR this is the latest payment when fully paid --}}
+                                                    @if($collection->invoice->payment_status != 'paid' || $isLatest)
+                                                        <a class="btn btn-secondary btn-sm" href="{{ route('collection.receipt', $collection->id) }}" target="_blank">
+                                                            <i class="fa fa-print"></i>
+                                                        </a>
+                                                    @endif
+                                                @endif
 
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('collection.destroy', $collection->id) }}" method="POST" class="d-inline delete-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-
+                                                <!-- Delete Button -->
+                                                <form action="{{ route('collection.destroy', $collection->id) }}" method="POST" class="d-inline delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

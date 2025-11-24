@@ -43,39 +43,41 @@
                 <div class="tile">
                     <div class="tile-body">
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Discount Records</h3>
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                            <tr>
-                                <th>Tax </th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach( $taxes as $tax)
-                            <tr>
-                                <td>{{ $tax->name }} %</td>
-                                @if($tax->status)
-                                <td>Active</td>
-                                    @else
-                                    <td>Inactive</td>
-                                @endif
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Tax </th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach( $taxes as $tax)
+                                <tr>
+                                    <td>{{ $tax->name }} %</td>
+                                    @if($tax->status)
+                                    <td>Active</td>
+                                        @else
+                                        <td>Inactive</td>
+                                    @endif
 
 
-                                <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('tax.edit', $tax->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $tax->id }})">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $tax->id }}" action="{{ route('tax.destroy',$tax->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{route('tax.edit', $tax->id)}}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $tax->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $tax->id }}" action="{{ route('tax.destroy',$tax->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

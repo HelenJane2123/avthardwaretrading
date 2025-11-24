@@ -43,39 +43,41 @@
                 <div class="tile">
                     <div class="tile-body">
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Unit Records</h3>
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                            <tr>
-                                <th>Unit </th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach( $units as $unit)
-                            <tr>
-                                <td>{{ $unit->name }} </td>
-                                @if($unit->status)
-                                <td>Active</td>
-                                    @else
-                                    <td>Inactive</td>
-                                @endif
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Unit </th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach( $units as $unit)
+                                <tr>
+                                    <td>{{ $unit->name }} </td>
+                                    @if($unit->status)
+                                    <td>Active</td>
+                                        @else
+                                        <td>Inactive</td>
+                                    @endif
 
 
-                                <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $unit->id }})">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $unit->id }}" action="{{ route('unit.destroy',$unit->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $unit->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $unit->id }}" action="{{ route('unit.destroy',$unit->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

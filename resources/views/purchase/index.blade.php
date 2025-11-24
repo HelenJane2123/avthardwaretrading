@@ -42,128 +42,130 @@
             <div class="tile shadow-sm">
                 <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Purchase Records</h3>
                 <div class="tile-body">
-                    <table class="table table-striped table-hover table-bordered" id="sampleTable">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>PO Number</th>
-                                <th>Supplier</th>
-                                <th>Salesman</th>
-                                <th>Date Purchased</th>
-                                <th>Discount Type</th>
-                                <th>Total Purchased</th>
-                                <th>Payment Status</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($purchases as $purchase)
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered" id="sampleTable">
+                            <thead class="table-dark">
                                 <tr>
-                                    @php
-                                        $totalPaid= $purchase->payments->sum('amount_paid');
-                                        $outstanding = $purchase->grand_total - $totalPaid;
-
-                                        if ($totalPaid == 0) {
-                                            $status = 'none'; // No payment yet
-                                        } elseif ($totalPaid < $purchase->grand_total) {
-                                            $status = 'partial';
-                                        } else {
-                                            $status = 'paid';
-                                        }
-                                    @endphp
-                                    <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
-                                    <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
-                                    <td>{{ $purchase->salesman->salesman_name ?? '-' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
-                                    <td>
-                                        @if ($purchase->discount_type === 'per_item')
-                                            <span class="badge bg-success">Per Item</span>
-                                        @elseif ($purchase->discount_type === 'overall')
-                                            <span class="badge bg-warning text-dark">Overall</span>
-                                        @else
-                                            <span class="badge bg-secondary">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td>₱ {{ number_format($purchase->grand_total, 2) }}</td>
-                                    <td>
-                                        @if($status === 'paid')
-                                            {{-- Fully paid, show info instead of Make Payment button --}}
-                                            <span class="badge bg-success ms-2">Paid</span>
-                                            <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
-                                            <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
-                                        @elseif($status === 'partial')
-                                            <span class="badge bg-warning ms-2">Partial Payment</span>
-                                            <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
-                                            <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
-                                        @else
-                                            <span class="badge bg-info ms-2">No Payment yet</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($purchase->is_approved === 1)
-                                            <span class="badge bg-success">Approved</span>
-                                        @else
-                                            <span class="badge bg-warning">Pending</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group" role="group">
-                                            {{-- View Details --}}
-                                            <button class="btn btn-info btn-sm view-btn"
-                                                    data-id="{{ $purchase->id }}"
-                                                    title="View Details">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-                                            {{-- Print --}}
-                                            @if ($purchase->is_approved === 1)
-                                                <a href="{{ route('purchase.print', $purchase->id) }}" 
-                                                    target="_blank" 
-                                                    class="btn btn-secondary btn-sm" 
-                                                    title="Print PO">
-                                                        <i class="fa fa-print"></i>
-                                                </a>
-                                            @endif
-                                            {{-- Edit --}}
-                                            @if ($purchase->is_approved !== 1)
-                                                <a class="btn btn-primary btn-sm" 
-                                                    href="{{ route('purchase.edit', $purchase->id) }}" 
-                                                    title="Edit">
-                                                        <i class="fa fa-edit"></i>
-                                                </a>
-                                                 @if(auth()->user()->user_role === 'super_admin')
-                                                    <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
-                                                        <i class="fa fa-check"></i> Approve
-                                                    </button>
-                                                @endif
-                                            @else
-                                                @if($status !== 'paid')
-                                                    {{-- Not fully paid, show Make Payment button --}}
-                                                    <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
-                                                        <i class="fa fa-credit-card"></i> Make Payment
-                                                    </button>
-                                                @endif
-                                            @endif
-
-                                            {{-- Delete --}}
-                                            <button class="btn btn-danger btn-sm" 
-                                                    onclick="deleteTag({{ $purchase->id }})"
-                                                    title="Delete">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </div>
-
-                                        {{-- Hidden Delete Form --}}
-                                        <form id="delete-form-{{ $purchase->id }}" 
-                                              action="{{ route('purchase.destroy', $purchase->id) }}" 
-                                              method="POST" style="display:none;">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                    </td>
+                                    <th>PO Number</th>
+                                    <th>Supplier</th>
+                                    <th>Salesman</th>
+                                    <th>Date Purchased</th>
+                                    <th>Discount Type</th>
+                                    <th>Total Purchased</th>
+                                    <th>Payment Status</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach($purchases as $purchase)
+                                    <tr>
+                                        @php
+                                            $totalPaid= $purchase->payments->sum('amount_paid');
+                                            $outstanding = $purchase->grand_total - $totalPaid;
+
+                                            if ($totalPaid == 0) {
+                                                $status = 'none'; // No payment yet
+                                            } elseif ($totalPaid < $purchase->grand_total) {
+                                                $status = 'partial';
+                                            } else {
+                                                $status = 'paid';
+                                            }
+                                        @endphp
+                                        <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
+                                        <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
+                                        <td>{{ $purchase->salesman->salesman_name ?? '-' }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
+                                        <td>
+                                            @if ($purchase->discount_type === 'per_item')
+                                                <span class="badge bg-success">Per Item</span>
+                                            @elseif ($purchase->discount_type === 'overall')
+                                                <span class="badge bg-warning text-dark">Overall</span>
+                                            @else
+                                                <span class="badge bg-secondary">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>₱ {{ number_format($purchase->grand_total, 2) }}</td>
+                                        <td>
+                                            @if($status === 'paid')
+                                                {{-- Fully paid, show info instead of Make Payment button --}}
+                                                <span class="badge bg-success ms-2">Paid</span>
+                                                <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
+                                                <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
+                                            @elseif($status === 'partial')
+                                                <span class="badge bg-warning ms-2">Partial Payment</span>
+                                                <span class="badge bg-info ms-1">₱ {{ number_format($totalPaid, 2) }}</span>
+                                                <span class="badge bg-warning text-dark ms-1">Outstanding: ₱ {{ number_format($outstanding, 2) }}</span>
+                                            @else
+                                                <span class="badge bg-info ms-2">No Payment yet</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if ($purchase->is_approved === 1)
+                                                <span class="badge bg-success">Approved</span>
+                                            @else
+                                                <span class="badge bg-warning">Pending</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                {{-- View Details --}}
+                                                <button class="btn btn-info btn-sm view-btn"
+                                                        data-id="{{ $purchase->id }}"
+                                                        title="View Details">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
+                                                {{-- Print --}}
+                                                @if ($purchase->is_approved === 1)
+                                                    <a href="{{ route('purchase.print', $purchase->id) }}" 
+                                                        target="_blank" 
+                                                        class="btn btn-secondary btn-sm" 
+                                                        title="Print PO">
+                                                            <i class="fa fa-print"></i>
+                                                    </a>
+                                                @endif
+                                                {{-- Edit --}}
+                                                @if ($purchase->is_approved !== 1)
+                                                    <a class="btn btn-primary btn-sm" 
+                                                        href="{{ route('purchase.edit', $purchase->id) }}" 
+                                                        title="Edit">
+                                                            <i class="fa fa-edit"></i>
+                                                    </a>
+                                                    @if(auth()->user()->user_role === 'super_admin')
+                                                        <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
+                                                            <i class="fa fa-check"></i> Approve
+                                                        </button>
+                                                    @endif
+                                                @else
+                                                    @if($status !== 'paid')
+                                                        {{-- Not fully paid, show Make Payment button --}}
+                                                        <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
+                                                            <i class="fa fa-credit-card"></i> Make Payment
+                                                        </button>
+                                                    @endif
+                                                @endif
+
+                                                {{-- Delete --}}
+                                                <button class="btn btn-danger btn-sm" 
+                                                        onclick="deleteTag({{ $purchase->id }})"
+                                                        title="Delete">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
+
+                                            {{-- Hidden Delete Form --}}
+                                            <form id="delete-form-{{ $purchase->id }}" 
+                                                action="{{ route('purchase.destroy', $purchase->id) }}" 
+                                                method="POST" style="display:none;">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

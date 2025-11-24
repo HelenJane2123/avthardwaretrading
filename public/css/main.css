@@ -15399,3 +15399,39 @@ be a descendant of the grid when it is being dragged.
 .login-left, .login-right {
     flex: 1;
 }
+
+/* Header background + height */
+.app-header {
+    background-color: #005c53; /* matches your screenshot */
+    height: 60px;              /* match sidebar header height */
+    flex-shrink: 0;
+}
+
+/* Logo */
+.header-logo {
+    height: 40px;
+    width: auto;
+}
+
+/* Title & subtitle */
+.app-header__logo {
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.header-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+/* Sidebar toggle icon */
+.app-sidebar__toggle i {
+    font-size: 1.3rem;
+}
+
+/* Right menu spacing */
+.app-nav li {
+    list-style: none;
+}

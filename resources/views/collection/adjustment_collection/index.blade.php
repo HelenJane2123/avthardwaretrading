@@ -38,50 +38,52 @@
                 <div class="tile">
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Adjustment Collection Table</h3>
                     <div class="tile-body">
-                        <table class="table table-hover table-bordered" id="adjustmentTable">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Adjustment #</th>
-                                    <th>Invoice #</th>
-                                    <th>Debit/Credit</th>
-                                    <th>Collection Date Adjustment</th>
-                                    <th>Account Name</th>
-                                    <th>Adjusted Amount</th>
-                                    <th>Remarks</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($adjustments as $adjustment)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="adjustmentTable">
+                                <thead class="thead-dark">
                                     <tr>
-                                        <td><span class="badge badge-info">{{ $adjustment->adjustment_no }}</span></td>
-                                        <td>{{ $adjustment->invoice_no }}</td>
-                                        <td>
-                                            <span class="badge 
-                                                {{ $adjustment->entry_type === 'Debit' ? 'badge-success' : 'badge-danger' }}">
-                                                {{ $adjustment->entry_type }}
-                                            </span>
-                                        </td>
-                                        <td>{{ \Carbon\Carbon::parse($adjustment->collection_date_adjustment)->format('M d, Y') }}</td>
-                                        <td>{{ $adjustment->account_name }}</td>
-                                        <td>{{ $adjustment->amount }}</td>
-                                        <td>{{ $adjustment->remarks ?? '-' }}</td>
-                                        <td>
-                                            <a href="{{ route('adjustment_collection.edit', $adjustment->id) }}" class="btn btn-info btn-sm">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('adjustment_collection.destroy', $adjustment->id) }}" method="POST" class="d-inline delete-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
+                                        <th>Adjustment #</th>
+                                        <th>Invoice #</th>
+                                        <th>Debit/Credit</th>
+                                        <th>Collection Date Adjustment</th>
+                                        <th>Account Name</th>
+                                        <th>Adjusted Amount</th>
+                                        <th>Remarks</th>
+                                        <th>Action</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($adjustments as $adjustment)
+                                        <tr>
+                                            <td><span class="badge badge-info">{{ $adjustment->adjustment_no }}</span></td>
+                                            <td>{{ $adjustment->invoice_no }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {{ $adjustment->entry_type === 'Debit' ? 'badge-success' : 'badge-danger' }}">
+                                                    {{ $adjustment->entry_type }}
+                                                </span>
+                                            </td>
+                                            <td>{{ \Carbon\Carbon::parse($adjustment->collection_date_adjustment)->format('M d, Y') }}</td>
+                                            <td>{{ $adjustment->account_name }}</td>
+                                            <td>{{ $adjustment->amount }}</td>
+                                            <td>{{ $adjustment->remarks ?? '-' }}</td>
+                                            <td>
+                                                <a href="{{ route('adjustment_collection.edit', $adjustment->id) }}" class="btn btn-info btn-sm">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('adjustment_collection.destroy', $adjustment->id) }}" method="POST" class="d-inline delete-form">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="button" class="btn btn-danger btn-sm btn-delete">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

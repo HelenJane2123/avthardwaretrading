@@ -43,39 +43,41 @@
                 <div class="tile">
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Category Records</h3>
                     <div class="tile-body">
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                            <tr>
-                                <th>Category</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach( $categories as $category)
-                            <tr>
-                                <td>{{ $category->name }}</td>
-                                @if($category->status)
-                                <td>Active</td>
-                                    @else
-                                    <td>Inactive</td>
-                                @endif
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach( $categories as $category)
+                                <tr>
+                                    <td>{{ $category->name }}</td>
+                                    @if($category->status)
+                                    <td>Active</td>
+                                        @else
+                                        <td>Inactive</td>
+                                    @endif
 
 
-                                <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('category.edit', $category->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger waves-effect btn-sm" type="submit" onclick="deleteTag({{ $category->id }})">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $category->id }}" action="{{ route('category.destroy',$category->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{route('category.edit', $category->id)}}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger waves-effect btn-sm" type="submit" onclick="deleteTag({{ $category->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $category->id }}" action="{{ route('category.destroy',$category->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

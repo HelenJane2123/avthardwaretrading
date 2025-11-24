@@ -34,41 +34,43 @@
             <div class="col-md-12">
                 <div class="tile">
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Mode of Payment Records</h3>
-                        <table class="table table-hover table-bordered" id="modeofpaymentTable">
-                            <thead class="thead-dard">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="modeofpaymentTable">
+                                <thead class="thead-dard">
+                                    <tr>
+                                        <th> ID </th>
+                                        <th> Name </th>
+                                        <th> Description </th>
+                                        <th> Term </th>
+                                        <th>Date Created</th>
+                                        <th>Date Updated</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach( $modeofpayments as $modeofpayment)
                                 <tr>
-                                    <th> ID </th>
-                                    <th> Name </th>
-                                    <th> Description </th>
-                                    <th> Term </th>
-                                    <th>Date Created</th>
-                                    <th>Date Updated</th>
-                                    <th>Action</th>
+                                    <td>{{ $modeofpayment->id }} </td>
+                                    <td>{{ $modeofpayment->name }} </td>
+                                    <td>{{ $modeofpayment->description }} </td>
+                                    <td>{{ $modeofpayment->term }} </td>
+                                    <td>{{ $modeofpayment->created_at }} </td>
+                                    <td>{{ $modeofpayment->updated_at }} </td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $modeofpayment->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $modeofpayment->id }}" action="{{ route('modeofpayment.destroy',$modeofpayment->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                            @foreach( $modeofpayments as $modeofpayment)
-                            <tr>
-                                <td>{{ $modeofpayment->id }} </td>
-                                <td>{{ $modeofpayment->name }} </td>
-                                <td>{{ $modeofpayment->description }} </td>
-                                <td>{{ $modeofpayment->term }} </td>
-                                <td>{{ $modeofpayment->created_at }} </td>
-                                <td>{{ $modeofpayment->updated_at }} </td>
-                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $modeofpayment->id }})">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $modeofpayment->id }}" action="{{ route('modeofpayment.destroy',$modeofpayment->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                 </div>
             </div>
         </div>

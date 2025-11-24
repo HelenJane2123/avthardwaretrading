@@ -1,6 +1,13 @@
 <header class="app-header">
-    <a class="app-header__logo" href="">AVT Hardware Trading</a>
-
+    <div class="d-flex text-truncate">
+        <!-- <img src="{{ asset('images/avt_logo.png') }}" alt="Logo" class="header-logo mr-2"> -->
+        <a class="app-header__logo" href="">AVT Hardware Trading</a>
+        <!-- <small class="text-light header-subtitle text-truncate" style="max-width: 250px;">
+            Wholesale of hardware, electricals, & plumbing supply etc.
+        </small> -->
+        <!-- Current Date/Time for mobile only -->
+        <span id="currentDateTimeMobile" class="text-light font-weight-bold d-block d-md-none mt-1"></span>
+    </div>
     <!-- Sidebar toggle button-->
     <a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
 
@@ -57,4 +64,19 @@
 
     setInterval(updateDateTime, 1000);
     updateDateTime();
+    $(document).ready(function() {
+        // Toggle sidebar
+        $('[data-toggle="sidebar"]').click(function(e) {
+            e.preventDefault();
+            $('.app-sidebar').toggleClass('active');
+            $('.app-sidebar__overlay').toggleClass('active');
+        });
+
+        // Close sidebar when overlay is clicked
+        $('.app-sidebar__overlay').click(function() {
+            $('.app-sidebar').removeClass('active');
+            $(this).removeClass('active');
+        });
+    });
+
 </script>

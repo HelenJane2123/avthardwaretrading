@@ -7,7 +7,7 @@
 
     <main class="app-content">
         <!-- Page Title -->
-        <div class="app-title">
+        <div class="app-title d-flex justify-content-between align-items-center">
             <div>
                 <h1><i class="fa fa-cubes"></i> Manage Inventory</h1>
                 <p class="text-muted mb-0">View, add, update, or delete products to keep your inventory organized.</p>
@@ -51,74 +51,76 @@
                     @endif
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Product Code</th>
-                                    <th>Product</th>
-                                    <th>Available Quantity</th>
-                                    <th>Quantity on Hand</th>
-                                    <th>Sales Price</th>
-                                    <th>Supplier Item Code</th>
-                                    <th>Supplier</th>
-                                    <th>Threshold</th>
-                                    <th>Status</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($additional as $add)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
                                     <tr>
-                                        <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
-                                        <td>{{ $add->product->product_name }}</td>
-                                        <td>{{ $add->product->quantity }}</td>
-                                        <td>{{ $add->product->remaining_stock }}</td>
-                                        <td>{{ $add->product->sales_price }}</td>
-                                        <td>{{ $add->product->supplier_product_code }}</td>
-                                        <td>{{ $add->supplier->name }}</td>
-                                        <td>{{ $add->product->threshold }}</td>
-                                        <td>
-                                            @if ($add->product->status === 'In Stock')
-                                                <span class="badge badge-success">{{ $add->product->status }}</span>
-                                            @elseif ($add->product->status === 'Low Stock')
-                                                <span class="badge badge-warning">{{ $add->product->status }}</span>
-                                            @else
-                                                <span class="badge badge-danger">{{ $add->product->status }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="btn-group" role="group">
-                                                <!-- View Button to Open Modal -->
-                                                <button class="btn btn-info btn-sm view-btn"
-                                                        data-toggle="modal"
-                                                        data-target="#viewProductModal"
-                                                        data-id="{{ $add->product->id }}">
-                                                    <i class="fa fa-eye"></i>
-                                                </button>
-
-                                                <!-- Edit -->
-                                                <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-
-                                                <!-- Delete -->
-                                                <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-
-                                                <!-- Hidden Delete Form -->
-                                                <form id="delete-form-{{ $add->product->id }}" 
-                                                    action="{{ route('product.destroy', $add->product->id) }}" 
-                                                    method="POST" style="display:none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                            </div>
-                                        </td>
+                                        <th>Product Code</th>
+                                        <th>Product</th>
+                                        <th>Available Quantity</th>
+                                        <th>Quantity on Hand</th>
+                                        <th>Sales Price</th>
+                                        <th>Supplier Item Code</th>
+                                        <th>Supplier</th>
+                                        <th>Threshold</th>
+                                        <th>Status</th>
+                                        <th class="text-center">Actions</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($additional as $add)
+                                        <tr>
+                                            <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
+                                            <td>{{ $add->product->product_name }}</td>
+                                            <td>{{ $add->product->quantity }}</td>
+                                            <td>{{ $add->product->remaining_stock }}</td>
+                                            <td>{{ $add->product->sales_price }}</td>
+                                            <td>{{ $add->product->supplier_product_code }}</td>
+                                            <td>{{ $add->supplier->name }}</td>
+                                            <td>{{ $add->product->threshold }}</td>
+                                            <td>
+                                                @if ($add->product->status === 'In Stock')
+                                                    <span class="badge badge-success">{{ $add->product->status }}</span>
+                                                @elseif ($add->product->status === 'Low Stock')
+                                                    <span class="badge badge-warning">{{ $add->product->status }}</span>
+                                                @else
+                                                    <span class="badge badge-danger">{{ $add->product->status }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <!-- View Button to Open Modal -->
+                                                    <button class="btn btn-info btn-sm view-btn"
+                                                            data-toggle="modal"
+                                                            data-target="#viewProductModal"
+                                                            data-id="{{ $add->product->id }}">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+
+                                                    <!-- Edit -->
+                                                    <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+
+                                                    <!-- Delete -->
+                                                    <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+
+                                                    <!-- Hidden Delete Form -->
+                                                    <form id="delete-form-{{ $add->product->id }}" 
+                                                        action="{{ route('product.destroy', $add->product->id) }}" 
+                                                        method="POST" style="display:none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

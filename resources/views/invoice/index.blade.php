@@ -44,106 +44,108 @@
                 <div class="tile">
                 <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Invoice Records</h3>
                     <div class="tile-body">
-                        <table class="table table-hover table-bordered" id="sampleTable">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Customer</th>
-                                    <th>Invoice Date</th>
-                                    <th>Due Date</th>
-                                    <th>Subtotal</th>
-                                    <th>Discount Type</th>
-                                    <th>Grand Total</th>
-                                    <th>Outstanding Balance</th>
-                                    <th>Status</th>
-                                    <th>Payment Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($invoices as $invoice)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="sampleTable">
+                                <thead class="thead-dark">
                                     <tr>
-                                        <td><span class="badge badge-info">{{ $invoice->invoice_number }}</span></td>
-                                        <td>{{ $invoice->customer->name }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
-                                        <td>{{ number_format($invoice->subtotal, 2) }}</td>
-                                        <td>
-                                           @if($invoice->discount_type == 'per_item')
-                                                <span class="badge badge-success">Per Item</span>
-                                            @elseif($invoice->discount_value > 0)
-                                                <span class="badge badge-primary">
-                                                    Overall - {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
-                                                </span>
-                                            @else
-                                                <span class="badge badge-warning">
-                                                   No Discount
-                                                </span>
-                                            @endif
-                                        </td>
-                                        <td>{{ number_format($invoice->grand_total, 2) }}</td>
-                                        <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
-                                        <td>
-                                            <span class="badge 
-                                                @if($invoice->invoice_status == 'approved') bg-success
-                                                @elseif($invoice->invoice_status == 'pending') bg-warning
-                                                @elseif($invoice->invoice_status == 'canceled') bg-danger
-                                                @endif">
-                                                {{ ucfirst($invoice->invoice_status) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge 
-                                                @if($invoice->payment_status == 'paid') bg-success
-                                                @elseif($invoice->payment_status == 'pending') bg-warning
-                                                @elseif($invoice->payment_status == 'overdue') bg-danger
-                                                @elseif($invoice->payment_status == 'partial') bg-info
-                                                @endif">
-                                                {{ ucfirst($invoice->payment_status) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $invoice->id }}">
-                                                <i class="fa fa-eye"></i>
-                                            </button>
-
-                                           @if($invoice->invoice_status == 'approved')
-                                                {{-- Show print button only when approved --}}
-                                                <a class="btn btn-secondary btn-sm" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
-                                                    <i class="fa fa-print"></i>
-                                                </a>
-
-                                            @elseif($invoice->invoice_status == 'canceled')
-                                                <span class="badge bg-danger text-light">
-                                                    This invoice is already canceled
-                                                </span>
-                                            @else
-                                                {{-- Show edit and approve buttons only if not approved or canceled --}}
-                                                <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-                                                @if(auth()->user()->user_role === 'super_admin')
-                                                    <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
-                                                        <i class="fa fa-check"></i> Approve
-                                                    </button>
-                                                @endif
-                                            @endif
-
-                                            <button class="btn btn-danger btn-sm" onclick="deleteTag({{ $invoice->id }})">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-
-                                            <form id="delete-form-{{ $invoice->id }}" 
-                                                action="{{ route('invoice.destroy',$invoice->id) }}" 
-                                                method="POST" style="display:none;">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
-                                        </td>
+                                        <th>Invoice #</th>
+                                        <th>Customer</th>
+                                        <th>Invoice Date</th>
+                                        <th>Due Date</th>
+                                        <th>Subtotal</th>
+                                        <th>Discount Type</th>
+                                        <th>Grand Total</th>
+                                        <th>Outstanding Balance</th>
+                                        <th>Status</th>
+                                        <th>Payment Status</th>
+                                        <th>Action</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach($invoices as $invoice)
+                                        <tr>
+                                            <td><span class="badge badge-info">{{ $invoice->invoice_number }}</span></td>
+                                            <td>{{ $invoice->customer->name }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
+                                            <td>{{ number_format($invoice->subtotal, 2) }}</td>
+                                            <td>
+                                            @if($invoice->discount_type == 'per_item')
+                                                    <span class="badge badge-success">Per Item</span>
+                                                @elseif($invoice->discount_value > 0)
+                                                    <span class="badge badge-primary">
+                                                        Overall - {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-warning">
+                                                    No Discount
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>{{ number_format($invoice->grand_total, 2) }}</td>
+                                            <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    @if($invoice->invoice_status == 'approved') bg-success
+                                                    @elseif($invoice->invoice_status == 'pending') bg-warning
+                                                    @elseif($invoice->invoice_status == 'canceled') bg-danger
+                                                    @endif">
+                                                    {{ ucfirst($invoice->invoice_status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    @if($invoice->payment_status == 'paid') bg-success
+                                                    @elseif($invoice->payment_status == 'pending') bg-warning
+                                                    @elseif($invoice->payment_status == 'overdue') bg-danger
+                                                    @elseif($invoice->payment_status == 'partial') bg-info
+                                                    @endif">
+                                                    {{ ucfirst($invoice->payment_status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $invoice->id }}">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
+
+                                            @if($invoice->invoice_status == 'approved')
+                                                    {{-- Show print button only when approved --}}
+                                                    <a class="btn btn-secondary btn-sm" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
+                                                        <i class="fa fa-print"></i>
+                                                    </a>
+
+                                                @elseif($invoice->invoice_status == 'canceled')
+                                                    <span class="badge bg-danger text-light">
+                                                        This invoice is already canceled
+                                                    </span>
+                                                @else
+                                                    {{-- Show edit and approve buttons only if not approved or canceled --}}
+                                                    <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+                                                    @if(auth()->user()->user_role === 'super_admin')
+                                                        <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
+                                                            <i class="fa fa-check"></i> Approve
+                                                        </button>
+                                                    @endif
+                                                @endif
+
+                                                <button class="btn btn-danger btn-sm" onclick="deleteTag({{ $invoice->id }})">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+
+                                                <form id="delete-form-{{ $invoice->id }}" 
+                                                    action="{{ route('invoice.destroy',$invoice->id) }}" 
+                                                    method="POST" style="display:none;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

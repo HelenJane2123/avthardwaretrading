@@ -29,47 +29,49 @@
                         </div>
                     @endif
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> User Records</h3>
-                        <table class="table table-hover table-bordered" id="userTable">
-                            <thead class="thead-dark">
-                            <tr>
-                                <th> First Name </th>
-                                <th> Last Name </th>
-                                <th> Email </th>
-                                <th>Image</th>
-                                <th>Contact</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Date Created</th>
-                                <th>Date Updated</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach( $users as $user)
-                            <tr>
-                                <td>{{ $user->f_name }} </td>
-                                <td>{{ $user->l_name }} </td>
-                                <td>{{ $user->email }} </td>
-                                <td>{{ $user->image }} </td>
-                                <td>{{ $user->contact }} </td>
-                                <td>{{ $user->user_role }} </td>
-                                <td>{{ $user->user_status }} </td>
-                                <td>{{ $user->created_at }} </td>
-                                <td>{{ $user->updated_at }} </td>
-                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="{{route('user.edit', $user->id)}}"><i class="fa fa-edit" ></i></a>
-                                    <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $user->id }})">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $user->id }}" action="{{ route('user.destroy',$user->id) }}" method="POST" style="display: none;">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered" id="userTable">
+                                <thead class="thead-dark">
+                                <tr>
+                                    <th> First Name </th>
+                                    <th> Last Name </th>
+                                    <th> Email </th>
+                                    <th>Image</th>
+                                    <th>Contact</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Date Created</th>
+                                    <th>Date Updated</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach( $users as $user)
+                                <tr>
+                                    <td>{{ $user->f_name }} </td>
+                                    <td>{{ $user->l_name }} </td>
+                                    <td>{{ $user->email }} </td>
+                                    <td>{{ $user->image }} </td>
+                                    <td>{{ $user->contact }} </td>
+                                    <td>{{ $user->user_role }} </td>
+                                    <td>{{ $user->user_status }} </td>
+                                    <td>{{ $user->created_at }} </td>
+                                    <td>{{ $user->updated_at }} </td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="{{route('user.edit', $user->id)}}"><i class="fa fa-edit" ></i></a>
+                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $user->id }})">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                        <form id="delete-form-{{ $user->id }}" action="{{ route('user.destroy',$user->id) }}" method="POST" style="display: none;">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
