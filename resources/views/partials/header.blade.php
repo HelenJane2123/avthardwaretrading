@@ -1,28 +1,27 @@
-<header class="app-header">
-    <div class="d-flex text-truncate">
-        <!-- <img src="{{ asset('images/avt_logo.png') }}" alt="Logo" class="header-logo mr-2"> -->
-        <a class="app-header__logo" href="">AVT Hardware Trading</a>
-        <!-- <small class="text-light header-subtitle text-truncate" style="max-width: 250px;">
-            Wholesale of hardware, electricals, & plumbing supply etc.
-        </small> -->
-        <!-- Current Date/Time for mobile only -->
-        <span id="currentDateTimeMobile" class="text-light font-weight-bold d-block d-md-none mt-1"></span>
+<header class="app-header d-flex align-items-center justify-content-between px-3">
+    <!-- Left side: Logo + Mobile Date -->
+    <div class="d-flex align-items-center">
+        <a class="app-header__logo mr-2" href="">AVT Hardware Trading</a>
+        <!-- Mobile-only Date/Time -->
+        <span id="currentDateTimeMobile" class="text-light font-weight-bold d-block d-md-none ml-2"></span>
     </div>
-    <!-- Sidebar toggle button-->
-    <a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
 
-    <!-- Navbar Right Menu-->
-    <ul class="app-nav ml-auto">
+    <!-- Sidebar toggle (always visible) -->
+    <a class="app-sidebar__toggle ml-2" href="#" data-toggle="sidebar" aria-label="Hide Sidebar">
+        <!-- <i class="fa fa-bars fa-lg text-light"></i> -->
+    </a>
 
-        <!-- Date & Time -->
-        <li class="app-nav__item pr-3">
+    <!-- Right side: Nav -->
+    <ul class="app-nav d-flex align-items-center ml-auto mb-0">
+        <!-- Desktop Date/Time -->
+        <li class="app-nav__item pr-3 d-none d-md-block">
             <span id="currentDateTime" class="text-light font-weight-bold"></span>
         </li>
 
         <!-- User Menu -->
         <li class="dropdown">
             <a class="app-nav__item dropdown-toggle" href="#" id="userMenu" role="button"
-            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-user fa-lg"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userMenu">
@@ -33,7 +32,7 @@
                     <i class="fa fa-question-circle fa-lg"></i> Help
                 </a>
                 <a class="dropdown-item" href="#"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     <i class="fa fa-sign-out fa-lg"></i> Logout
                 </a>
                 <form id="logout-form" action="{{ route('signout') }}" method="POST" style="display:none;">
@@ -65,18 +64,17 @@
     setInterval(updateDateTime, 1000);
     updateDateTime();
     $(document).ready(function() {
-        // Toggle sidebar
         $('[data-toggle="sidebar"]').click(function(e) {
             e.preventDefault();
             $('.app-sidebar').toggleClass('active');
             $('.app-sidebar__overlay').toggleClass('active');
         });
 
-        // Close sidebar when overlay is clicked
         $('.app-sidebar__overlay').click(function() {
             $('.app-sidebar').removeClass('active');
             $(this).removeClass('active');
         });
     });
+
 
 </script>

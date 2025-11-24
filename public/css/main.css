@@ -15402,10 +15402,58 @@ be a descendant of the grid when it is being dragged.
 
 /* Header background + height */
 .app-header {
-    background-color: #005c53; /* matches your screenshot */
-    height: 60px;              /* match sidebar header height */
-    flex-shrink: 0;
+    padding-left: 250px; /* match sidebar width */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 1000;
+    background-color: #005046;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
+.app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* desktop width */
+    height: 100vh;
+    background-color: #2f3e47;
+    z-index: 999;
+    transition: transform 0.3s ease;
+}
+
+/* Overlay */
+.app-sidebar__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    display: none;
+}
+
+/* Mobile behavior */
+@media (max-width: 768px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+        width:250px; /* full width on mobile */
+    }
+
+    .app-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .app-sidebar__overlay.active {
+        display: block;
+    }
+}
+
+
 
 /* Logo */
 .header-logo {
@@ -15434,4 +15482,22 @@ be a descendant of the grid when it is being dragged.
 /* Right menu spacing */
 .app-nav li {
     list-style: none;
+}
+
+.app-footer {
+    background-color: #343a40;
+    color: #333;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.app-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-main {
+    flex: 1;
 }

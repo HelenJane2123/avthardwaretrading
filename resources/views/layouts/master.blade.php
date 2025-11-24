@@ -53,5 +53,6 @@
 
 @stack('js')
 @include('partials.help-modal')
+@include('partials.footer')
 </body>
 </html>

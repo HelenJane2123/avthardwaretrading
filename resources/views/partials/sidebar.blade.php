@@ -1,4 +1,3 @@
-<div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
     @if (session('passwordResetNotice'))
         <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
@@ -239,3 +238,4 @@
         </li>
     </ul>
 </aside>
+<div class="app-sidebar__overlay" data-toggle="sidebar"></div>
