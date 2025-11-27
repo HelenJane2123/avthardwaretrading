@@ -38,7 +38,86 @@
 
 @yield('content')
 
+<div id="autoLogoutModal" 
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:8px; max-width:400px; text-align:center;">
+        <h4>Session Expiring Soon</h4>
+        <p>You’ve been inactive. You will be logged out in <span id="logoutCountdown">60</span> seconds.</p>
+        <button onclick="stayLoggedIn()" 
+                style="padding:10px 20px; background:#3490dc; border:none; color:white; border-radius:5px;">
+            Stay Logged In
+        </button>
+    </div>
+</div>
+<script>
+    let idleTime = 0;
+    const sessionLifetime = {{ config('session.lifetime') }} * 60 * 1000; // in ms
+    const warningTime = sessionLifetime - (1 * 60 * 1000); // show popup 1 minute before
+    
+    let countdown = 60; // seconds
+    let countdownInterval;
 
+    function resetTimer() {
+        idleTime = 0;
+
+        // hide modal & reset countdown if user becomes active
+        document.getElementById('autoLogoutModal').style.display = 'none';
+        clearInterval(countdownInterval);
+        countdown = 60;
+        document.getElementById('logoutCountdown').innerText = countdown;
+    }
+
+    window.onload = resetTimer;
+    document.onmousemove = resetTimer;
+    document.onkeypress = resetTimer;
+    document.onclick = resetTimer;
+    document.onscroll = resetTimer;
+
+    setInterval(() => {
+        idleTime += 1000;
+
+        // Show warning popup
+        if (idleTime >= warningTime && idleTime < sessionLifetime) {
+            showWarning();
+        }
+
+        // Force logout
+        if (idleTime >= sessionLifetime) {
+            autoLogout();
+        }
+    }, 1000);
+
+    function showWarning() {
+        const modal = document.getElementById('autoLogoutModal');
+        if (modal.style.display === "none") {
+            modal.style.display = "flex";
+
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('logoutCountdown').innerText = countdown;
+
+                if (countdown <= 0) {
+                    autoLogout();
+                }
+            }, 1000);
+        }
+    }
+
+    function stayLoggedIn() {
+        resetTimer();
+    }
+
+    function autoLogout() {
+        // Submit Laravel logout form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('logout') }}";
+        form.innerHTML = `@csrf`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
 <!-- Essential javascripts for application to work-->
 <script src="{{asset('/')}}js/jquery-3.2.1.min.js"></script>
 <script src="{{asset('/')}}js/popper.min.js"></script>
@@ -49,8 +128,7 @@
 <!-- Page specific javascripts-->
 <script type="text/javascript" src="{{asset('/')}}js/plugins/chart.js"></script>
 <script src="{{ asset('js/app.js') }}"></script>
-
-
+<!-- Auto Logout Warning Modal -->
 @stack('js')
 @include('partials.help-modal')
 @include('partials.footer')

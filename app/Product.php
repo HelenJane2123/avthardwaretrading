@@ -10,7 +10,7 @@ class Product extends Model
     protected $fillable = [
         'product_code','supplier_product_code', 'product_name', 'description','serial_number', 'model',
         'category_id', 'sales_price', 'unit_id', 'quantity',
-        'remaining_stock', 'tax_id', 'image', 'threshold', 'status','volume_less','regular_less',
+        'remaining_stock', 'discount_1','discount_2','discount_3', 'image', 'threshold', 'status','volume_less','regular_less',
     ];
 
     public function category(){

@@ -73,7 +73,9 @@ class ProductController extends Controller
             'supplier_price' => 'required|array',
             'supplier_price.*' => 'numeric|min:0',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'tax_id' => 'nullable|integer',
+            'discount_1' => 'nullable|integer',
+            'discount_2' => 'nullable|integer',
+            'discount_3' => 'nullable|integer',
             // 'adjustment' => 'nullable|integer|min:0', // new adjustment input
             // 'adjustment_status' => 'nullable|in:Return,Others',
             // 'remarks' => 'nullable|string|max:500',
@@ -91,7 +93,9 @@ class ProductController extends Controller
         $product->unit_id = $request->unit_id;
         $product->quantity = $request->quantity;
         $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
-        $product->tax_id = $request->tax_id;
+        $product->discount_1 = $request->discount_1;
+        $product->discount_2 = $request->discount_2;
+        $product->discount_3 = $request->discount_3;
         $product->threshold = 0;
         $product->volume_less = $request->volume_less;
         $product->regular_less = $request->regular_less;
@@ -237,10 +241,12 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'model' => $request->model,
             'quantity' => $request->quantity,
-            'remaining_stock' => $request->quantity, // will adjust later based on adjustments
+            'remaining_stock' => $request->quantity, 
             'sales_price' => $request->sales_price,
             'unit_id' => $request->unit_id,
-            'tax_id' => $request->tax_id,
+            'discount_1' => $request->discount_1,
+            'discount_2' => $request->discount_2,
+            'discount_3' => $request->discount_3,
             'threshold' => $threshold,
             'status' => $status,
             'volume_less' => $request->volume_less,
@@ -332,6 +338,15 @@ class ProductController extends Controller
             ->get(['id', 'item_code', 'item_description', 'item_price', 'supplier_id']);
 
         return response()->json($items);
+    }
+
+    public function list()
+    {
+        $products = SupplierItem::select('id', 'item_code', 'item_description')
+                    // ->take(10) // only get 10 records
+                    ->get();
+
+        return response()->json($products);
     }
 
     // Get suppliers based on chosen item_code

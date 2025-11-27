@@ -61,12 +61,14 @@
 
                                 <!-- RIGHT SIDE FIELDS -->
                                 <div class="col-md-9">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
                                             <label class="fw-bold">Product Name</label>
-                                            <input type="text" name="product_name" class="form-control" id="product_name" 
-                                                value="{{ $product->product_name }}" required>
-                                            <div id="productSuggestions" class="list-group position-absolute w-100 shadow" style="display:none; z-index:1000;"></div>
+                                            <div class="input-group">
+                                                <input type="text" id="product_name" name="product_name" class="form-control" readonly value="{{ $product->product_name }}">
+                                                <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
+                                                <!-- <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div> -->
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="fw-bold">Product Code</label>
@@ -77,30 +79,30 @@
                                             <input type="text" class="form-control" name="supplier_product_code" 
                                                 id="supplier_product_code" value="{{ $product->supplier_product_code }}" readonly>
                                         </div>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                            <label class="control-label fw-bold">Product Description</label>
-                                            <textarea name="description"
+                                        <div class="form-group col-md-4">
+                                                <label class="control-label fw-bold">Product Description</label>
+                                                <textarea name="description"
+                                                    class="form-control"
+                                                    rows="2">{{ $product->description }}</textarea>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Volume Less</label>
+                                            <textarea name="volume_less"
                                                 class="form-control"
-                                                rows="2">{{ $product->description }}</textarea>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <label class="control-label fw-bold">Volume Less</label>
-                                        <textarea name="volume_less"
-                                            class="form-control"
-                                            rows="2">{{ $product->volume_less }}</textarea>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <label class="control-label fw-bold">Regular Less</label>
-                                        <textarea name="regular_less"
-                                            class="form-control"
-                                            rows="2">{{ $product->regular_less }}</textarea>
+                                                rows="2">{{ $product->volume_less }}</textarea>
+                                        </div>
                                     </div>
                                     <div class="row g-3 mt-2">
-                                        <div class="col-md-3">
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label fw-bold">Regular Less</label>
+                                            <textarea name="regular_less"
+                                                class="form-control"
+                                                rows="2">{{ $product->regular_less }}</textarea>
+                                        </div>
+                                        <!-- <div class="col-md-3">
                                             <label>Serial Number</label>
                                             <input type="text" name="serial_number" class="form-control" value="{{ $product->serial_number }}">
-                                        </div>
+                                        </div> -->
                                         <div class="col-md-3">
                                             <label>Category</label>
                                             <select name="category_id" class="form-control" required>
@@ -112,10 +114,10 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-3">
+                                        <!-- <div class="col-md-3">
                                             <label>Model</label>
                                             <input type="text" name="model" class="form-control" value="{{ $product->model }}">
-                                        </div>
+                                        </div> -->
                                         <div class="col-md-3">
                                             <label>Unit</label>
                                             <select name="unit_id" class="form-control">
@@ -160,12 +162,51 @@
                                         {{ $product->status }}
                                     </span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">Discount/s</h5>
+                            </div>
+                            <div class="card-body row g-3">
                                 <div class="form-group col-md-3">
-                                    <label class="control-label">Discount</label>
-                                    <select name="tax_id" class="form-control">
+                                    <label class="control-label">Discount 1</label>
+                                    <select name="discount_1" class="form-control">
                                         <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
-                                            <option value="{{$tax->id}}" {{ $product->tax_id == $tax->id ? 'selected' : '' }}>
+                                            <option value="{{$tax->name}}" {{ $product->discount_1 == $tax->name ? 'selected' : '' }}>
+                                                {{$tax->name}} %
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('tax_id')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label class="control-label">Discount 2</label>
+                                    <select name="discount_2" class="form-control">
+                                        <option value="0">---Select Discount---</option>
+                                        @foreach($taxes as $tax)
+                                            <option value="{{$tax->name}}" {{ $product->discount_2 == $tax->name ? 'selected' : '' }}>
+                                                {{$tax->name}} %
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('tax_id')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                    @enderror
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label class="control-label">Discount 2</label>
+                                    <select name="discount_3" class="form-control">
+                                        <option value="0">---Select Discount---</option>
+                                        @foreach($taxes as $tax)
+                                            <option value="{{$tax->name}}" {{ $product->discount_3 == $tax->name ? 'selected' : '' }}>
                                                 {{$tax->name}} %
                                             </option>
                                         @endforeach
@@ -286,12 +327,42 @@
             </div>
         </div>
     </div>
+     <!-- Product Selection Modal -->
+        <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="productModalLabel">Select Product</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-hover" id="productTable">
+                    <thead>
+                        <tr>
+                        <th>Item Code</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Product rows will be loaded here via AJAX -->
+                    </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+     </main>
 </main>
 @endsection
 
 
 @push('js')
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+<script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
+<script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
 <script type="text/javascript">
     const suppliers = @json($suppliers);
     $(document).ready(function () {
@@ -391,7 +462,7 @@
         });
 
         // initialize on page load
-        updateRemainingStock();
+        //updateRemainingStock();
         
         // Product suggestions (autocomplete)
         $("#product_name").on("keyup", function () {
@@ -463,6 +534,80 @@
                     console.error("Supplier AJAX Error:", xhr.responseText);
                 }
             });
+        });
+        //modal will open when searching for product
+        $('#productModal').on('show.bs.modal', function () {
+            $.ajax({
+                url: "{{ route('products.list') }}",
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    console.log("Products loaded:", data);
+                    let tbody = '';
+                    data.forEach(function(item) {
+                        tbody += `
+                            <tr>
+                                <td>${item.item_code}</td>
+                                <td>${item.item_description}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary select-product"
+                                        data-item='${JSON.stringify(item)}'>Select</button>
+                                </td>
+                            </tr>`;
+                    });
+                    $('#productTable tbody').html(tbody);
+
+                    // Initialize DataTable or destroy first if already exists
+                    if ($.fn.DataTable.isDataTable('#productTable')) {
+                        $('#productTable').DataTable().destroy();
+                    }
+
+                    $('#productTable').DataTable({
+                        pageLength: 10, // show 10 rows per page
+                        lengthChange: false, // hide rows per page dropdown
+                    });
+                },
+                error: function(xhr) {
+                    console.error('Error loading products:', xhr.responseText);
+                }
+            });
+        });
+        // Handle selecting a product from the modal
+        $(document).on('click', '.select-product', function() {
+            let item = $(this).data('item');
+            $('#product_name').val(item.item_description);
+            //$('#product_code').val(item.item_code);
+            $('#supplier_product_code').val(item.item_code); // optional
+                $.ajax({
+                url: "{{ route('products.suppliers') }}",
+                type: "GET",
+                data: { item_code: item.item_code },
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        let supplier = data[0];
+                        $("#supplier_id").val(supplier.id);
+                        $("#supplier_name").val(supplier.name);
+                        $("#supplier_price").val(supplier.item_price);
+
+                        console.log("supplier name",supplier.name);
+                        // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
+                        if (supplier.name.trim().toLowerCase().includes("1st tool")) {
+                            let currentProductText = $("#product_name").val();
+                            let updatedProductText = currentProductText.replace(/^PL/i, "AV");
+                            console.log("updated product name",updatedProductText)
+                            $("#product_name").val(updatedProductText);
+                        }
+                    } else {
+                        alert("No suppliers found for this product");
+                    }
+                },
+                error: function (xhr) {
+                    console.error("Supplier AJAX Error:", xhr.responseText);
+                }
+            });
+            $('#productModal').modal('hide');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
         });
     });
 </script>

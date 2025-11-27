@@ -535,19 +535,19 @@
                 // Out of stock
                 if (stock <= 0) {
                     hasError = true;
-                    errorMessages.push(`❌ ${productName} is out of stock.`);
+                    errorMessages.push(`${productName} is out of stock.`);
                 }
 
                 // Exceeds stock
                 if (qty > stock) {
                     hasError = true;
-                    errorMessages.push(`⚠️ ${productName} quantity (${qty}) exceeds available stock (${stock}).`);
+                    errorMessages.push(`${productName} quantity (${qty}) exceeds available stock (${stock}).`);
                 }
 
                 // Zero or negative qty
                 if (qty <= 0) {
                     hasError = true;
-                    errorMessages.push(`⚠️ ${productName} must have a quantity greater than 0.`);
+                    errorMessages.push(`${productName} must have a quantity greater than 0.`);
                 }
             });
 

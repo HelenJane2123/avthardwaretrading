@@ -104,10 +104,13 @@
                                 <!-- Right Column: Product Details -->
                                 <div class="col-md-9">
                                     <div class="row">
-                                        <div class="form-group col-md-4 position-relative">
+                                        <div class="form-group col-md-8 position-relative">
                                             <label class="control-label">Product</label>
-                                            <input type="text" id="product_name" name="product_name" class="form-control" placeholder="Search product...">
-                                            <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div>
+                                            <div class="input-group">
+                                                <input type="text" id="product_name" name="product_name" class="form-control" readonly placeholder="Select product...">
+                                                <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
+                                                <!-- <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div> -->
+                                            </div>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Product Code</label>
@@ -136,7 +139,7 @@
                                                 class="form-control"
                                                 rows="2"></textarea>
                                         </div>
-                                        <div class="form-group col-md-4">
+                                        <!-- <div class="form-group col-md-4">
                                             <label class="control-label">Serial Number</label>
                                             <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
                                             @error('serial_number')
@@ -144,7 +147,7 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
-                                        </div>
+                                        </div> -->
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Category</label>
@@ -161,7 +164,7 @@
                                             @enderror
                                         </div>
 
-                                        <div class="form-group col-md-4">
+                                        <!-- <div class="form-group col-md-4">
                                             <label class="control-label">Model</label>
                                             <input name="model" class="form-control @error('model') is-invalid @enderror" type="text" placeholder="Enter Model">
                                             @error('model')
@@ -169,7 +172,7 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
-                                        </div>
+                                        </div> -->
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Initial Quantity</label>
@@ -183,7 +186,7 @@
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Selling Price</label>
-                                            <input name="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
+                                            <input name="sales_price" id="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                             @error('sales_price')
                                             <span class="invalid-feedback" role="alert">
                                                 <strong>{{ $message }}</strong>
@@ -204,12 +207,50 @@
                                             </span>
                                             @enderror
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Discount Section --}}
+                            <div class="card mt-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Discounts</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Discount</label>
-                                            <select name="tax_id" class="form-control">
+                                            <label class="control-label">Discount 1</label>
+                                            <select name="discount_1" class="form-control">
                                                 <option value="0">---Select Discount---</option>
                                                 @foreach($taxes as $tax)
-                                                    <option value="{{$tax->id}}">{{$tax->name}} %</option>
+                                                    <option value="{{$tax->name}}">{{$tax->name}} %</option>
+                                                @endforeach
+                                            </select>
+                                            @error('tax_id')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Discount 2</label>
+                                            <select name="discount_2" class="form-control">
+                                                <option value="0">---Select Discount---</option>
+                                                @foreach($taxes as $tax)
+                                                    <option value="{{$tax->name}}">{{$tax->name}} %</option>
+                                                @endforeach
+                                            </select>
+                                            @error('tax_id')
+                                            <span class="invalid-feedback" role="alert">
+                                                <strong>{{ $message }}</strong>
+                                            </span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Discount 3</label>
+                                            <select name="discount_3" class="form-control">
+                                                <option value="0">---Select Discount---</option>
+                                                @foreach($taxes as $tax)
+                                                    <option value="{{$tax->name}}">{{$tax->name}} %</option>
                                                 @endforeach
                                             </select>
                                             @error('tax_id')
@@ -219,7 +260,7 @@
                                             @enderror
                                         </div>
                                     </div>
-                                </div>
+                                </div>      
                             </div>
                             {{-- Adjustment Section --}}
                             <div class="card mt-4">
@@ -294,11 +335,38 @@
                 </div>
             </div>
         </div>
-
+        <!-- Product Selection Modal -->
+        <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="productModalLabel">Select Product</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-hover" id="productTable">
+                    <thead>
+                        <tr>
+                        <th>Item Code</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Product rows will be loaded here via AJAX -->
+                    </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
      </main>
 @endsection
 @push('js')
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
+    <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
@@ -331,7 +399,7 @@
             });
 
             // Product suggestions (autocomplete)
-             $("#product_name").on("keyup", function () {
+            $("#product_name").on("keyup", function () {
                 let query = $(this).val().trim();
 
                 if (query.length > 1) {
@@ -365,6 +433,81 @@
                 } else {
                     $("#productSuggestions").hide();
                 }
+            });
+
+            //modal will open when searching for product
+            $('#productModal').on('show.bs.modal', function () {
+                $.ajax({
+                    url: "{{ route('products.list') }}",
+                    type: "GET",
+                    dataType: "json",
+                    success: function(data) {
+                        console.log("Products loaded:", data);
+                        let tbody = '';
+                        data.forEach(function(item) {
+                            tbody += `
+                                <tr>
+                                    <td>${item.item_code}</td>
+                                    <td>${item.item_description}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary select-product"
+                                            data-item='${JSON.stringify(item)}'>Select</button>
+                                    </td>
+                                </tr>`;
+                        });
+                        $('#productTable tbody').html(tbody);
+
+                        // Initialize DataTable or destroy first if already exists
+                        if ($.fn.DataTable.isDataTable('#productTable')) {
+                            $('#productTable').DataTable().destroy();
+                        }
+
+                        $('#productTable').DataTable({
+                            pageLength: 10, // show 10 rows per page
+                            lengthChange: false, // hide rows per page dropdown
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading products:', xhr.responseText);
+                    }
+                });
+            });
+            // Handle selecting a product from the modal
+            $(document).on('click', '.select-product', function() {
+                let item = $(this).data('item');
+                $('#product_name').val(item.item_description);
+                //$('#product_code').val(item.item_code);
+                $('#supplier_product_code').val(item.item_code); // optional
+                 $.ajax({
+                    url: "{{ route('products.suppliers') }}",
+                    type: "GET",
+                    data: { item_code: item.item_code },
+                    success: function (data) {
+                        if (Array.isArray(data) && data.length > 0) {
+                            let supplier = data[0];
+                            $("#supplier_id").val(supplier.id);
+                            $("#supplier_name").val(supplier.name);
+                            $("#supplier_price").val(supplier.item_price);
+
+                            console.log("supplier name",supplier.name);
+                            // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
+                            if (supplier.name.trim().toLowerCase().includes("1st tool")) {
+                                let currentProductText = $("#product_name").val();
+                                let updatedProductText = currentProductText.replace(/^PL/i, "AV");
+                                console.log("updated product name",updatedProductText)
+                                $("#product_name").val(updatedProductText);
+                            }
+                        } else {
+                            alert("No suppliers found for this product");
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error("Supplier AJAX Error:", xhr.responseText);
+                    }
+                });
+                $('#productModal').modal('hide');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
             });
 
              $(document).on("click", ".product-suggestion", function (e) {
@@ -411,6 +554,43 @@
                     $("#productSuggestions").fadeOut(150);
                 }
             });
+
+            // Function to calculate selling price after discounts
+            const salesPriceInput = $('input[name="sales_price"]');
+
+            // Store the original price as the base for discount calculation
+            function storeOriginalPrice() {
+                if (!salesPriceInput.data('original')) {
+                    let val = parseFloat(salesPriceInput.val()) || 0;
+                    salesPriceInput.data('original', val);
+                }
+            }
+
+            // Apply compound discounts
+            function applyDiscounts() {
+                // Make sure we have the original price
+                storeOriginalPrice();
+                let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
+
+                // Get discount percentages
+                let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
+                let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
+                let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
+
+                // Sequential discount calculation
+                let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
+
+                // Update the sales price field with final price
+                salesPriceInput.val(finalPrice.toFixed(2));
+            }
+
+            // Trigger calculation when the user changes the price or selects discounts
+            salesPriceInput.on('input', function() {
+                // Reset original price if user manually edits
+                salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
+            });
+
+            $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
         });
         // function generateProductCode() {
         //     const prefix = "AVT";

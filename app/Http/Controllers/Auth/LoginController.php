@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Rules\Recaptcha;
 
 class LoginController extends Controller
 {
@@ -50,6 +51,27 @@ class LoginController extends Controller
         return redirect('/login')->with('status', 'You have been logged out successfully.');
     }
 
+    public function login(Request $request)
+    {
+        // Validate login + reCAPTCHA
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+            'g-recaptcha-response' => ['required', new Recaptcha()],
+        ]);
+
+        // Use default Laravel login
+        if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+            $request->session()->regenerate();
+
+            return $this->authenticated($request, Auth::user()) ?: redirect()->intended($this->redirectPath());
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->withInput($request->only('email', 'remember'));
+    }
+
     protected function authenticated(Request $request, $user)
     {
         if ($user->password_reset_flag) {
@@ -63,4 +85,5 @@ class LoginController extends Controller
 
         return redirect()->intended($this->redirectPath());
     }
+    
 }

@@ -79,14 +79,14 @@
                     </div>
                 </div>
 
-                {{-- Optional reCAPTCHA --}}
-                {{-- <div class="form-group">
+               <div class="form-group mt-3">
                     {!! NoCaptcha::display() !!}
                     @error('g-recaptcha-response')
                         <span class="text-danger">{{ $message }}</span>
                     @enderror
-                </div> --}}
+                </div>
 
+                {!! NoCaptcha::renderJs() !!}
                 {{-- Submit button --}}
                 <div class="form-group btn-container">
                     <button id="loginBtn" class="btn btn-primary btn-block" type="submit">
