@@ -185,7 +185,7 @@
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Selling Price</label>
+                                            <label class="control-label">Unit Cost</label>
                                             <input name="sales_price" id="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                             @error('sales_price')
                                             <span class="invalid-feedback" role="alert">
@@ -206,6 +206,30 @@
                                                 <strong>{{ $message }}</strong>
                                             </span>
                                             @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Supplier Section --}}
+                            <div class="card mt-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="example-2" class="content">
+                                        <div class="group row g-3 align-items-end">
+                                            <div class="col-md-6">
+                                                <label for="supplier_name" class="form-label">Supplier</label>
+                                                <input type="text" id="supplier_name" name="supplier_name" 
+                                                    class="form-control" autocomplete="off">
+                                                <div id="supplierSuggestions" class="list-group shadow-sm"></div>
+                                                <input type="hidden" id="supplier_id" name="supplier_id[]">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="supplier_price" class="form-label">Base Price</label>
+                                                <input type="number" id="supplier_price" name="supplier_price[]" 
+                                                    class="form-control" placeholder="Base Price">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -297,30 +321,6 @@
                                             </tr>
                                         </tbody>
                                     </table>
-                                </div>
-                            </div>
-                           {{-- Supplier Section --}}
-                            <div class="card mt-4">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="example-2" class="content">
-                                        <div class="group row g-3 align-items-end">
-                                            <div class="col-md-6">
-                                                <label for="supplier_name" class="form-label">Supplier</label>
-                                                <input type="text" id="supplier_name" name="supplier_name" 
-                                                    class="form-control" autocomplete="off">
-                                                <div id="supplierSuggestions" class="list-group shadow-sm"></div>
-                                                <input type="hidden" id="supplier_id" name="supplier_id[]">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="supplier_price" class="form-label">Supplier Item Price</label>
-                                                <input type="number" id="supplier_price" name="supplier_price[]" 
-                                                    class="form-control" placeholder="Purchase Price">
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                             <div class="form-group col-md-4 mt-4 align-self-end">
@@ -488,6 +488,7 @@
                             $("#supplier_id").val(supplier.id);
                             $("#supplier_name").val(supplier.name);
                             $("#supplier_price").val(supplier.item_price);
+                            $("#sales_price").val(supplier.item_price);
 
                             console.log("supplier name",supplier.name);
                             // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
@@ -510,7 +511,7 @@
                 $('body').removeClass('modal-open');
             });
 
-             $(document).on("click", ".product-suggestion", function (e) {
+            $(document).on("click", ".product-suggestion", function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -600,7 +601,7 @@
         // }
 
         // Set it when the page loads
-        $('#product_code').val(generateProductCode());
+       // $('#product_code').val(generateProductCode());
 
          // Initial stock & remaining stock inputs
         const initialStockInput = $('input[name="quantity"]');

@@ -132,6 +132,16 @@
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                                         <td>
+                                            <div class="input-group">
+                                                <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
+                                                <input type="hidden" name="product_id[]" class="product_id">
+                                                <button type="button" class="btn btn-outline-primary select-product-btn">
+                                                    <i class="fa fa-search"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-muted small selected-product-info mt-1"></div>
+                                        </td>
+                                        <!-- <td>
                                             <select name="product_id[]" class="form-control productname">
                                                 <option value="">Select Product</option>
                                                 @foreach($products as $product)
@@ -144,8 +154,8 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <div class="text-muted small selected-product-info mt-1"></div>                                            
-                                        </td>
+                                            <div class="text-muted small selected-product-info mt-1"></div>                                        
+                                        </td> -->
                                         <td>
                                             <select name="unit[]" class="form-control unit">
                                                 <option value="">Select Unit</option>
@@ -240,19 +250,113 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Select Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
+                <div class="table-responsive">
+                <table class="table table-bordered" id="productTable">
+                    <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Unit</th>
+                        <th>Select</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($products as $product)
+                    <tr data-id="{{ $product->id }}"
+                        data-code="{{ $product->product_code }}"
+                        data-name="{{ $product->product_name }}"
+                        data-price="{{ $product->sales_price }}"
+                        data-stock="{{ $product->remaining_stock }}"
+                        data-unit="{{ $product->unit_id }}">
+                        <td>{{ $product->product_code }}</td>
+                        <td>{{ $product->product_name }}</td>
+                        <td>{{ $product->sales_price }}</td>
+                        <td>{{ $product->remaining_stock }}</td>
+                        <td>{{ $product->unit_id }}</td>
+                        <td>
+                        <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                        </td>
+                    </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
 </div>
 @endsection
 
 @push('js')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
-            $('.productname').select2({
-                placeholder: "Select Product",
-                allowClear: true,
-                width: '400px'
+            let currentRow = null;
+            let productTable = null;
+
+            $('#productModal').on('shown.bs.modal', function () {
+                if (!productTable) {
+                    productTable = $('#productTable').DataTable({
+                        pageLength: 10,       // Show 10 rows per page
+                        lengthChange: false,  // Disable changing rows per page
+                        searching: true,      // Enable search box
+                        ordering: true,       // Enable column sorting
+                        info: false,          // Hide "Showing x of y" info if you want
+                        autoWidth: false
+                    });
+                }
             });
+            // Open modal when search button clicked
+            $(document).on('click', '.select-product-btn', function() {
+                currentRow = $(this).closest('tr'); // remember which row opened the modal
+                $('#productModal').modal('show');
+                $('#productSearch').val('').trigger('input'); // reset search
+            });
+            // Filter products as you type
+            $('#productSearch').on('input', function() {
+                productTable.search($(this).val()).draw();
+            });
+            // When selecting a product
+            $(document).on('click', '.select-this', function() {
+                let tr = $(this).closest('tr');
+                let id = tr.data('id');
+                let code = tr.data('code');
+                let name = tr.data('name');
+                let price = tr.data('price');
+                let stock = tr.data('stock');
+                let unit = tr.data('unit');
+
+                // Update row fields
+                currentRow.find('.product-input').val(name);
+                currentRow.find('.product_id').val(id);
+                currentRow.find('.code').val(code);
+                currentRow.find('.price').val(price);
+                currentRow.find('.qty').val('').prop('readonly', false).data('stock', stock);
+                currentRow.find('.unit').val(unit);
+                currentRow.find('.selected-product-info').html(name);
+
+                $('#productModal').modal('hide');
+            });
+            // $('.productname').select2({
+            //     placeholder: "Select Product",
+            //     allowClear: true,
+            //     width: '400px'
+            // });
             $('#customerSelect').select2({
                 placeholder: "Select Customer",
                 allowClear: true,
@@ -288,9 +392,13 @@
                 const newRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
-                        <select name="product_id[]" class="form-control productname">
-                            ${options}
-                        </select>
+                        <div class="input-group">
+                            <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
+                            <input type="hidden" name="product_id[]" class="product_id">
+                            <button type="button" class="btn btn-outline-primary select-product-btn">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </div>
                         <div class="text-muted small selected-product-info mt-1"></div>
                     </td>
                     <td>
@@ -328,11 +436,11 @@
                 $('#po-body').append(newRow);
 
                 // Re-initialize Select2 for the new row
-                $('#po-body tr:last .productname').select2({
-                    placeholder: "Select Product",
-                    allowClear: true,
-                    width: '400px'
-                });
+                // $('#po-body tr:last .productname').select2({
+                //     placeholder: "Select Product",
+                //     allowClear: true,
+                //     width: '400px'
+                // });
 
                 // Apply same behavior based on current discount type
                 const discountType = $('#discount_type').val();

@@ -164,6 +164,38 @@
                                 </div>
                             </div>
                         </div>
+                         <!-- Supplier Section -->
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Supplier Details</h5>
+                                <button type="button" class="btn btn-sm btn-success add_button">
+                                    <i class="fa fa-plus"></i> Add Supplier
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="field_wrapper">
+                                    @if ($product->productSuppliers && count($product->productSuppliers) > 0)
+                                        @foreach ($product->productSuppliers as $supplierItem)
+                                            <div class="row mb-2">
+                                                <div class="col-md-5">
+                                                    <label class="control-label">Supplier</label>
+                                                    <input type="text" class="form-control" value="{{ $supplierItem->supplier->name ?? '' }}" readonly>
+                                                    <input type="hidden" name="supplier_id[]" value="{{ $supplierItem->supplier_id }}">
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <label class="control-label">Base Price</label>
+                                                    <input type="number" name="supplier_price[]" class="form-control" 
+                                                        placeholder="Purchase Price" value="{{ $supplierItem->price }}" required>
+                                                </div>
+                                                <div class="col-md-2 d-flex align-items-center">
+                                                    <button type="button" class="btn btn-danger remove-supplier">Delete</button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
                         <div class="card mb-4 shadow-sm">
                             <div class="card-header bg-dark text-white">
                                 <h5 class="mb-0">Discount/s</h5>
@@ -280,38 +312,6 @@
                                 </table>
                             </div>
                         </div>
-
-                        <!-- Supplier Section -->
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Supplier Details</h5>
-                                <button type="button" class="btn btn-sm btn-success add_button">
-                                    <i class="fa fa-plus"></i> Add Supplier
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="field_wrapper">
-                                    @if ($product->productSuppliers && count($product->productSuppliers) > 0)
-                                        @foreach ($product->productSuppliers as $supplierItem)
-                                            <div class="row mb-2">
-                                                <div class="col-md-5">
-                                                    <input type="text" class="form-control" value="{{ $supplierItem->supplier->name ?? '' }}" readonly>
-                                                    <input type="hidden" name="supplier_id[]" value="{{ $supplierItem->supplier_id }}">
-                                                </div>
-                                                <div class="col-md-5">
-                                                    <input type="number" name="supplier_price[]" class="form-control" 
-                                                        placeholder="Purchase Price" value="{{ $supplierItem->price }}" required>
-                                                </div>
-                                                <div class="col-md-2 d-flex align-items-center">
-                                                    <button type="button" class="btn btn-danger remove-supplier">Delete</button>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Submit -->
                         <div class="text-end mt-4">
                             <button type="submit" class="btn btn-success px-4">
@@ -535,6 +535,7 @@
                 }
             });
         });
+
         //modal will open when searching for product
         $('#productModal').on('show.bs.modal', function () {
             $.ajax({
@@ -572,6 +573,7 @@
                 }
             });
         });
+
         // Handle selecting a product from the modal
         $(document).on('click', '.select-product', function() {
             let item = $(this).data('item');
@@ -609,6 +611,39 @@
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
         });
+
+        const salesPriceInput = $('input[name="sales_price"]');
+        // Store the original price as the base for discount calculation
+        function storeOriginalPrice() {
+            if (!salesPriceInput.data('original')) {
+                let val = parseFloat(salesPriceInput.val()) || 0;
+                salesPriceInput.data('original', val);
+            }
+        }
+        function applyDiscounts() {
+            // Make sure we have the original price
+            storeOriginalPrice();
+            let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
+
+            // Get discount percentages
+            let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
+            let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
+            let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
+
+            // Sequential discount calculation
+            let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
+
+            // Update the sales price field with final price
+            salesPriceInput.val(finalPrice.toFixed(2));
+        }
+
+        // Trigger calculation when the user changes the price or selects discounts
+        salesPriceInput.on('input', function() {
+            // Reset original price if user manually edits
+            salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
+        });
+
+        $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
     });
 </script>
 @endpush
