@@ -22,6 +22,7 @@ class PurchasePaymentController extends Controller
             'outstanding_balance' => number_format($outstanding, 2),
             'mode_of_payment_id' => $purchase->payment_id,
             'mode_of_payment_name' => $purchase->paymentMode->name, 
+            'mode_of_payment_term' => $purchase->paymentMode->term, 
             'gcash_number' => $purchase->gcash_number,
             'gcash_name' => $purchase->gcash_name,
             'check_number' => $purchase->check_number,

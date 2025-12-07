@@ -321,7 +321,7 @@
             $("#payment_status").val(data.payment_status);
 
             // Set mode of payment dropdown
-            $("#mode_of_payment").val(data.mode_of_payment_id).trigger("change");
+            $("#mode_of_payment").val(data.mode_of_payment_name +' ('+data.mode_of_payment_term+' Days)').trigger("change");
 
             // Hide all optional fields first
             $("#check-fields").hide();

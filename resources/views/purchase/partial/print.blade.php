@@ -153,8 +153,8 @@
             <th style="width: 15%;">ITEM #</th>
             <th style="width: 45%;">DESCRIPTION</th>
             <th style="width: 10%;">QTY</th>
-            <th style="width: 15%;">UNIT PRICE</th>
-            <th style="width: 15%;">TOTAL</th>
+            <th style="width: 15%;">UNIT COST</th>
+            <th style="width: 15%;">TOTAL COST</th>
         </tr>
     </thead>
     <tbody>
@@ -164,8 +164,21 @@
                 <td>{{ $item->product_code ?? '-' }}</td>
                 <td>
                     {{ $item->supplierItem->item_description ?? 'N/A' }}
+                    @php
+                        $discounts = [];
+                        if ($item->discount_1 > 0) $discounts[] = $item->discount_1 . '%';
+                        if ($item->discount_2 > 0) $discounts[] = $item->discount_2 . '%';
+                        if ($item->discount_3 > 0) $discounts[] = $item->discount_3 . '%';
+                    @endphp
+
+                    @if(count($discounts) > 0)
+                        <strong>{{ ucfirst($item->discount_less_add) }}:</strong> {{ implode(' ', $discounts) }}
+                    @else
+                        -
+                    @endif
+
                     @if(!empty($item->discount) && $item->discount > 0)
-                        <br><small><strong>Discount:</strong> {{ number_format($item->discount, 2) }}%</small>
+                        <br><small><strong>Overall Discount:</strong> {{ number_format($item->discount, 2) }}%</small>
                     @endif
                 </td>
                 <td>{{ $item->qty }}</td>
