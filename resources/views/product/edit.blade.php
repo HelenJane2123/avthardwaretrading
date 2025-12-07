@@ -183,7 +183,7 @@
                                                     <input type="hidden" name="supplier_id[]" value="{{ $supplierItem->supplier_id }}">
                                                 </div>
                                                 <div class="col-md-5">
-                                                    <label class="control-label">Base Price</label>
+                                                    <label class="control-label">Base Price (Unit Cost)</label>
                                                     <input type="number" name="supplier_price[]" class="form-control" 
                                                         placeholder="Purchase Price" value="{{ $supplierItem->price }}" required>
                                                 </div>
@@ -201,6 +201,13 @@
                                 <h5 class="mb-0">Discount/s</h5>
                             </div>
                             <div class="card-body row g-3">
+                                <div class="form-group col-md-2">
+                                    <label class="control-label">Choose Discount Type</label>
+                                    <select name="discount_type" class="form-control">
+                                        <option value="less" {{ $product->discount_type == 'less' ? 'selected' : '' }}>Less (-)</option>
+                                        <option value="add" {{ $product->discount_type == 'add' ? 'selected' : '' }}>Add (+)</option>
+                                    </select>
+                                </div>
                                 <div class="form-group col-md-3">
                                     <label class="control-label">Discount 1</label>
                                     <select name="discount_1" class="form-control">
@@ -612,38 +619,38 @@
             $('body').removeClass('modal-open');
         });
 
-        const salesPriceInput = $('input[name="sales_price"]');
-        // Store the original price as the base for discount calculation
-        function storeOriginalPrice() {
-            if (!salesPriceInput.data('original')) {
-                let val = parseFloat(salesPriceInput.val()) || 0;
-                salesPriceInput.data('original', val);
-            }
-        }
-        function applyDiscounts() {
-            // Make sure we have the original price
-            storeOriginalPrice();
-            let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
+        // const salesPriceInput = $('input[name="sales_price"]');
+        // // Store the original price as the base for discount calculation
+        // function storeOriginalPrice() {
+        //     if (!salesPriceInput.data('original')) {
+        //         let val = parseFloat(salesPriceInput.val()) || 0;
+        //         salesPriceInput.data('original', val);
+        //     }
+        // }
+        // function applyDiscounts() {
+        //     // Make sure we have the original price
+        //     storeOriginalPrice();
+        //     let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
 
-            // Get discount percentages
-            let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
-            let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
-            let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
+        //     // Get discount percentages
+        //     let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
+        //     let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
+        //     let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
 
-            // Sequential discount calculation
-            let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
+        //     // Sequential discount calculation
+        //     let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
 
-            // Update the sales price field with final price
-            salesPriceInput.val(finalPrice.toFixed(2));
-        }
+        //     // Update the sales price field with final price
+        //     salesPriceInput.val(finalPrice.toFixed(2));
+        // }
 
-        // Trigger calculation when the user changes the price or selects discounts
-        salesPriceInput.on('input', function() {
-            // Reset original price if user manually edits
-            salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
-        });
+        // // Trigger calculation when the user changes the price or selects discounts
+        // salesPriceInput.on('input', function() {
+        //     // Reset original price if user manually edits
+        //     salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
+        // });
 
-        $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
+        // $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
     });
 </script>
 @endpush

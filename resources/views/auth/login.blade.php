@@ -68,7 +68,7 @@
                 </div>
 
                 {{-- Stay signed in --}}
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <div class="utility">
                         <div class="animated-checkbox">
                             <label>
@@ -77,7 +77,7 @@
                             </label>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                <div class="form-group mt-3">
                     {!! NoCaptcha::display() !!}

@@ -73,6 +73,7 @@ class ProductController extends Controller
             'supplier_price' => 'required|array',
             'supplier_price.*' => 'numeric|min:0',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'discount_type' => 'nullable', 
             'discount_1' => 'nullable|integer',
             'discount_2' => 'nullable|integer',
             'discount_3' => 'nullable|integer',
@@ -89,10 +90,12 @@ class ProductController extends Controller
         $product->serial_number = $request->serial_number;
         $product->model = $request->model;
         $product->category_id = $request->category_id;
+        $product->base_price = $request->base_price;
         $product->sales_price = $request->sales_price;
         $product->unit_id = $request->unit_id;
         $product->quantity = $request->quantity;
         $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
+        $product->discount_type = $request->discount_type;
         $product->discount_1 = $request->discount_1;
         $product->discount_2 = $request->discount_2;
         $product->discount_3 = $request->discount_3;
@@ -244,6 +247,7 @@ class ProductController extends Controller
             'remaining_stock' => $request->quantity, 
             'sales_price' => $request->sales_price,
             'unit_id' => $request->unit_id,
+            'discount_type' => $request->discount_type,
             'discount_1' => $request->discount_1,
             'discount_2' => $request->discount_2,
             'discount_3' => $request->discount_3,

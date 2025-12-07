@@ -13,6 +13,7 @@ use App\PurchaseDetail;
 use App\ModeofPayment;
 use App\Unit;
 use App\Salesman;
+use App\Tax;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +50,7 @@ class PurchaseController extends Controller
         $suppliers = Supplier::all();
         $products = SupplierItem::all();
         $units = Unit::all();
+        $taxes = Tax::all();
 
         // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
@@ -58,7 +60,7 @@ class PurchaseController extends Controller
 
         //get salesman
         $salesman = Salesman::where('status',1)->get();
-        return view('purchase.create', compact('suppliers','products','paymentModes','units','salesman'));
+        return view('purchase.create', compact('suppliers','products','paymentModes','units','salesman','taxes'));
     }
 
     public function getSupplierItems($id)
@@ -172,13 +174,16 @@ class PurchaseController extends Controller
 
             foreach ($request->product_id as $index => $supplierItemId) {
                 $purchase->items()->create([
-                    'supplier_item_id' => $supplierItemId,
-                    'product_code'     => $request->product_code[$index],
-                    'qty'              => $request->qty[$index],
-                    'unit_price'       => $request->price[$index],
-                    'discount'         => $request->dis[$index] ?? 0,
-                    'unit'             => $request->unit[$index],
-                    'total'            => $request->amount[$index],
+                    'supplier_item_id'     => $supplierItemId,
+                    'product_code'         => $request->product_code[$index],
+                    'qty'                  => $request->qty[$index],
+                    'unit_price'           => $request->price[$index],
+                    'discount_less_add'    => $request->discount_less_add[$index],
+                    'discount_1'           => $request->dis1[$index] ?? 0,
+                    'discount_2'           => $request->dis2[$index] ?? 0,
+                    'discount_3'           => $request->dis3[$index] ?? 0,
+                    'unit'                 => $request->unit[$index],
+                    'total'                => $request->amount[$index],
                 ]);
             }
         });
@@ -237,11 +242,32 @@ class PurchaseController extends Controller
         $suppliers = Supplier::all();
         $paymentModes = ModeofPayment::all();
         $units = Unit::all();
+        $taxes = Tax::all();
+        $taxesArray = $taxes->map(function($t) {
+            return ['id' => $t->id, 'name' => $t->name];
+        })->toArray();
 
         // Load supplier items linked to this purchase's supplier
         $supplierItems = SupplierItem::where('supplier_id', $purchase->supplier_id)
                                     ->get();
 
+        $purchaseItemsArray = $purchase->items->map(function($i){
+            return [
+                'product_id' => $i->supplier_item_id,
+                'product_code' => $i->supplierItem->item_code,
+                'product_name' => $i->supplierItem->item_description,
+                'unit_id' => $i->unit_id,
+                'qty' => $i->qty,
+                'price' => $i->price,
+                'discount_less_add' => $i->discount_less_add,
+                'dis1' => $i->discount_1,
+                'dis2' => $i->discount_2,
+                'dis3' => $i->discount_3,
+                'unit_price' => $i->unit_price,
+                'amount' => $i->total
+            ];
+        })->toArray();        
+        
         //get salesman
         $salesman = Salesman::where('status',1)->get();
         return view('purchase.edit', compact(
@@ -250,7 +276,10 @@ class PurchaseController extends Controller
             'paymentModes',
             'units',
             'supplierItems',
-            'salesman'
+            'salesman',
+            'taxesArray',
+            'taxes',
+            'purchaseItemsArray'
         ));
     }
 
@@ -326,7 +355,10 @@ class PurchaseController extends Controller
                     'product_code'     => $request->product_code[$index],
                     'qty'              => $request->qty[$index],
                     'unit_price'       => $request->price[$index],
-                    'discount'         => $request->dis[$index] ?? 0,
+                    'discount_less_add'    => $request->discount_less_add[$index],
+                    'discount_1'         => $request->dis1[$index] ?? 0,
+                    'discount_2'         => $request->dis2[$index] ?? 0,
+                    'discount_3'         => $request->dis3[$index] ?? 0,
                     'unit'             => $request->unit[$index],
                     'total'            => $request->amount[$index],
                 ]);

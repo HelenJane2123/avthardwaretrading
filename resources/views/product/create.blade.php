@@ -185,7 +185,7 @@
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Unit Cost</label>
+                                            <label class="control-label">Selling Price</label>
                                             <input name="sales_price" id="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                             @error('sales_price')
                                             <span class="invalid-feedback" role="alert">
@@ -226,7 +226,7 @@
                                                 <input type="hidden" id="supplier_id" name="supplier_id[]">
                                             </div>
                                             <div class="col-md-4">
-                                                <label for="supplier_price" class="form-label">Base Price</label>
+                                                <label for="supplier_price" class="form-label">Base Price (Unit Cost)</label>
                                                 <input type="number" id="supplier_price" name="supplier_price[]" 
                                                     class="form-control" placeholder="Base Price">
                                             </div>
@@ -241,7 +241,14 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-2">
+                                            <label class="control-label">Choose Discount Type</label>
+                                            <select name="discount_type" class="form-control">
+                                                <option value="less">Less (-)</option>
+                                                <option value="add">Add (+)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
                                             <label class="control-label">Discount 1</label>
                                             <select name="discount_1" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -255,7 +262,7 @@
                                             </span>
                                             @enderror
                                         </div>
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label class="control-label">Discount 2</label>
                                             <select name="discount_2" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -269,7 +276,7 @@
                                             </span>
                                             @enderror
                                         </div>
-                                        <div class="form-group col-md-4">
+                                        <div class="form-group col-md-3">
                                             <label class="control-label">Discount 3</label>
                                             <select name="discount_3" class="form-control">
                                                 <option value="0">---Select Discount---</option>
@@ -556,42 +563,53 @@
                 }
             });
 
-            // Function to calculate selling price after discounts
-            const salesPriceInput = $('input[name="sales_price"]');
+            //--- start this should be in invoice
+            // Function to calculate selling price after discounts 
+            //const salesPriceInput = $('input[name="sales_price"]');
 
             // Store the original price as the base for discount calculation
-            function storeOriginalPrice() {
-                if (!salesPriceInput.data('original')) {
-                    let val = parseFloat(salesPriceInput.val()) || 0;
-                    salesPriceInput.data('original', val);
-                }
-            }
+            // function storeOriginalPrice() {
+            //     if (!salesPriceInput.data('original')) {
+            //         let val = parseFloat(salesPriceInput.val()) || 0;
+            //         salesPriceInput.data('original', val);
+            //     }
+            // }
 
             // Apply compound discounts
-            function applyDiscounts() {
-                // Make sure we have the original price
-                storeOriginalPrice();
-                let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
+            // function applyDiscounts() {
+            //     // Keep original price
+            //     storeOriginalPrice();
+            //     let price = parseFloat(salesPriceInput.data('original')) || 0;
 
-                // Get discount percentages
-                let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
-                let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
-                let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
+            //     // Only one discount type for all 3 discounts
+            //     let type = $('select[name="discount_type"]').val(); // less or add
 
-                // Sequential discount calculation
-                let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
+            //     // Apply 3 sequential discounts
+            //     for (let i = 1; i <= 3; i++) {
+            //         let d = parseFloat($(`select[name="discount_${i}"]`).val()) || 0;
 
-                // Update the sales price field with final price
-                salesPriceInput.val(finalPrice.toFixed(2));
-            }
+            //         if (d > 0) {
+            //             if (type === "less") {
+            //                 price = price * (1 - d / 100);
+            //             } else {
+            //                 price = price * (1 + d / 100);
+            //             }
+            //         }
+            //     }
 
+            //     // Update sales price
+            //     salesPriceInput.val(price.toFixed(2));
+            // }
+
+            
             // Trigger calculation when the user changes the price or selects discounts
-            salesPriceInput.on('input', function() {
-                // Reset original price if user manually edits
-                salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
-            });
+            // salesPriceInput.on('input', function() {
+            //     // Reset original price if user manually edits
+            //     salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
+            // });
 
-            $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
+            // $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
+            //--end invoice price computation
         });
         // function generateProductCode() {
         //     const prefix = "AVT";

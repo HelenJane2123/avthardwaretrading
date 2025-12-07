@@ -101,79 +101,144 @@
                         {{-- Product List --}}
                         <div class="table-responsive mb-4">
                             <table class="table table-bordered align-middle">
-                                <thead class="bg-dark text-white">
+                                <thead class="bg-dark text-white text-center">
                                     <tr>
-                                        <th>Product Code</th>
-                                        <th>Product</th>
-                                        <th>Unit</th>
-                                        <th>Qty Ordered</th>
-                                        <th>Unit Price</th>
-                                        <th>Discount (%)</th>
-                                        <th>Amount</th>
-                                        <th class="text-center">
+                                        <th style="width: 20%">Product</th>
+                                        <th style="width: 8%">Unit</th>
+                                        <th style="width: 8%">Qty</th>
+                                        <th style="width: 15%">Discounts</th>
+                                        <th style="width: 12%">Unit Cost</th>
+                                        <th style="width: 12%">Total Cost</th>
+                                        <th style="width: 5%">
                                             <button type="button" class="btn btn-success btn-sm addRow">
                                                 <i class="fa fa-plus"></i>
                                             </button>
                                         </th>
                                     </tr>
                                 </thead>
+
                                 <tbody id="po-body">
                                     <tr>
-                                        <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
+                                        <!-- PRODUCT -->
                                         <td>
-                                            <select name="product_id[]" class="form-control purchaseproduct"></select>
-                                            <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
+                                            <input type="hidden" name="product_code[]" class="form-control form-control-sm code">
+                                            <select name="product_id[]" class="form-control form-control-sm purchaseproduct"></select>
+                                            <small class="text-muted selected-product-name"></small>
                                         </td>
+
+                                        <!-- UNIT -->
                                         <td>
-                                            <select name="unit[]" class="form-control unit">
-                                                <option value="">Select Unit</option>
+                                            <select name="unit[]" class="form-control form-control-sm">
+                                                <option value="">Unit</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
-                                        <td><input type="number" name="qty[]" class="form-control qty"></td>
-                                        <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
-                                        <td><input type="number" step="0.01" name="dis[]" class="form-control dis"></td>
-                                        <td><input type="number" step="0.01" name="amount[]" class="form-control amount" readonly></td>
+
+                                        <!-- QTY -->
+                                        <td>
+                                            <input type="number" name="qty[]" class="form-control form-control-sm qty" placeholder="0">
+                                        </td>
+
+                                        <!-- DISCOUNTS (Stacked for readability) -->
+                                        <td>
+                                            <div class="row g-1">
+                                                <!-- Discount Type -->
+                                                <div class="col-8">
+                                                    <select name="discount_less_add[]" class="form-control form-control-sm">
+                                                        <option value="less">Less (-)</option>
+                                                        <option value="add">Add (+)</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Discount 1 -->
+                                                <div class="col-8">
+                                                    <select name="dis1[]" class="form-control form-control-sm">
+                                                        <option value="0">Discount 1 (%)</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <!-- Discount 2 -->
+                                                <div class="col-8">
+                                                    <select name="dis2[]" class="form-control form-control-sm">
+                                                        <option value="0">Discount 2 (%)</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <!-- Discount 3 -->
+                                                <div class="col-8">
+                                                    <select name="dis3[]" class="form-control form-control-sm mt-1">
+                                                        <option value="0">Discount 3 (%)</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </td>
+
+
+                                        <!-- UNIT PRICE -->
+                                        <td>
+                                            <input type="number" step="0.01" name="price[]" class="form-control form-control-sm price" placeholder="0.00">
+                                        </td>
+
+                                        <!-- TOTAL -->
+                                        <td>
+                                            <input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount" readonly>
+                                        </td>
+
+                                        <!-- REMOVE BUTTON -->
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
+                                            <button type="button" class="btn btn-danger btn-sm remove">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
+
                                 <tfoot class="bg-light">
                                     <tr>
                                         <th colspan="5" class="text-end">Discount Type</th>
-                                        <td colspan="3">
-                                            <select id="discount_type" name="discount_type" class="form-control">
+                                        <td colspan="2">
+                                            <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                                 <option value="all" selected>All</option>
-                                                <option value="per_item" >Per Item</option>
+                                                <option value="per_item">Per Item</option>
                                                 <option value="overall">Overall</option>
                                             </select>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Tax / Discount</th>
-                                        <td colspan="3"><input type="text" id="discount" name="discount_value" class="form-control"></td>
+                                        <td colspan="2"><input type="text" id="discount" name="discount_value" class="form-control form-control-sm"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Shipping</th>
-                                        <td colspan="3"><input type="number" id="shipping" name="shipping" class="form-control" value="0"></td>
+                                        <td colspan="2"><input type="number" id="shipping" name="shipping" class="form-control form-control-sm" value="0"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Other Charges</th>
-                                        <td colspan="3"><input type="number" id="other" name="other_charges" class="form-control" value="0"></td>
+                                        <td colspan="2"><input type="number" id="other" name="other_charges" class="form-control form-control-sm" value="0"></td>
                                     </tr>
                                     <tr class="fw-bold">
                                         <th colspan="5" class="text-end">Subtotal</th>
-                                        <td colspan="3"><input type="text" id="subtotal" name="subtotal" class="form-control" readonly></td>
+                                        <td colspan="2"><input type="text" id="subtotal" name="subtotal" class="form-control form-control-sm" readonly></td>
                                     </tr>
                                     <tr class="fw-bold bg-secondary text-white">
                                         <th colspan="5" class="text-end">Grand Total</th>
-                                        <td colspan="3"><input type="text" id="grand_total" name="grand_total" class="form-control" readonly></td>
+                                        <td colspan="2"><input type="text" id="grand_total" name="grand_total" class="form-control form-control-sm" readonly></td>
                                     </tr>
                                 </tfoot>
                             </table>
+
                         </div>
 
                         {{-- Remarks --}}
@@ -235,25 +300,65 @@
                 });
 
                 const addRow = `<tr>
-                    <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
                     <td>
-                        <select name="product_id[]" class="form-control purchaseproduct">
+                        <input type="hidden" name="product_code[]" class="form-control form-control-sm code">
+                        <select name="product_id[]" class="form-control form-control-sm purchaseproduct">
                             ${options}
                         </select>
-                        <small class="text-muted d-block mt-1 selected-product-name" style="font-size: 0.85rem;"></small>
+                       <small class="text-muted selected-product-name"></small>
                     </td>
                     <td>
-                        <select name="unit[]" class="form-control unit">
-                            <option value="">Select Unit</option>
+                        <select name="unit[]" class="form-control form-control-sm unit">
+                            <option value="">Unit</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                             @endforeach
                         </select>
                     </td>
-                    <td><input type="number" name="qty[]" class="form-control qty"></td>
-                    <td><input type="text" name="price[]" class="form-control price"></td>
-                    <td><input type="text" name="dis[]" class="form-control dis"></td>
-                    <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
+                    <td><input type="number" name="qty[]" class="form-control form-control-sm qty"  placeholder="0"></td>
+                    <td>
+                        <div class="row g-1">
+                            <!-- Discount Type -->
+                            <div class="col-8">
+                                <select name="discount_less_add[]" class="form-control form-control-sm">
+                                    <option value="less">Less (-)</option>
+                                    <option value="add">Add (+)</option>
+                                </select>
+                            </div>
+
+                            <!-- Discount 1 -->
+                            <div class="col-8">
+                                <select name="dis1[]" class="form-control form-control-sm">
+                                    <option value="0">Discount 1 (%)</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Discount 2 -->
+                            <div class="col-8">
+                                <select name="dis2[]" class="form-control form-control-sm">
+                                    <option value="0">Discount 2 (%)</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Discount 3 -->
+                            <div class="col-8">
+                                <select name="dis3[]" class="form-control form-control-sm mt-1">
+                                    <option value="0">Discount 3 (%)</option>
+                                    @foreach($taxes as $tax)
+                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </td>
+                    <td><input type="number" step="0.01" name="price[]" class="form-control form-control-sm price" placeholder="0.00"></td>
+                    <td><input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount" readonly></td>
                     <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
                 </tr>`;
 
@@ -326,7 +431,7 @@
 
                 $row.find('.code').val(code);
                 $row.find('.price').val(price);
-                $row.find('.selected-product-name').text(name);
+                $row.find('.selected-product-name').text('('+ code +') '+name);
 
                 calculateTotals(); // make sure this function exists
             });
@@ -377,6 +482,7 @@
             $('#hidden_grand_total').val($('#grand_total').val() || 0);
         });
 
+
         //Populate Product details
         $(document).on('change', 'select[name="supplier_id"]', function () {
             var supplierId = $(this).val();
@@ -411,54 +517,62 @@
         });
 
         function calculateTotals() {
-            let baseSubtotal = 0;
-            let totalDiscount = 0;
-            const discountType = $('#discount_type').val();
+            let subtotal = 0; // sum of all row totals
 
             $('#po-body tr').each(function () {
-                const qty   = parseFloat($(this).find('.qty').val())   || 0;
+                const qty   = parseFloat($(this).find('.qty').val()) || 0;
                 const price = parseFloat($(this).find('.price').val()) || 0;
-                const disP  = parseFloat($(this).find('.dis').val())   || 0;
 
-                const lineBase = qty * price;
-                baseSubtotal += lineBase;
+                const dis1 = parseFloat($(this).find('[name="dis1[]"]').val()) || 0;
+                const dis2 = parseFloat($(this).find('[name="dis2[]"]').val()) || 0;
+                const dis3 = parseFloat($(this).find('[name="dis3[]"]').val()) || 0;
 
-                let lineNet = lineBase;
+                const type = $(this).find('[name="discount_less_add[]"]').val(); // "less" or "add"
 
-                // Per-item discount
-                if ((discountType === 'per_item' || discountType === 'all') && disP > 0) {
-                    const lineDiscAmt = lineBase * disP / 100;
-                    totalDiscount += lineDiscAmt;
-                    lineNet -= lineDiscAmt;
-                }
+                let lineTotal = qty * price;
 
-                $(this).find('.amount').val(lineNet.toFixed(2));
+                // Apply discounts sequentially
+                [dis1, dis2, dis3].forEach(function(d) {
+                    if(d > 0){
+                        if(type === 'less'){
+                            lineTotal -= lineTotal * (d / 100);
+                        } else if(type === 'add'){
+                            lineTotal += lineTotal * (d / 100);
+                        }
+                    }
+                });
+
+                $(this).find('.amount').val(lineTotal.toFixed(2));
+
+                subtotal += lineTotal; // sum row total
             });
 
-            // Overall discount
-            if (discountType === 'overall' || discountType === 'all') {
+            // Overall discount (if selected)
+            const discountType = $('#discount_type').val();
+            let overallDiscount = 0;
+            if(discountType === 'overall'){
                 const overallPct = parseFloat($('#discount').val()) || 0;
-                const overallDiscAmt = baseSubtotal * overallPct / 100;
-                totalDiscount += overallDiscAmt;
+                overallDiscount = subtotal * overallPct / 100;
             }
 
             const shipping = parseFloat($('#shipping').val()) || 0;
-            const other    = parseFloat($('#other').val())    || 0;
+            const other    = parseFloat($('#other').val()) || 0;
 
-            const taxableBase = (baseSubtotal - totalDiscount) + shipping + other;
-            const grandTotal  = taxableBase;
+            const grandTotal = subtotal - overallDiscount + shipping + other;
 
-            $('#subtotal').val(baseSubtotal.toFixed(2));
+            // Update fields
+            $('#subtotal').val(subtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
 
-            // Hidden backend values if you have them
-            $('#hidden_subtotal').val(baseSubtotal.toFixed(2));
-            $('#hidden_discount_value').val(totalDiscount.toFixed(2));
+            $('#hidden_subtotal').val(subtotal.toFixed(2));
+            $('#hidden_discount_value').val(overallDiscount.toFixed(2));
             $('#hidden_grand_total').val(grandTotal.toFixed(2));
         }
 
-        $(document).on('input', '.qty, .price, .dis, #discount, #tax, #shipping, #other', function() {
-            calculateTotals();
+        $(document).on('input change', 
+            '.qty, .price, [name="dis1[]"], [name="dis2[]"], [name="dis3[]"], [name="discount_less_add[]"], #discount, #tax, #shipping, #other', 
+            function() {
+                calculateTotals();
         });
 
         $('#discount_type').on('change', function() {

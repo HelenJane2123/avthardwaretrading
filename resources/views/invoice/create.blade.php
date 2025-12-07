@@ -131,7 +131,7 @@
                                 <tbody id="po-body">
                                     <tr>
                                         <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                                        <td>
+                                        <td style="width: 400px;">
                                             <div class="input-group">
                                                 <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
                                                 <input type="hidden" name="product_id[]" class="product_id">
@@ -295,7 +295,7 @@
             </div>
             </div>
         </div>
-        </div>
+    </div>
 </div>
 @endsection
 
@@ -321,6 +321,7 @@
                     });
                 }
             });
+
             // Open modal when search button clicked
             $(document).on('click', '.select-product-btn', function() {
                 currentRow = $(this).closest('tr'); // remember which row opened the modal
@@ -391,7 +392,7 @@
                 @endforeach
                 const newRow = `<tr>
                     <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                    <td>
+                    <td style="width: 400px;">
                         <div class="input-group">
                             <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
                             <input type="hidden" name="product_id[]" class="product_id">

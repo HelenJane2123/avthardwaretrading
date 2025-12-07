@@ -7,7 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseItem extends Model
 {
     protected $table = 'purchase_items';
-    protected $fillable = ['purchase_id', 'supplier_item_id', 'product_code', 'qty', 'unit_price', 'discount', 'unit', 'total'];
+    protected $fillable = [
+        'purchase_id', 
+        'supplier_item_id', 
+        'product_code', 
+        'qty', 
+        'unit', 
+        'discount_less_add', 
+        'discount_1', 
+        'discount_2', 
+        'discount_3', 
+        'unit_price', 
+        'total'];
 
     public function purchase()
     {
