@@ -41,7 +41,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <label class="form-label">Customer <span class="text-danger">*</span></label>
-                                <select id="customerSelect" name="customer_id" class="form-control" required>
+                                <select id="customerSelect" name="customer_id" class="form-control form-control-sm" required>
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
@@ -50,19 +50,19 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                                <input type="date" name="invoice_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="invoice_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Due Date <span class="text-danger">*</span></label>
-                                <input type="date" name="due_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="due_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Invoice Number</label>
-                                <input type="text" name="invoice_number" id="invoice_number" class="form-control" readonly>
+                                <input type="text" name="invoice_number" id="invoice_number" class="form-control form-control-sm" readonly>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                                <select name="payment_mode_id" id="payment_id" class="form-control" required>
+                                <select name="payment_mode_id" id="payment_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}" data-term="{{ $mode->term }}">
@@ -74,7 +74,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Discount Type <span class="text-danger">*</span></label>
-                                <select id="discount_type" name="discount_type" class="form-control">
+                                <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                     <option value="" selected>Select Type of Discount</option>
                                     <option value="per_item" >Per Item</option>
                                     <option value="overall">Overall</option>
@@ -82,7 +82,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                               <select name="salesman" id="salesman_id" class="form-control" required>
+                               <select name="salesman" id="salesman_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}">
@@ -114,13 +114,12 @@
                             <table class="table table-bordered align-middle">
                                 <thead class="bg-dark text-white">
                                     <tr>
-                                        <th>Product Code</th>
-                                        <th>Product</th>
-                                        <th>Unit</th>
-                                        <th>Qty Ordered</th>
-                                        <th>Unit Price</th>
-                                        <th>Discount (%)</th>
-                                        <th>Amount</th>
+                                        <th style="width: 45%">Product</th>
+                                        <th style="width: 8%">Unit</th>
+                                        <th style="width: 8%">Qty</th>
+                                        <th style="width: 20%">Discount (%)</th>
+                                        <th style="width: 10%">Unit Price</th>
+                                        <th style="width: 12%">Total Price</th>
                                         <th class="text-center">
                                             <button type="button" class="btn btn-success btn-sm addRow">
                                                 <i class="fa fa-plus"></i>
@@ -130,10 +129,10 @@
                                 </thead>
                                 <tbody id="po-body">
                                     <tr>
-                                        <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                                        <td style="width: 400px;">
+                                        <td>
+                                            <input type="hidden" name="product_code[]" class="form-control code" readonly>
                                             <div class="input-group">
-                                                <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
+                                                <input type="text" name="product_name[]" class="form-control form-control-sm product-input productname" placeholder="Search Product" readonly>
                                                 <input type="hidden" name="product_id[]" class="product_id">
                                                 <button type="button" class="btn btn-outline-primary select-product-btn">
                                                     <i class="fa fa-search"></i>
@@ -141,23 +140,8 @@
                                             </div>
                                             <div class="text-muted small selected-product-info mt-1"></div>
                                         </td>
-                                        <!-- <td>
-                                            <select name="product_id[]" class="form-control productname">
-                                                <option value="">Select Product</option>
-                                                @foreach($products as $product)
-                                                    <option value="{{ $product->id }}"
-                                                        data-code="{{ $product->product_code }}"
-                                                        data-price="{{ $product->sales_price }}"
-                                                        data-stock="{{ $product->remaining_stock }}"
-                                                        data-unit="{{ $product->unit_id }}">
-                                                        {{ $product->product_name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <div class="text-muted small selected-product-info mt-1"></div>                                        
-                                        </td> -->
                                         <td>
-                                            <select name="unit[]" class="form-control unit">
+                                            <select name="unit[]" class="form-control form-control-sm unit">
                                                 <option value="">Select Unit</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -165,24 +149,56 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="number" name="qty[]" class="form-control qty">
+                                            <input type="number" name="qty[]" class="form-control form-control-sm qty">
                                             <small class="text-muted available-stock"></small>
                                         </td>
-                                        <td><input type="number" step="0.01" name="price[]" class="form-control price"></td>
                                         <td>
-                                            <div class="discounts-wrapper">
-                                                <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                                    <select name="dis[0][]" class="form-control dis">
-                                                        <option value="0">---Select Discount---</option>
+                                            <div class="row g-1">
+                                                <!-- Discount Type -->
+                                                <div class="col-8">
+                                                    <select name="discount_less_add[]" class="form-control form-control-sm discount_type">
+                                                        <option value="less">Less (-)</option>
+                                                        <option value="add">Add (+)</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Discount 1 -->
+                                                <div class="col-8">
+                                                    <select name="dis1[]" class="form-control form-control-sm dis1">
+                                                        <option value="0">Discount 1 (%)</option>
                                                         @foreach($taxes as $tax)
-                                                            <option value="{{$tax->name}}">{{$tax->name}} %</option>
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
                                                         @endforeach
                                                     </select>
-                                                    <button type="button" class="btn btn-success btn-sm add-discount"><i class="fa fa-plus"></i></button>
                                                 </div>
+
+                                                <!-- Discount 2 -->
+                                                <div class="col-8">
+                                                    <select name="dis2[]" class="form-control form-control-sm dis2">
+                                                        <option value="0">Discount 2 (%)</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <!-- Discount 3 -->
+                                                <div class="col-8">
+                                                    <select name="dis3[]" class="form-control form-control-sm dis3">
+                                                        <option value="0">Discount 3 (%)</option>
+                                                        @foreach($taxes as $tax)
+                                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
                                             </div>
                                         </td>
-                                        <td><input type="number" step="0.01" name="amount[]" class="form-control amount" readonly></td>
+                                        <td>
+                                            <input type="number" name="price[]" class="form-control form-control-sm price">
+                                            <div class="text-muted small show-base-price mt-1"></div>
+                                        </td>
+                                        <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
                                         </td>
@@ -265,6 +281,7 @@
                     <tr>
                         <th>Code</th>
                         <th>Name</th>
+                        <th>Unit Cost</th>
                         <th>Price</th>
                         <th>Stock</th>
                         <th>Unit</th>
@@ -273,21 +290,27 @@
                     </thead>
                     <tbody>
                     @foreach($products as $product)
-                    <tr data-id="{{ $product->id }}"
-                        data-code="{{ $product->product_code }}"
-                        data-name="{{ $product->product_name }}"
-                        data-price="{{ $product->sales_price }}"
-                        data-stock="{{ $product->remaining_stock }}"
-                        data-unit="{{ $product->unit_id }}">
-                        <td>{{ $product->product_code }}</td>
-                        <td>{{ $product->product_name }}</td>
-                        <td>{{ $product->sales_price }}</td>
-                        <td>{{ $product->remaining_stock }}</td>
-                        <td>{{ $product->unit_id }}</td>
-                        <td>
-                        <button type="button" class="btn btn-success btn-sm select-this">Select</button>
-                        </td>
-                    </tr>
+                        <tr data-id="{{ $product->id }}"
+                            data-code="{{ $product->product_code }}"
+                            data-name="{{ $product->product_name }}"
+                            data-price="{{ $product->sales_price }}"
+                            data-stock="{{ $product->remaining_stock }}"
+                            data-unit="{{ $product->unit_id }}"
+                            data-discounttype="{{ $product->discount_type }}"
+                            data-discount1="{{ $product->discount_1 }}"
+                            data-discount2="{{ $product->discount_2 }}"
+                            data-discount3="{{ $product->discount_3 }}"
+                            data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                            <td>{{ $product->product_code }}</td>
+                            <td>{{ $product->product_name }}</td>
+                            <td>{{ optional($product->supplierItems->first())->item_price }}</td>
+                            <td>{{ $product->sales_price }}</td>
+                            <td>{{ $product->remaining_stock }}</td>
+                            <td>{{ $product->unit->name }}</td>
+                            <td>
+                            <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                            </td>
+                        </tr>
                     @endforeach
                     </tbody>
                 </table>
@@ -309,7 +332,7 @@
             let currentRow = null;
             let productTable = null;
 
-            $('#productModal').on('shown.bs.modal', function () {
+             $('#productModal').on('shown.bs.modal', function () {
                 if (!productTable) {
                     productTable = $('#productTable').DataTable({
                         pageLength: 10,       // Show 10 rows per page
@@ -340,7 +363,13 @@
                 let name = tr.data('name');
                 let price = tr.data('price');
                 let stock = tr.data('stock');
-                let unit = tr.data('unit');
+                let unitId = tr.data('unit');
+                let basePrice = tr.data('baseprice');
+                let discount_type = tr.data('discounttype');
+                let discount_1 = tr.data('discount1');
+                let discount_2 = tr.data('discount2');
+                let discount_3 = tr.data('discount3');
+                
 
                 // Update row fields
                 currentRow.find('.product-input').val(name);
@@ -348,16 +377,17 @@
                 currentRow.find('.code').val(code);
                 currentRow.find('.price').val(price);
                 currentRow.find('.qty').val('').prop('readonly', false).data('stock', stock);
-                currentRow.find('.unit').val(unit);
+                currentRow.find('.unit').val(unitId).trigger('change');
+                currentRow.find('.discount_type').val(discount_type).trigger('change');
+                currentRow.find('.dis1').val(discount_1).trigger('change');
+                currentRow.find('.dis2').val(discount_2).trigger('change');
+                currentRow.find('.dis3').val(discount_3).trigger('change');
+
                 currentRow.find('.selected-product-info').html(name);
+                currentRow.find('.show-base-price').html("Unit Cost: " +basePrice);
 
                 $('#productModal').modal('hide');
             });
-            // $('.productname').select2({
-            //     placeholder: "Select Product",
-            //     allowClear: true,
-            //     width: '400px'
-            // });
             $('#customerSelect').select2({
                 placeholder: "Select Customer",
                 allowClear: true,
@@ -391,57 +421,81 @@
                                 </option>`;
                 @endforeach
                 const newRow = `<tr>
-                    <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                    <td style="width: 400px;">
-                        <div class="input-group">
-                            <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
-                            <input type="hidden" name="product_id[]" class="product_id">
-                            <button type="button" class="btn btn-outline-primary select-product-btn">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </div>
-                        <div class="text-muted small selected-product-info mt-1"></div>
-                    </td>
-                    <td>
-                        <select name="unit[]" class="form-control unit">
-                            <option value="">Select Unit</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" name="qty[]" class="form-control qty">
-                        <small class="text-muted available-stock"></small>
-                    </td>
-                    <td><input type="text" name="price[]" class="form-control price"></td>
-                    <td>
-                        <div class="discounts-wrapper">
-                            <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                <select name="dis[${rowIndex}][]" class="form-control dis">
-                                    <option value="0">---Select Discount---</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{$tax->name}}">{{$tax->name}} %</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-success btn-sm add-discount">
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </td>
-                    <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
-                    <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
-                </tr>`;
+                                    <td>
+                                        <input type="hidden" name="product_code[]" class="form-control code" readonly>
+                                        <div class="input-group">
+                                            <input type="text" name="product_name[]" class="form-control form-control-sm product-input productname" placeholder="Search Product" readonly>
+                                            <input type="hidden" name="product_id[]" class="product_id">
+                                            <button type="button" class="btn btn-outline-primary select-product-btn">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </div>
+                                        <div class="text-muted small selected-product-info mt-1"></div>
+                                    </td>
+                                    <td>
+                                        <select name="unit[]" class="form-control form-control-sm unit">
+                                            <option value="">Select Unit</option>
+                                            @foreach($units as $unit)
+                                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="qty[]" class="form-control form-control-sm qty">
+                                        <small class="text-muted available-stock"></small>
+                                    </td>
+                                    <td>
+                                        <div class="row g-1">
+                                            <!-- Discount Type -->
+                                            <div class="col-8">
+                                                <select name="discount_less_add[]" class="form-control form-control-sm discount_type">
+                                                    <option value="less">Less (-)</option>
+                                                    <option value="add">Add (+)</option>
+                                                </select>
+                                            </div>
 
+                                            <!-- Discount 1 -->
+                                            <div class="col-8">
+                                                <select name="dis1[]" class="form-control form-control-sm dis1">
+                                                    <option value="0">Discount 1 (%)</option>
+                                                    @foreach($taxes as $tax)
+                                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Discount 2 -->
+                                            <div class="col-8">
+                                                <select name="dis2[]" class="form-control form-control-sm dis2">
+                                                    <option value="0">Discount 2 (%)</option>
+                                                    @foreach($taxes as $tax)
+                                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Discount 3 -->
+                                            <div class="col-8">
+                                                <select name="dis3[]" class="form-control form-control-sm dis3">
+                                                    <option value="0">Discount 3 (%)</option>
+                                                    @foreach($taxes as $tax)
+                                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="price[]" class="form-control form-control-sm price">
+                                        <div class="text-muted small show-base-price mt-1"></div>
+                                    </td>
+                                    <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>`;
                 $('#po-body').append(newRow);
-
-                // Re-initialize Select2 for the new row
-                // $('#po-body tr:last .productname').select2({
-                //     placeholder: "Select Product",
-                //     allowClear: true,
-                //     width: '400px'
-                // });
 
                 // Apply same behavior based on current discount type
                 const discountType = $('#discount_type').val();
@@ -484,32 +538,33 @@
                 calculateTotals();
             });
 
-            $(document).on('click', '.add-discount', function () {
-                const wrapper = $(this).closest('.discounts-wrapper');
-                const row = $(this).closest('tr');
-                const rowIndex = row.index(); // get row number
-                const newRow = `
-                    <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                        <select name="dis[${rowIndex}][]" class="form-control dis">
-                            <option value="0">---Select Discount---</option>
-                            @foreach($taxes as $tax)
-                                <option value="{{$tax->name}}">{{$tax->name}} %</option>
-                            @endforeach
-                        </select>
-                        <button type="button" class="btn btn-success btn-sm add-discount">
-                            <i class="fa fa-plus"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger btn-sm remove-discount">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </div>`;
-                wrapper.append(newRow);
-            });
-            // Remove a discount
-            $(document).on('click', '.remove-discount', function() {
-                $(this).closest('.discount-row').remove();
-                calculateTotals();
-            });
+            // $(document).on('click', '.add-discount', function () {
+            //     const wrapper = $(this).closest('.discounts-wrapper');
+            //     const row = $(this).closest('tr');
+            //     const rowIndex = row.index(); 
+
+            //     const newRow = `
+            //         <div class="discount-row d-flex align-items-center gap-2 mb-2">
+            //             <select name="dis[${rowIndex}][]" class="form-control dis">
+            //                 <option value="0">---Select Discount---</option>
+            //                 @foreach($taxes as $tax)
+            //                     <option value="{{$tax->name}}">{{$tax->name}} %</option>
+            //                 @endforeach
+            //             </select>
+            //             <button type="button" class="btn btn-danger btn-sm remove-discount">
+            //                 <i class="fa fa-trash"></i>
+            //             </button>
+            //         </div>`;
+            //     wrapper.append(newRow);
+
+            //     // Recalculate totals after adding
+            //     calculateTotals();
+            // });
+
+            // $(document).on('click', '.remove-discount', function() {
+            //     $(this).closest('.discount-row').remove();
+            //     calculateTotals();
+            // });
 
             // Populate Customer Information
             $('#customerSelect').on('change', function () {
@@ -778,43 +833,59 @@
         function calculateTotals() {
             let subtotal = 0;
 
-            $('#po-body tr').each(function(index) {
-                let qty = parseFloat($(this).find('.qty').val()) || 0;
-                let price = parseFloat($(this).find('.price').val()) || 0;
+            $('#po-body tr').each(function() {
+                const $row = $(this);
+                const qty = parseFloat($row.find('.qty').val()) || 0;
+                let price = parseFloat($row.find('.price').val()) || 0;
                 let lineTotal = qty * price;
 
-                // Apply per-item discounts
-                $(this).find('.dis').each(function() {
-                    let disText = $(this).find('option:selected').text();
-                    let disValue = parseFloat(disText) || 0;
-                    if (disValue > 0) {
-                        lineTotal -= (lineTotal * disValue / 100);
-                    }
+                // Get the discount type for this row
+                const discountType = $row.find('select[name="discount_less_add[]"]').val() || 'less';
+
+                // Apply static discounts (dis1, dis2, dis3)
+                const staticDiscounts = [
+                    parseFloat($row.find('select[name="dis1[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis2[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis3[]"]').val()) || 0
+                ];
+
+                staticDiscounts.forEach(d => {
+                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
+                    else lineTotal += (lineTotal * d / 100);
                 });
 
-                $(this).find('.amount').val(lineTotal.toFixed(2));
+                // Apply dynamic discounts (.dis)
+                $row.find('.discount-row .dis').each(function() {
+                    const d = parseFloat($(this).val()) || 0;
+                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
+                    else lineTotal += (lineTotal * d / 100);
+                });
+
+                // Update row amount
+                $row.find('.amount').val(lineTotal.toFixed(2));
                 subtotal += lineTotal;
             });
 
-            // Overall discount
-            let discountType = $('#discount_type').val();
+            // Overall discount if selected
+            const overallType = $('#discount_type').val();
             let overallDis = parseFloat($('#discount').val()) || 0;
             let overallAmount = 0;
 
-            if (discountType === 'overall' && overallDis > 0) {
+            if (overallType === 'overall' && overallDis > 0) {
                 overallAmount = subtotal * (overallDis / 100);
+                subtotal = subtotal - overallAmount;
             }
 
-            let afterDiscount = subtotal - overallAmount;
-            let shipping = parseFloat($('#shipping').val()) || 0;
-            let other = parseFloat($('#other').val()) || 0;
-            let grandTotal = afterDiscount + shipping + other;
+            const shipping = parseFloat($('#shipping').val()) || 0;
+            const other = parseFloat($('#other').val()) || 0;
+            const grandTotal = subtotal + shipping + other;
 
             $('#subtotal').val(subtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
         }
 
-        $(document).on('change input', '.dis, .qty, .price, #discount_type, #discount, #shipping, #other', function() {
+        // Trigger recalculation whenever relevant inputs change
+        $(document).on('change input', '.qty, .price, select[name="dis1[]"], select[name="dis2[]"], select[name="dis3[]"], .dis, select[name="discount_less_add[]"], #discount, #shipping, #other', function() {
             calculateTotals();
         });
 

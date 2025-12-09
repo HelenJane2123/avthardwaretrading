@@ -20,6 +20,7 @@ use App\InvoiceSalesDiscount;
 use App\Salesman;
 use Illuminate\Support\Facades\DB;
 
+
 class InvoiceController extends Controller
 {
     /**
@@ -48,23 +49,37 @@ class InvoiceController extends Controller
      */
     public function create()
     {
-        // Load categories with their products (only necessary columns)
-        $categories = Category::with(['products' => function($q){
-            $q->select('id','product_name','product_code','sales_price','remaining_stock','category_id');
+        $categories = Category::with(['products' => function($q) {
+            $q->select('id','product_name','product_code','sales_price','remaining_stock','category_id','supplier_product_code')
+            ->with(['supplierItems:id,item_code,item_price']); 
         }])->get();
 
-        // Also load a flat products list (fallback or for other places in the form)
-        $products = Product::select('id','product_name','product_code','sales_price','remaining_stock','category_id')->get();
-
+        // Load products with base price
+        $products = Product::select('id',
+                'product_name',
+                'product_code',
+                'sales_price',
+                'remaining_stock',
+                'category_id',
+                'supplier_product_code',
+                'unit_id',
+                'discount_type',
+                'discount_1',
+                'discount_2',
+                'discount_3')
+            ->with(['supplierItems:id,item_code,item_price',
+                    'unit:id,name'])
+            ->get();
+            
         $customers = Customer::where('status', 1)->get();
-        $products = Product::all();
         $units = Unit::all();
         $taxes = Tax::all();
-
-        // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
         $salesman = Salesman::where('status',1)->get();
-        return view('invoice.create', compact('customers','products','paymentModes','units','taxes','salesman'));
+
+        return view('invoice.create', compact(
+            'customers','products','paymentModes','units','taxes','salesman'
+        ));
     }
 
     public function getCustomerInformation($id)
@@ -120,8 +135,11 @@ class InvoiceController extends Controller
             $quantities = $request->qty;
             $prices = $request->price;
             $amounts = $request->amount;
-            $discounts = $request->dis ?? []; // multiple discounts per item
             $discountType = $request->discount_type;
+            $discount_less_add = $request->discount_less_add ?? [];
+            $discount_1 = $request->dis1 ?? [];
+            $discount_2 = $request->dis2 ?? [];
+            $discount_3 = $request->dis3 ?? [];
 
             // Loop through each product in the invoice
             foreach ($productIds as $index => $productId) {
@@ -130,27 +148,31 @@ class InvoiceController extends Controller
                 $product->product_id = $productId;
                 $product->qty = $quantities[$index] ?? 0;
                 $product->price = $prices[$index] ?? 0;
+                $product->discount_less_add = $discount_less_add[$index] ?? 'less';
+                $product->discount_1 =  $discount_1[$index] ?? 0;
+                $product->discount_2 =  $discount_2[$index] ?? 0;
+                $product->discount_3 =  $discount_3[$index] ?? 0;
                 $product->amount = $amounts[$index] ?? 0;
                 $product->save();
 
                 // Save multiple discounts for this product (if any)
-                if (isset($discounts[$index]) && is_array($discounts[$index])) {
-                    foreach ($discounts[$index] as $discountValue) {
-                        InvoiceSalesDiscount::create([
-                            'invoice_sale_id' => $product->id,
-                            'discount_name' => 'Discount', // optional label
-                            'discount_type' => 'percent',  // assuming these are % values
-                            'discount_value' => $discountValue,
-                        ]);
-                    }
-                }
+                // if (isset($discounts[$index]) && is_array($discounts[$index])) {
+                //     foreach ($discounts[$index] as $discountValue) {
+                //         InvoiceSalesDiscount::create([
+                //             'invoice_sale_id' => $product->id,
+                //             'discount_name' => 'Discount', // optional label
+                //             'discount_type' => 'percent',  // assuming these are % values
+                //             'discount_value' => $discountValue,
+                //         ]);
+                //     }
+                // }
 
                 $product = Product::find($productId);
                 if ($product) {
                     $soldQty = $quantities[$index] ?? 0;
                     $product->remaining_stock = max(0, $product->quantity - $soldQty); // no negatives
 
-                    // ✅ Recalculate threshold status
+                    // Recalculate threshold status
                     $threshold = $product->threshold ?? 0;
                     if ($product->quantity <= 0) {
                         $product->status = 'Out of Stock';
@@ -166,7 +188,6 @@ class InvoiceController extends Controller
 
             \Log::info('Invoice successfully created', ['invoice_id' => $invoice->id]);
 
-            // 🔹 Fix your redirect route name: it should match your web.php
             return redirect()->route('invoice.index')->with('message', 'Invoice created successfully!');
 
         } catch (\Throwable $e) {
@@ -217,16 +238,55 @@ class InvoiceController extends Controller
      */
     public function edit($id)
     {
-        $invoice = Invoice::with(['items.discounts'])->findOrFail($id);
+        // Load invoice with items, their products, units, and supplier items
+        $invoice = Invoice::with([
+            'items.product.unit',
+            'items.product.supplierItems' // eager load supplier items
+        ])->findOrFail($id);
+
+        // Load all customers, products, units, payment modes, taxes, and active salesmen
         $customers = Customer::all();
-        $products = Product::all();
+        $products = Product::with(['supplierItems', 'unit'])->get();
         $units = Unit::all();
         $paymentModes = ModeofPayment::all();
-        $taxes = Tax::all(); // If you’re using discount options from $taxes in the form
-        //get salesman
-        $salesman = Salesman::where('status',1)->get();
+        $taxes = Tax::all();
+        $salesman = Salesman::where('status', 1)->get();
 
-        return view('invoice.edit', compact('invoice', 'customers', 'products', 'units', 'paymentModes', 'taxes','salesman'));
+        // Map invoice items to include supplier_item_price
+        $invoiceItems = $invoice->items->map(function($item) {
+           $product = $item->product;
+           $supplierItem = $product->supplierItems->first(); 
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'qty' => $item->qty,
+                'price' => $item->price,
+                'amount' => $item->amount,
+                'discount_1' => $item->discount_1,
+                'discount_2' => $item->discount_2,
+                'discount_3' => $item->discount_3,
+                'discount_less_add' => $item->discount_less_add,
+                'unit_id' => $item->unit_id,
+                'product' => [
+                    'product_code' => $item->product->product_code,
+                    'product_name' => $item->product->product_name,
+                    'supplier_item_price' => optional($supplierItem)->item_price ?? $item->price ?? 0
+                ]
+            ];
+        });
+
+        // Return the edit view with all necessary data
+        return view('invoice.edit', compact(
+            'invoice', 
+            'customers', 
+            'products', 
+            'units', 
+            'paymentModes', 
+            'taxes', 
+            'salesman',
+            'invoiceItems'
+        ));
     }
 
     /**
@@ -241,41 +301,35 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($request, $id) {
             $invoice = Invoice::findOrFail($id);
 
-            // 1️⃣ Restore previous stock before updating
-            foreach ($invoice->items as $oldItem) {
-                $product = Product::find($oldItem->product_id);
-                if ($product) {
-                    $product->quantity += $oldItem->qty;
+            // Log invoice data before updating
+            \Log::info("Updating Invoice ID: {$invoice->id}", [
+                'invoice_number' => $invoice->invoice_number,
+                'customer_id' => $invoice->customer_id,
+                'items' => $invoice->items->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'qty' => $item->qty,
+                        'price' => $item->price,
+                        'amount' => $item->amount,
+                    ];
+                }),
+            ]);
 
-                    $threshold = $product->threshold ?? 0;
-                    if ($product->quantity <= 0) {
-                        $product->status = 'Out of Stock';
-                    } elseif ($product->quantity <= $threshold) {
-                        $product->status = 'Low Stock';
-                    } else {
-                        $product->status = 'In Stock';
-                    }
-                    $product->save();
-                }
-            }
+            // Restore previous stock for all invoice items
+            // foreach ($invoice->items as $oldItem) {
+            //     $product = Product::find($oldItem->product_id);
+            //     if ($product) {
+            //         $product->quantity += $oldItem->qty;
+            //         $this->updateProductStatus($product);
+            //     }
+            // }
 
-            // 2️⃣ Determine removed products
-            $oldProductIds = $invoice->items->pluck('product_id')->toArray();
-            $newProductIds = $request->product_id ?? [];
-            $removedProductIds = array_diff($oldProductIds, $newProductIds);
+            // Remove old invoice items (and optional discounts)
+            $oldItems = InvoiceSales::where('invoice_id', $invoice->id)->pluck('id');
+            // InvoiceSalesDiscount::whereIn('invoice_sale_id', $oldItems)->delete(); // optional
+            InvoiceSales::where('invoice_id', $invoice->id)->delete();
 
-            // 3️⃣ Delete removed items and their discounts
-            if (!empty($removedProductIds)) {
-                $removedItems = InvoiceSales::where('invoice_id', $invoice->id)
-                    ->whereIn('product_id', $removedProductIds)
-                    ->pluck('id')
-                    ->toArray();
-
-                InvoiceSalesDiscount::whereIn('invoice_sale_id', $removedItems)->delete();
-                InvoiceSales::whereIn('id', $removedItems)->delete();
-            }
-
-            // 4️⃣ Update main invoice details
+            // Update main invoice details
             $invoice->update([
                 'customer_id'    => $request->customer_id,
                 'invoice_number' => $request->invoice_number,
@@ -292,59 +346,65 @@ class InvoiceController extends Controller
                 'remarks'        => $request->remarks,
             ]);
 
-            // 5️⃣ Loop through each product to update or insert
-            foreach ($request->product_id as $key => $productId) {
+            // Insert new invoice items
+            $newProductIds = $request->product_id ?? [];
+            foreach ($newProductIds as $key => $productId) {
+                if (!$productId) continue; // skip empty rows
+
                 $qty = $request->qty[$key] ?? 0;
                 $price = $request->price[$key] ?? 0;
                 $amount = $request->amount[$key] ?? 0;
+                $discount_less_add = $request->discount_less_add[$key] ?? 'less';
+                $discount_1 = $request->dis1[$key] ?? 0;
+                $discount_2 = $request->dis2[$key] ?? 0;
+                $discount_3 = $request->dis3[$key] ?? 0;
 
-                // Update or create invoice item
-                $invoiceSale = InvoiceSales::updateOrCreate(
-                    [
-                        'invoice_id' => $invoice->id,
-                        'product_id' => $productId,
-                    ],
-                    [
-                        'product_code' => $request->product_code[$key] ?? '',
-                        'unit_id'      => $request->unit[$key] ?? null,
-                        'qty'          => $qty,
-                        'price'        => $price,
-                        'amount'       => $amount,
-                    ]
-                );
-
-                // Delete all previous discounts for this invoice item
-                InvoiceSalesDiscount::where('invoice_sale_id', $invoiceSale->id)->delete();
-
-                // Re-insert discounts from request
-                if (!empty($request->dis[$key]) && is_array($request->dis[$key])) {
-                    foreach ($request->dis[$key] as $discountValue) {
-                        InvoiceSalesDiscount::create([
-                            'invoice_sale_id' => $invoiceSale->id,
-                            'discount_name'   => 'Discount',
-                            'discount_value'  => $discountValue,
-                        ]);
-                    }
-                }
+                $invoiceSale = InvoiceSales::create([
+                    'invoice_id'        => $invoice->id,
+                    'product_id'        => $productId,
+                    'product_code'      => $request->product_code[$key] ?? '',
+                    'unit_id'           => $request->unit[$key] ?? null,
+                    'qty'               => $qty,
+                    'price'             => $price,
+                    'discount_less_add' => $discount_less_add,
+                    'discount_1'        => $discount_1,
+                    'discount_2'        => $discount_2,
+                    'discount_3'        => $discount_3,
+                    'amount'            => $amount,
+                ]);
 
                 // Adjust product stock
                 $product = Product::find($productId);
                 if ($product) {
-                    $product->quantity = max(0, $product->quantity - $qty);
-                    $threshold = $product->threshold ?? 0;
-                    if ($product->quantity <= 0) {
-                        $product->status = 'Out of Stock';
-                    } elseif ($product->quantity <= $threshold) {
-                        $product->status = 'Low Stock';
-                    } else {
-                        $product->status = 'In Stock';
-                    }
-                    $product->save();
+                    $product->remaining_stock = max(0, $product->quantity - $qty);
+                    $this->updateProductStatus($product);
                 }
             }
+
+            // Optional: Log after update
+            \Log::info("Invoice ID {$invoice->id} updated successfully.");
         });
 
-        return redirect()->route('invoice.index')->with('message', 'Invoice updated successfully.');
+        return redirect()->route('invoice.index')
+            ->with('message', 'Invoice updated successfully.');
+    }
+
+    /**
+     * Helper function to update product stock status
+     */
+    protected function updateProductStatus(Product $product)
+    {
+        $threshold = $product->threshold ?? 0;
+
+        if ($product->quantity <= 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->quantity <= $threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
+
+        $product->save();
     }
 
 

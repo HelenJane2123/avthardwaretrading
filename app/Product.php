@@ -35,12 +35,17 @@ class Product extends Model
     }
 
     public function unit(){
-        return $this->belongsTo(Unit::class);
+        return $this->belongsTo(Unit::class, 'unit_id', 'id');
     }
 
     public function tax()
     {
         return $this->belongsTo(Tax::class);
+    }
+
+    public function supplierItems()
+    {
+        return $this->hasMany(SupplierItem::class, 'item_code', 'supplier_product_code');
     }
 
     public function additionalProduct(){

@@ -67,10 +67,15 @@
                     <td>{{ $item->qty }}</td>
                     <td>₱{{ number_format($item->price, 2) }}</td>
                     <td>
-                        @if($item->discounts->count() > 0)
-                            @foreach($item->discounts as $discount)
-                                <span class="badge bg-info text-dark">{{ $discount->discount_value }} %</span>
-                            @endforeach
+                        @php
+                            $discounts = [];
+                            if ($item->discount_1 > 0) $discounts[] = $item->discount_1 . '%';
+                            if ($item->discount_2 > 0) $discounts[] = $item->discount_2 . '%';
+                            if ($item->discount_3 > 0) $discounts[] = $item->discount_3 . '%';
+                        @endphp
+
+                        @if(count($discounts) > 0)
+                            {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
                         @else
                             -
                         @endif

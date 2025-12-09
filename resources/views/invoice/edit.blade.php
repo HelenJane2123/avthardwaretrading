@@ -42,7 +42,7 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label">Customer <span class="text-danger">*</span></label>
-                            <select id="customerSelect" name="customer_id" class="form-control" disabled>
+                            <select id="customerSelect" name="customer_id" class="form-control form-control-sm" disabled>
                                 <option value="">Select Customer</option>
                                 @foreach($customers as $customer)
                                     <option value="{{ $customer->id }}" 
@@ -56,24 +56,24 @@
 
                         <div class="col-md-3">
                             <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                            <input type="date" name="invoice_date" class="form-control" 
+                            <input type="date" name="invoice_date" class="form-control form-control-sm" 
                                 value="{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') }}" required>
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label">Invoice Due Date <span class="text-danger">*</span></label>
-                            <input type="date" name="due_date" class="form-control" 
+                            <input type="date" name="due_date" class="form-control form-control-sm" 
                                 value="{{ \Carbon\Carbon::parse($invoice->due_date)->format('Y-m-d') }}" required>
                         </div>
 
                         <div class="col-md-2">
                             <label class="form-label">Invoice Number</label>
-                            <input type="text" name="invoice_number" class="form-control" 
+                            <input type="text" name="invoice_number" class="form-control form-control-sm" 
                                 value="{{ $invoice->invoice_number }}" readonly>
                         </div>
                         <div class="col-md-4 form-group">
                             <label for="salesman">Salesman</label>
-                            <select name="salesman" id="salesman_id" class="form-control" required>
+                            <select name="salesman" id="salesman_id" class="form-control form-control-sm" required>
                                 <option value="">-- Select Salesman --</option>
                                 @foreach($salesman as $salesmen)
                                     <option value="{{ $salesmen->id }}" 
@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                            <select name="payment_mode_id" class="form-control" required>
+                            <select name="payment_mode_id" class="form-control form-control-sm" required>
                                 <option value="">-- Select Payment Mode --</option>
                                 @foreach($paymentModes as $mode)
                                     <option value="{{ $mode->id }}" 
@@ -100,7 +100,7 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Discount Type <span class="text-danger">*</span></label>
-                            <select id="discount_type" name="discount_type" class="form-control">
+                            <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                 <option value="">Select Type of Discount</option>
                                 <option value="per_item" {{ $invoice->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
                                 <option value="overall" {{ $invoice->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
@@ -148,13 +148,12 @@
                         <table class="table table-bordered align-middle">
                             <thead class="bg-dark text-white">
                                 <tr>
-                                    <th>Product Code</th>
-                                    <th>Product</th>
-                                    <th>Unit</th>
-                                    <th>Qty Ordered</th>
-                                    <th>Unit Price</th>
-                                    <th>Discount (%)</th>
-                                    <th>Amount</th>
+                                    <th style="width: 45%">Product</th>
+                                    <th style="width: 8%">Unit</th>
+                                    <th style="width: 8%">Qty</th>
+                                    <th style="width: 20%">Discount (%)</th>
+                                    <th style="width: 10%">Unit Price</th>
+                                    <th style="width: 12%">Total Price</th>
                                     <th class="text-center">
                                         <button type="button" class="btn btn-success btn-sm addRow">
                                             <i class="fa fa-plus"></i>
@@ -162,75 +161,8 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody id="po-body" style="font-size:11px;">
-                                @foreach($invoice->items as $item)
-                                    <tr>
-                                        <td>
-                                            <input type="text" name="product_code[]" class="form-control code"
-                                                value="{{ $item->product->product_code ?? '' }}" readonly>
-                                        </td>
-                                        <td style="width:400px;">
-                                            <div class="input-group">
-                                                <input type="text" name="product_name[]" 
-                                                    class="form-control product-input" 
-                                                    value="{{ $item->product->product_name }}" readonly>
-
-                                                <input type="hidden" name="product_id[]" 
-                                                    class="product_id" value="{{ $item->product_id }}">
-
-                                                <button type="button" class="btn btn-outline-primary select-product-btn">
-                                                    <i class="fa fa-search"></i>
-                                                </button>
-                                            </div>
-                                            <div class="text-muted small selected-product-info mt-1"></div>      
-                                        </td>
-                                        <td style="width:100px;">
-                                            <select name="unit[]" class="form-control unit">
-                                                @foreach($units as $unit)
-                                                    <option value="{{ $unit->id }}"
-                                                        {{ $item->unit_id == $unit->id ? 'selected' : '' }}>
-                                                        {{ $unit->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td><input type="number" name="qty[]" class="form-control qty" value="{{ $item->qty }}"></td>
-                                        <td><input type="number" step="0.01" name="price[]" class="form-control price" value="{{ $item->price }}"></td>
-                                        <td>
-                                        <div class="discounts-wrapper">
-                                            @php
-                                                $discounts = $item->discounts ?? collect();
-                                            @endphp
-
-                                            @foreach($discounts as $discount)
-                                                <div class="discount-row d-flex align-items-center gap-2 mb-2">
-                                                    <select name="dis[{{ $loop->parent->index }}][]" class="form-control dis">
-                                                        <option value="">---Select Discount---</option>
-                                                        @foreach($taxes as $tax)
-                                                            <option value="{{ $tax->name }}" {{ $discount->discount_value == $tax->name ? 'selected' : '' }}>
-                                                                {{ $tax->name }} %
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button type="button" class="btn btn-danger btn-sm remove-discount">
-                                                        <i class="fa fa-minus"></i>
-                                                    </button>
-                                                </div>
-                                            @endforeach
-
-                                            {{-- Add new discount button --}}
-                                            <button type="button" class="btn btn-success btn-sm add-discount">
-                                                <i class="fa fa-plus"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                        <td><input type="number" step="0.01" name="amount[]" class="form-control amount" value="{{ $item->amount }}" readonly></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-
+                            <tbody id="po-body">
+                                {{-- JS will populate existing items --}}
                             </tbody>
                             <tfoot class="bg-light">
                                 <tr>
@@ -307,6 +239,7 @@
                     <tr>
                         <th>Code</th>
                         <th>Name</th>
+                        <th>Unit Cost</th>
                         <th>Price</th>
                         <th>Stock</th>
                         <th>Unit</th>
@@ -314,23 +247,29 @@
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach($products as $product)
-                    <tr data-id="{{ $product->id }}"
-                        data-code="{{ $product->product_code }}"
-                        data-name="{{ $product->product_name }}"
-                        data-price="{{ $product->sales_price }}"
-                        data-stock="{{ $product->remaining_stock }}"
-                        data-unit="{{ $product->unit_id }}">
-                        <td>{{ $product->product_code }}</td>
-                        <td>{{ $product->product_name }}</td>
-                        <td>{{ $product->sales_price }}</td>
-                        <td>{{ $product->remaining_stock }}</td>
-                        <td>{{ $product->unit_id }}</td>
-                        <td>
-                        <button type="button" class="btn btn-success btn-sm select-this">Select</button>
-                        </td>
-                    </tr>
-                    @endforeach
+                        @foreach($products as $product)
+                            <tr data-id="{{ $product->id }}"
+                                data-code="{{ $product->product_code }}"
+                                data-name="{{ $product->product_name }}"
+                                data-price="{{ $product->sales_price }}"
+                                data-stock="{{ $product->remaining_stock }}"
+                                data-unit="{{ $product->unit_id }}"
+                                data-discounttype="{{ $product->discount_type }}"
+                                data-discount1="{{ $product->discount_1 }}"
+                                data-discount2="{{ $product->discount_2 }}"
+                                data-discount3="{{ $product->discount_3 }}"
+                                data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                                <td>{{ $product->product_code }}</td>
+                                <td>{{ $product->product_name }}</td>
+                                <td>{{ optional($product->supplierItems->first())->item_price }}</td>
+                                <td>{{ $product->sales_price }}</td>
+                                <td>{{ $product->remaining_stock }}</td>
+                                <td>{{ $product->unit->name }}</td>
+                                <td>
+                                <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
                 </div>
@@ -342,508 +281,264 @@
 @endsection
 
 @push('js')
+@push('js')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function(){
-             let currentRow = null;
-            let productTable = null;
 
-            $('#productModal').on('shown.bs.modal', function () {
-                if (!productTable) {
-                    productTable = $('#productTable').DataTable({
-                        pageLength: 10,       // Show 10 rows per page
-                        lengthChange: false,  // Disable changing rows per page
-                        searching: true,      // Enable search box
-                        ordering: true,       // Enable column sorting
-                        info: false,          // Hide "Showing x of y" info if you want
-                        autoWidth: false
-                    });
-                }
+<script type="text/javascript">
+const invoiceItems = @json($invoice->items);
+const products = @json($products);
+const taxes = @json($taxes);
+const units = @json($units);
+
+$(document).ready(function(){
+    let currentRow = null;
+    let productTable = null;
+
+    // Initialize select2 for customer
+    $('#customerSelect').select2({
+        placeholder: "Select Customer",
+        allowClear: true,
+        width: 'resolve'
+    });
+
+    // Load existing invoice items
+    loadInvoiceItems();
+
+    // Open modal when search button clicked
+    $(document).on('click', '.select-product-btn', function() {
+        currentRow = $(this).closest('tr'); // remember which row opened the modal
+        $('#productModal').modal('show');
+
+        if (!productTable) {
+            productTable = $('#productTable').DataTable({
+                pageLength: 10,
+                lengthChange: false,
+                searching: true,
+                ordering: true,
+                info: false,
+                autoWidth: false
             });
-            // Open modal when search button clicked
-            $(document).on('click', '.select-product-btn', function() {
-                currentRow = $(this).closest('tr'); // remember which row opened the modal
-                $('#productModal').modal('show');
-                $('#productSearch').val('').trigger('input'); // reset search
-            });
-            // Filter products as you type
-            $('#productSearch').on('input', function() {
-                productTable.search($(this).val()).draw();
-            });
-            // When selecting a product
-            $(document).on('click', '.select-this', function() {
-                let tr = $(this).closest('tr');
-                let id = tr.data('id');
-                let code = tr.data('code');
-                let name = tr.data('name');
-                let price = tr.data('price');
-                let stock = tr.data('stock');
-                let unit = tr.data('unit');
-
-                // Update row fields
-                currentRow.find('.product-input').val(name);
-                currentRow.find('.product_id').val(id);
-                currentRow.find('.code').val(code);
-                currentRow.find('.price').val(price);
-                currentRow.find('.qty').val('').prop('readonly', false).data('stock', stock);
-                currentRow.find('.unit').val(unit);
-                currentRow.find('.selected-product-info').html(name);
-
-                $('#productModal').modal('hide');
-            });
-            $('#customerSelect').select2({
-                placeholder: "Select Customer",
-                allowClear: true,
-                width: 'resolve'
-            });
-            $('.addRow').on('click', function() {
-                addRow();
-                calculateTotals();
-            });
-            const productOptions = `{!! 
-                $products->map(function($product){
-                    return '<option value="'.$product->id.'">'.$product->name.'</option>';
-                })->implode('') 
-            !!}`;
-            let rowIndex = $('#po-body tr').length;
-            function addRow() {
-                let options = `<option value="">Select Product</option>`;
-                @foreach($products as $product)
-                    options += `<option value="{{ $product->id }}" 
-                                    data-code="{{ $product->product_code }}" 
-                                    data-price="{{ $product->sales_price }}" 
-                                    data-stock="{{ $product->remaining_stock }}"
-                                    data-unit="{{ $product->unit_id }}">
-                                    {{ $product->product_name }}
-                                </option>`;
-                @endforeach
-                const newRow = `<tr>
-                    <td><input type="text" name="product_code[]" class="form-control code" readonly></td>
-                    <td style="width: 400px;">
-                        <div class="input-group">
-                            <input type="text" name="product_name[]" class="form-control product-input" placeholder="Search Product" readonly>
-                            <input type="hidden" name="product_id[]" class="product_id">
-                            <button type="button" class="btn btn-outline-primary select-product-btn">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </div>
-                        <div class="text-muted small selected-product-info mt-1"></div>
-                    </td>
-                    <td style="width: 100px;>
-                        <select name="unit[]" class="form-control unit">
-                            <option value="">Select Unit</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" name="qty[]" class="form-control qty">
-                        <small class="text-muted available-stock"></small>
-                    </td>
-                    <td><input type="text" name="price[]" class="form-control price"></td>
-                    <td>
-                        <div class="discount-row mb-2">
-                            <select name="dis[${rowIndex}][]" class="form-control dis">
-                                <option value="0">---Select Discount---</option>
-                                @foreach($taxes as $tax)
-                                    <option value="{{$tax->name}}">{{$tax->name}} %</option>
-                                @endforeach
-                            </select>
-                            <button type="button" class="btn btn-success btn-sm add-discount" disabled>
-                                <i class="fa fa-plus"></i>
-                            </button>
-                        </div>
-                    </td>
-                    <td><input type="text" name="amount[]" class="form-control amount" readonly></td>
-                    <td><a class="btn btn-danger remove"><i class="fa fa-trash"></i></a></td>
-                </tr>`;
-
-                $('#po-body').append(newRow);
-                // Re-initialize Select2 for the new row
-                $('#po-body tr:last .productname').select2({
-                    placeholder: "Select Product",
-                    allowClear: true,
-                    width: '400px'
-                });
-                toggleDiscountControls(); // <- ensure correct button state when new row is added
-            }
-            $(document).on('click', '.remove', function () {
-                var l = $('tbody tr').length;
-                if (l == 1) {
-                    alert('You can\'t delete the last one');
-                    calculateTotals();
-                } else {
-                    $(this).closest('tr').remove();
-                    calculateTotals();
-                }
-            });
-
-            // Populate Customer Information
-            $('#customerSelect').on('change', function () {
-                const customerId = $(this).val();
-                console.log(customerId);
-                if (!customerId) return;
-
-                $.ajax({
-                    url: '/customers/' + customerId, // plural now
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(data) {
-                        console.log("Customer API response:", data);
-                        if (data && data.customer) {
-                            const c = data.customer; // shortcut
-                            $('#customer-info').removeClass('d-none');
-                            $('#info-customer-code').text(c.customer_code || '');
-                            $('#info-name').text(c.name || '');
-                            $('#info-phone').text(c.mobile || '');
-                            $('#info-email').text(c.email || '');
-                            $('#info-address').text(c.address || '');
-                        } else {
-                            alert("Customer not found.");
-                            $('#customer-info').addClass('d-none');
-                        }
-                    }
-                });
-            });
-
-            $('#po-body tr').each(function () {
-                const productName = $(this).find('.product-input').val();
-                if (productName) {
-                    $(this).find('.selected-product-info').text(productName);
-                }
-            });
-
-            // When user selects a product
-            $(document).on('change', '.productname', function () {
-                var $row = $(this).closest('tr');
-                var selected = $(this).find(':selected');
-                var productName = selected.val() ? selected.text().trim() : ''; 
-                var stock = selected.data('stock') || 0;
-                var unitId = selected.data('unit') || '';
-
-                $row.find('.code').val(selected.data('code') || '');
-                $row.find('.price').val(selected.data('price') || '');
-                $row.find('.qty').val('');
-                $row.find('.available-stock').text("Available: " + stock);
-
-                // set unit dropdown automatically
-                if (unitId) {
-                    $row.find('.unit').val(unitId);
-                }
-                // store original stock in input
-                $row.find('.qty').data('original-stock', stock);
-                var productSelected = $(this).val();
-                if (productSelected) {
-                    // enable discount field only if a product is chosen
-                    $row.find('.dis').prop('disabled', false);
-                } else {
-                    // disable again if product removed
-                    $row.find('.dis').prop('disabled', true).val(0);
-                    calculateTotals();
-                }
-                // Show selected product name below dropdown
-                $row.find('.selected-product-info').text(productName);
-            });
-
-            // Auto-compute due date based on mode of payment
-            $('#payment_id').on('change', function () {
-                let selected = $(this).find(':selected');
-                let term = parseInt(selected.data('term')) || 0; // get days from option
-                let invoiceDate = $('input[name="invoice_date"]').val();
-
-                if (invoiceDate) {
-                    let d = new Date(invoiceDate);
-                    d.setDate(d.getDate() + term); // add term days
-                    let dueDate = d.toISOString().split('T')[0]; // format yyyy-mm-dd
-                    $('input[name="due_date"]').val(dueDate);
-                }
-            });
-            
-            // Validate qty on input
-            $(document).on('input', '.qty', function () {
-                var $row = $(this).closest('tr');
-                var originalStock = parseInt($row.find('.qty').data('original-stock')) || 0;
-                var enteredQty = parseInt($(this).val()) || 0;
-
-                if (enteredQty > originalStock) {
-                    alert("Quantity exceeds available stock!");
-                    $(this).val(originalStock);
-                    enteredQty = originalStock;
-                }
-
-                // Update displayed available stock
-                var remainingStock = originalStock - enteredQty;
-                $row.find('.available-stock').text("Available: " + remainingStock);
-
-                calculateTotals(); // recalc totals after change
-            });
-            
-            // get the latest Invoice number in database
-            let randomInvoice = 'DR-' + Math.floor(100000 + Math.random() * 900000);
-            $('#invoice_number').val(randomInvoice);
-        });
-
-        let formPendingSubmit = null;
-        $('form').on('submit', function(e) {
-            e.preventDefault(); // always prevent immediate submit
-
-            // --- keep your hidden fields update here ---
-            const type = $('#discount_type').val();
-            $('#hidden_discount_type').val(type);
-            $('#hidden_overall_discount').val(type === 'overall' ? ($('#discount').val() || 0) : 0);
-            $('#hidden_subtotal').val($('#subtotal').val() || 0);
-            $('#hidden_shipping').val($('#shipping').val() || 0);
-            $('#hidden_other').val($('#other').val() || 0);
-            $('#hidden_grand_total').val($('#grand_total').val() || 0);
-
-            // Check if any discount exists
-            const hasPerItemDiscount = $('.dis').toArray().some(inp => parseFloat($(inp).val()) > 0);
-            const overallDiscount = parseFloat($('#discount').val()) || 0;
-
-            // if (hasPerItemDiscount || overallDiscount > 0) {
-            //     formPendingSubmit = this; // store form for later submission
-            //     $("#adminPassword").val("");
-            //     $("#passwordError").addClass("d-none");
-            //     discountModal.show(); // <-- show modal here
-            // } else {
-                this.submit(); // no discount → submit immediately
-            // }
-        });
-
-        // Disable all discount fields by default
-        $('.dis, #discount').prop('disabled', true);
-
-        $('#discount_type').trigger('change');
-
-            let discountApprovalCount = 0;
-            let pendingDiscountInput = null;
-
-            var discountModal = new bootstrap.Modal(document.getElementById('discountApprovalModalUpdate'), {
-                backdrop: 'static',
-                keyboard: false
-            });
-
-            /*$(document).on("input", ".dis, #discount", function() {
-                var val = parseFloat($(this).val()) || 0;
-
-                if (val > 0) {
-                    if (discountApprovalCount < 3) {
-                        pendingDiscountInput = $(this); // remember which input triggered
-                        if ($('#discountApprovalModalUpdate').is(':hidden')) { // only show if hidden
-                            discountModal.show(); // <-- updated
-                        }
-                    } else {
-                        alert("Maximum of 3 discount approvals reached.");
-                        $(this).val(0);
-                        calculateTotals();
-                    }
-                }
-            });*/
-
-            $('#approveDiscount').on('click', function () {
-                let password = $('#adminPassword').val().trim();
-
-                if (password === '') {
-                    $('#passwordError').text('Password is required.').removeClass('d-none');
-                    return;
-                }
-
-                $.ajax({
-                    url: "{{ route('validate.admin.password') }}",
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        password: password
-                    },
-                    success: function (response) {
-                        if(response.success){
-                            $('#discount_approved').val(1);
-                            discountModal.hide(); // hide modal
-                            if(formPendingSubmit){ 
-                                formPendingSubmit.submit(); 
-                                formPendingSubmit = null; 
-                            }
-                        } else {
-                            $('#passwordError').text('Invalid password.').removeClass('d-none');
-                        }
-                    },
-                    error: function () {
-                        $('#passwordError').text('Invalid password. Try again.').removeClass('d-none');
-                    }
-                });
-            });
-
-            // Cancel / close modal
-            $('#closeModal, #cancelModal').click(function() {
-                if (formPendingSubmit) {
-                    // reset discount if modal canceled
-                    $('.dis').val(0);
-                    $('#discount').val(0);
-                    calculateTotals();
-                    formPendingSubmit = null;
-                }
-                discountModal.hide();
-            });
-
-        //Populate Product details
-        $(document).on('change', 'select[name="supplier_id"]', function () {
-            var supplierId = $(this).val();
-            if (supplierId) {
-                $.ajax({
-                    url: '/supplier/' + supplierId + '/items',
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (data) {
-                        // update all product dropdowns
-                        $('.productname').each(function () {
-                            var $dropdown = $(this);
-                            $dropdown.empty().append('<option value="">Select Product</option>');
-
-                            $.each(data.items, function (index, item) {
-                                var $option = $('<option>', {
-                                    value: item.id,
-                                    text: item.item_description,
-                                    'data-code': item.item_code,
-                                    'data-price': item.item_price
-                                });
-                                $dropdown.append($option);
-                            });
-                        });
-                    }
-                });
-            } else {
-                $('.productname').empty().append('<option value="">Select Product</option>');
-            }
-        });
-
-        $(document).on('click', '.add-discount', function () {
-            const wrapper = $(this).closest('.discounts-wrapper');
-            const index = wrapper.closest('tr').index();
-            const newRow = `
-                <div class="discount-row mb-2">
-                    <select name="dis[${index}][]" class="form-control dis">
-                        <option value="">---Select Discount---</option>
-                        @foreach($taxes as $tax)
-                            <option value="{{ $tax->name }}">{{ $tax->name }} %</option>
-                        @endforeach
-                    </select>
-                    <button type="button" class="btn btn-danger btn-sm remove-discount mt-1">
-                        <i class="fa fa-minus"></i>
-                    </button>
-                </div>
-            `;
-            $(this).before(newRow);
-        });
-        $('.productname').each(function() {
-            var $row = $(this).closest('tr');
-            var selected = $(this).find(':selected');
-            var productName = selected.val() ? selected.text().trim() : '';
-            $row.find('.selected-product-info').text(productName);
-
-            // Optional: set stock and unit if needed
-            $row.find('.available-stock').text("Available: " + (selected.data('stock') || 0));
-            if (selected.data('unit')) {
-                $row.find('.unit').val(selected.data('unit'));
-            }
-        });
-
-        // Remove a discount row
-        $(document).on('click', '.remove-discount', function () {
-            $(this).closest('.discount-row').remove();
-            calculateTotals();
-        });
-
-        function toggleDiscountControls() {
-            const discountType = $('#discount_type').val();
-
-            if (discountType === '') {
-                // disable all discount fields & add buttons if type not selected
-                $('.dis').prop('disabled', true);
-                $('.add-discount').prop('disabled', true);
-            } else if (discountType === 'overall') {
-                // disable per-item discounts if overall discount
-                $('.dis').prop('disabled', true);
-                $('.add-discount').prop('disabled', true);
-            } else if (discountType === 'per_item') {
-                // enable per-item discounts
-                $('.dis').prop('disabled', false);
-                $('.add-discount').prop('disabled', false);
-            }
         }
-        function calculateTotals() {
+    });
+
+    // When selecting a product from modal
+    $(document).on('click', '.select-this', function() {
+        let tr = $(this).closest('tr');
+        let id = tr.data('id');
+        let code = tr.data('code');
+        let name = tr.data('name');
+        let price = tr.data('price');
+        let stock = tr.data('stock');
+        let unit = tr.data('unit');
+        let basePrice = tr.data('baseprice');
+
+        // Update row fields
+        currentRow.find('.productname').val(name);
+        currentRow.find('.product_id').val(id);
+        currentRow.find('.code').val(code);
+        currentRow.find('.price').val(price);
+        currentRow.find('.qty')
+            .val('')
+            .prop('readonly', false)
+            .data('original-stock', stock); // 👈 store stock for validation
+        currentRow.find('.unit').val(unit);
+        currentRow.find('.selected-product-info').text(name);
+        currentRow.find('.show-base-price').html("Unit Cost: " + basePrice);
+
+        // Update available stock display
+        currentRow.find('.available-stock').text("Available: " + stock);
+
+        $('#productModal').modal('hide');
+        calculateTotals();
+    });
+
+    // Add new row
+    $(document).on('click', '.addRow', function() {
+        $("#po-body").append(generateRow());
+    });
+
+    // Remove row
+    $(document).on('click', '.remove', function () {
+        let rowCount = $('#po-body tr').length;
+        if (rowCount === 1) {
+            alert("You can't delete the last row");
+        } else {
+            $(this).closest('tr').remove();
+            calculateTotals();
+        }
+    });
+
+    // Quantity input validation
+    $(document).on('input', '.qty', function () {
+        let $row = $(this).closest('tr');
+        let originalStock = parseInt($row.find('.qty').data('original-stock')) || 0;
+        let enteredQty = parseInt($(this).val()) || 0;
+
+        if (enteredQty > originalStock) {
+            alert("Quantity exceeds available stock!");
+            $(this).val(originalStock);
+            enteredQty = originalStock;
+        }
+
+        let remainingStock = originalStock - enteredQty;
+        $row.find('.available-stock').text("Available: " + remainingStock);
+        calculateTotals();
+    });
+
+    // Calculate totals when price, qty, or discounts change
+    $(document).on('input change', '.qty, .price, select[name="discount_less_add[]"], select[name="dis1[]"], select[name="dis2[]"], select[name="dis3[]"]', function() {
+        calculateTotals();
+    });
+
+    // Discount type change
+    $('#discount_type').on('change', function() {
+        toggleDiscountControls();
+        calculateTotals();
+    });
+
+    function toggleDiscountControls() {
+        const type = $('#discount_type').val();
+        if (type === 'overall') {
+            $('#discount').prop('disabled', false);
+            $('.dis').prop('disabled', true).val(0);
+        } else if (type === 'per_item') {
+            $('#discount').prop('disabled', true).val(0);
+            $('.dis').prop('disabled', false);
+        } else {
+            $('#discount').prop('disabled', true).val(0);
+            $('.dis').prop('disabled', true).val(0);
+        }
+    }
+
+    function calculateTotals() {
             let subtotal = 0;
 
-            // 1. Loop through line items (apply per-item discounts first)
             $('#po-body tr').each(function() {
-                let qty   = parseFloat($(this).find('.qty').val()) || 0;
-                let price = parseFloat($(this).find('.price').val()) || 0;
-                let dis   = parseFloat($(this).find('.dis').val()) || 0; // per-item %
+                const $row = $(this);
+                const qty = parseFloat($row.find('.qty').val()) || 0;
+                let price = parseFloat($row.find('.price').val()) || 0;
+                let lineTotal = qty * price;
 
-                let lineTotal = price * qty;
+                // Get the discount type for this row
+                const discountType = $row.find('select[name="discount_less_add[]"]').val() || 'less';
 
-                if (dis > 0) {
-                    lineTotal -= (lineTotal * dis / 100);
-                }
+                // Apply static discounts (dis1, dis2, dis3)
+                const staticDiscounts = [
+                    parseFloat($row.find('select[name="dis1[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis2[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis3[]"]').val()) || 0
+                ];
 
-                $(this).find('.amount').val(lineTotal.toFixed(2));
+                staticDiscounts.forEach(d => {
+                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
+                    else lineTotal += (lineTotal * d / 100);
+                });
+
+                // Apply dynamic discounts (.dis)
+                $row.find('.discount-row .dis').each(function() {
+                    const d = parseFloat($(this).val()) || 0;
+                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
+                    else lineTotal += (lineTotal * d / 100);
+                });
+
+                // Update row amount
+                $row.find('.amount').val(lineTotal.toFixed(2));
                 subtotal += lineTotal;
             });
 
-            // 2. Apply overall discount
-            let overallType  = $('#discount_type').val(); // "overall", "fixed", or ""
-            let overallValue = parseFloat($('#discount').val()) || 0;
-            let discountAmount = 0;
+            // Overall discount if selected
+            const overallType = $('#discount_type').val();
+            let overallDis = parseFloat($('#discount').val()) || 0;
+            let overallAmount = 0;
 
-            if (overallValue > 0) {
-                if (overallType === 'overall') {
-                    // percentage discount
-                    discountAmount = subtotal * (overallValue / 100);
-                } else if (overallType === 'per_item') {
-                    // fixed peso discount
-                    discountAmount = overallValue;
-                } else {
-                    // no type selected → default to percentage
-                    discountAmount = subtotal * (overallValue / 100);
-                }
+            if (overallType === 'overall' && overallDis > 0) {
+                overallAmount = subtotal * (overallDis / 100);
+                subtotal = subtotal - overallAmount;
             }
 
-            let afterDiscount = subtotal - discountAmount;
+            const shipping = parseFloat($('#shipping').val()) || 0;
+            const other = parseFloat($('#other').val()) || 0;
+            const grandTotal = subtotal + shipping + other;
 
-            // 3. Add shipping and other charges
-            let shipping = parseFloat($('#shipping').val()) || 0;
-            let other    = parseFloat($('#other').val()) || 0;
-
-            let grandTotal = afterDiscount + shipping + other;
-
-            // 4. Update fields
             $('#subtotal').val(subtotal.toFixed(2));
-            $('#hidden_overall_discount').val(discountAmount.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
         }
 
-        $(document).on('input change', '.qty, .price, .dis, #discount, #shipping, #other, #discount_type', calculateTotals);
+    function loadInvoiceItems() {
+        if (!invoiceItems || invoiceItems.length === 0) return;
+        invoiceItems.forEach(item => $("#po-body").append(generateRow(item)));
+        calculateTotals();
+    }
 
-        $('#discount_type').on('change', function() {
-            const type = $(this).val();
+    function generateRow(item = null) {
+        const productId = item?.product_id || '';
+        const productCode = item?.product?.product_code || '';
+        const productName = item?.product?.product_name || '';
+        const qty = item?.qty || '';
+        const price = item?.price || '';
+        const amount = item?.amount || '';
+        const disLessAdd = item?.discount_less_add || 'less';
+        const dis1 = item?.discount_1 || 0;
+        const dis2 = item?.discount_2 || 0;
+        const dis3 = item?.discount_3 || 0;
+        const supplierPrice = item?.product?.supplier_item_price || 0; 
+        const unitId = item?.unit_id || '';
+        const stock = item?.product?.remaining_stock || 0;
 
-            if (type === 'overall') {
-                $('#discount').prop('disabled', false);
-                $('.dis').prop('disabled', true).val(0);
-            } else if (type === 'per_item') {
-                $('#discount').prop('disabled', true).val(0);
-                $('.dis').prop('disabled', false);
-            } else {
-                // No type selected
-                $('#discount').prop('disabled', true).val(0);
-                $('.dis').prop('disabled', true).val(0);
-            }
+        const unitOptions = units.map(u => `<option value="${u.id}" ${u.id == unitId ? 'selected' : ''}>${u.name}</option>`).join('');
+        const discountOptions = (val) => taxes.map(t => `<option value="${t.name}" ${t.name == val ? 'selected':''}>${t.name}%</option>`).join('');
 
-            toggleDiscountControls(); // 👈 ensure button states update properly
-            calculateTotals();
-        });
-                
-    </script>
+        return `
+        <tr>
+            <td style="width:400px;">
+                <div class="input-group">
+                    <input type="hidden" name="product_id[]" class="product_id" value="${productId}">
+                    <input type="hidden" class="form-control code" value="${productCode}" readonly>
+                    <input type="text" class="form-control productname" value="${productName}" readonly>
+                    <button type="button" class="btn btn-outline-primary select-product-btn">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+                <div class="text-muted small selected-product-info mt-1">${productName}</div>
+
+            </td>
+            <td><select name="unit[]" class="form-control form-control-sm">${unitOptions}</select></td>
+            <td>
+                <input type="number" name="qty[]" class="form-control qty" value="${qty}" ${productName ? '' : 'readonly'} data-original-stock="${stock}">
+                 <small class="text-muted available-stock">Available: ${stock}</small>
+            </td>
+            <td>
+                <div class="row g-1">
+                    <div class="col-8">
+                        <select name="discount_less_add[]" class="form-control form-control-sm">
+                            <option value="less" ${disLessAdd=='less'?'selected':''}>Less (-)</option>
+                            <option value="add" ${disLessAdd=='add'?'selected':''}>Add (+)</option>
+                        </select>
+                    </div>
+                    <div class="col-8"><select name="dis1[]" class="form-control form-control-sm"><option value="0">Discount 1 (%)</option>${discountOptions(dis1)}</select></div>
+                    <div class="col-8"><select name="dis2[]" class="form-control form-control-sm"><option value="0">Discount 2 (%)</option>${discountOptions(dis2)}</select></div>
+                    <div class="col-8"><select name="dis3[]" class="form-control form-control-sm"><option value="0">Discount 3 (%)</option>${discountOptions(dis3)}</select></div>
+                </div>
+            </td>
+            <td>
+                <input type="text" name="price[]" class="form-control price" value="${price}">
+                <div class="text-muted small show-base-price mt-1">Unit Cost: ${supplierPrice}</div>
+            </td>
+            <td><input type="text" name="amount[]" class="form-control amount" value="${amount}" readonly></td>
+            <td>
+                <button type="button" class="btn btn-danger remove">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    }
+
+});
+</script>
+@endpush
+
 
 @endpush

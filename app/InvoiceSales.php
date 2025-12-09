@@ -12,13 +12,16 @@ class InvoiceSales extends Model
         'product_id',
         'qty',
         'price',
-        'dis',
+        'disdiscount_less_add',
+        'discount_1',
+        'discount_2',
+        'discount_3',
         'amount',
     ];
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
     
     public function unit()

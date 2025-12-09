@@ -141,7 +141,7 @@
                                             <input type="number" name="qty[]" class="form-control form-control-sm qty" placeholder="0">
                                         </td>
 
-                                        <!-- DISCOUNTS (Stacked for readability) -->
+                                        <!-- DISCOUNTS  -->
                                         <td>
                                             <div class="row g-1">
                                                 <!-- Discount Type -->
@@ -181,7 +181,6 @@
                                                         @endforeach
                                                     </select>
                                                 </div>
-
                                             </div>
                                         </td>
 

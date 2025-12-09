@@ -15279,8 +15279,8 @@ be a descendant of the grid when it is being dragged.
     vertical-align: middle;
 }
 
-.selected-product-info {
-    font-size: 13px;
+.selected-product-info, .show-base-price {
+    font-size: 12px;
     color: #6c757d; /* muted gray */
 }
 

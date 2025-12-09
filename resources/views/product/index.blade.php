@@ -57,7 +57,7 @@
                                     <tr>
                                         <th>Product Code</th>
                                         <th>Product</th>
-                                        <th>Available Quantity</th>
+                                        <th>Initial Quantity</th>
                                         <th>Quantity on Hand</th>
                                         <th>Sales Price</th>
                                         <th>Supplier Item Code</th>

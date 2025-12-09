@@ -325,47 +325,56 @@ class PurchaseController extends Controller
         //     'amount'              => 'required|array|min:1',
         //     'amount.*'            => 'required|numeric|min:0',
         // ]);
+        try {
+            \Log::info('Purchase request data', $request->all());
+            DB::transaction(function () use ($request, $id) {
+                $purchase = Purchase::findOrFail($id);
 
-        DB::transaction(function () use ($request, $id) {
-            $purchase = Purchase::findOrFail($id);
-
-            // ✅ Update purchase main record
-            $purchase->update([
-                'supplier_id'        => $request->supplier_id,
-                'po_number'          => $request->po_number,
-                'salesman_id'        => $request->salesman_id,
-                'payment_id'         => $request->payment_id,
-                'date'               => $request->date,
-                'discount_type'      => $request->discount_type,
-                'discount_value'     => $request->discount_value ?? 0,
-                'overall_discount'   => $request->overall_discount ?? 0,
-                'subtotal'           => $request->subtotal ?? 0,
-                'shipping'           => $request->shipping ?? 0,
-                'other_charges'      => $request->other_charges ?? 0,
-                'remarks'            => $request->remarks,
-                'grand_total'        => $request->grand_total ?? 0,
-            ]);
-
-            // ✅ Reset and reinsert items
-            $purchase->items()->delete();
-
-            foreach ($request->product_id as $index => $supplierItemId) {
-                $purchase->items()->create([
-                    'supplier_item_id' => $supplierItemId,
-                    'product_code'     => $request->product_code[$index],
-                    'qty'              => $request->qty[$index],
-                    'unit_price'       => $request->price[$index],
-                    'discount_less_add'    => $request->discount_less_add[$index],
-                    'discount_1'         => $request->dis1[$index] ?? 0,
-                    'discount_2'         => $request->dis2[$index] ?? 0,
-                    'discount_3'         => $request->dis3[$index] ?? 0,
-                    'unit'             => $request->unit[$index],
-                    'total'            => $request->amount[$index],
+                // ✅ Update purchase main record
+                $purchase->update([
+                    'supplier_id'        => $request->supplier_id,
+                    'po_number'          => $request->po_number,
+                    'salesman_id'        => $request->salesman_id,
+                    'payment_id'         => $request->payment_id,
+                    'date'               => $request->date,
+                    'discount_type'      => $request->discount_type,
+                    'discount_value'     => $request->discount_value ?? 0,
+                    'overall_discount'   => $request->overall_discount ?? 0,
+                    'subtotal'           => $request->subtotal ?? 0,
+                    'shipping'           => $request->shipping ?? 0,
+                    'other_charges'      => $request->other_charges ?? 0,
+                    'remarks'            => $request->remarks,
+                    'grand_total'        => $request->grand_total ?? 0,
                 ]);
-            }
-        });
 
-        return redirect()->route('purchase.index')->with('message', 'Purchase updated successfully.');
+                // ✅ Reset and reinsert items
+                $purchase->items()->delete();
+
+                foreach ($request->product_id as $index => $supplierItemId) {
+                    $purchase->items()->create([
+                        'supplier_item_id' => $supplierItemId,
+                        'product_code'     => $request->product_code[$index],
+                        'qty'              => $request->qty[$index],
+                        'unit_price'       => $request->price[$index],
+                        'discount_less_add'    => $request->discount_less_add[$index],
+                        'discount_1'         => $request->dis1[$index] ?? 0,
+                        'discount_2'         => $request->dis2[$index] ?? 0,
+                        'discount_3'         => $request->dis3[$index] ?? 0,
+                        'unit'             => $request->unit[$index],
+                        'total'            => $request->amount[$index],
+                    ]);
+                }
+            });
+
+            \Log::info('Purchase successfully updated', ['purchase_id' => $id]);
+            return redirect()->route('purchase.index')->with('message', 'Purchase updated successfully.');
+        } catch (\Throwable $e) {
+            \Log::error('Purchase creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'An error occurred while creating the invoice.');
+        }
     }
 
     public function getLatestPoNumber()
