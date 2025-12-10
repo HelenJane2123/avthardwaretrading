@@ -286,6 +286,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 
 <script type="text/javascript">
 const invoiceItems = @json($invoice->items);
@@ -335,6 +336,23 @@ $(document).ready(function(){
         let unit = tr.data('unit');
         let basePrice = tr.data('baseprice');
 
+        let duplicate = false;
+        $('input.product_id').each(function() {
+            if ($(this).val() == id && this !== currentRow.find('.product_id')[0]) {
+                duplicate = true;
+            }
+        });
+
+        if (duplicate) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Duplicate Product',
+                text: 'This product has already been selected.',
+                confirmButtonColor: '#ff9f43',
+            });
+            return;
+        }
+
         // Update row fields
         currentRow.find('.productname').val(name);
         currentRow.find('.product_id').val(id);
@@ -378,7 +396,13 @@ $(document).ready(function(){
         let enteredQty = parseInt($(this).val()) || 0;
 
         if (enteredQty > originalStock) {
-            alert("Quantity exceeds available stock!");
+            Swal.fire({
+                icon: "warning",
+                title: "Insufficient Stock",
+                text: "Quantity exceeds the available stock!",
+                confirmButtonColor: "#ff9f43",
+            });
+
             $(this).val(originalStock);
             enteredQty = originalStock;
         }
@@ -525,7 +549,7 @@ $(document).ready(function(){
             </td>
             <td>
                 <input type="text" name="price[]" class="form-control price" value="${price}">
-                <div class="text-muted small show-base-price mt-1">Unit Cost: ${supplierPrice}</div>
+                <small class="text-muted show-base-price">Unit Cost: ${supplierPrice}</small>
             </td>
             <td><input type="text" name="amount[]" class="form-control amount" value="${amount}" readonly></td>
             <td>

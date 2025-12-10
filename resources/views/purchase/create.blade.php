@@ -263,6 +263,8 @@
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+
     <script type="text/javascript">
         $(document).ready(function(){
             $('.purchaseproduct').select2({
@@ -277,7 +279,12 @@
             });
             $('.addRow').on('click', function() {
                 if (!window.supplierItems || window.supplierItems.length === 0) {
-                    alert('Please select a supplier first.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Warning',
+                        text: 'Please select supplier first.',
+                        confirmButtonColor: '#ff9f43',
+                    });
                     return;
                 }
                 addRow(window.supplierItems);
@@ -377,7 +384,13 @@
             $('.remove').live('click', function () {
                 var l =$('tbody tr').length;
                 if(l==1){
-                    alert('you cant delete last one');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Cannot delete',
+                        text: 'You cannot delete the last one.',
+                        confirmButtonColor: '#ff9f43',
+                    });
+                    return;
                     calculateTotals();
                 }
                 else{
@@ -432,7 +445,7 @@
                 $row.find('.price').val(price);
                 $row.find('.selected-product-name').text('('+ code +') '+name);
 
-                calculateTotals(); // make sure this function exists
+                calculateTotals(); 
             });
             
             // get the latest PO number in database
@@ -592,5 +605,4 @@
         });
         calculateTotals();
     </script>
-
 @endpush

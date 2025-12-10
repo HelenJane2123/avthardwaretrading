@@ -327,6 +327,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             let currentRow = null;
@@ -369,7 +370,23 @@
                 let discount_1 = tr.data('discount1');
                 let discount_2 = tr.data('discount2');
                 let discount_3 = tr.data('discount3');
-                
+
+                let duplicate = false;
+                $('input.product_id').each(function() {
+                    if ($(this).val() == id && this !== currentRow.find('.product_id')[0]) {
+                        duplicate = true;
+                    }
+                });
+
+                if (duplicate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Duplicate Product',
+                        text: 'This product has already been selected.',
+                        confirmButtonColor: '#ff9f43',
+                    });
+                    return;
+                }
 
                 // Update row fields
                 currentRow.find('.product-input').val(name);
@@ -657,10 +674,17 @@
 
                 // Validation: exceed stock
                 if (enteredQty > originalStock) {
-                    alert("Quantity exceeds available stock!");
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Insufficient Stock",
+                        text: "Quantity exceeds the available stock!",
+                        confirmButtonColor: "#ff9f43",
+                    });
+
                     $(this).val(originalStock);
                     enteredQty = originalStock;
                 }
+
 
                 // Update remaining stock display
                 var remainingStock = originalStock - enteredQty;

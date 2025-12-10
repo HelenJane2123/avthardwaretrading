@@ -170,13 +170,13 @@ class InvoiceController extends Controller
                 $product = Product::find($productId);
                 if ($product) {
                     $soldQty = $quantities[$index] ?? 0;
-                    $product->remaining_stock = max(0, $product->quantity - $soldQty); // no negatives
+                    $product->qty = max(0, $product->qty - $soldQty); // no negatives
 
                     // Recalculate threshold status
                     $threshold = $product->threshold ?? 0;
-                    if ($product->quantity <= 0) {
+                    if ($product->qty <= 0) {
                         $product->status = 'Out of Stock';
-                    } elseif ($product->quantity <= $threshold) {
+                    } elseif ($product->qty <= $threshold) {
                         $product->status = 'Low Stock';
                     } else {
                         $product->status = 'In Stock';
@@ -241,7 +241,7 @@ class InvoiceController extends Controller
         // Load invoice with items, their products, units, and supplier items
         $invoice = Invoice::with([
             'items.product.unit',
-            'items.product.supplierItems' // eager load supplier items
+            'items.product.supplierItems'
         ])->findOrFail($id);
 
         // Load all customers, products, units, payment modes, taxes, and active salesmen
@@ -254,9 +254,11 @@ class InvoiceController extends Controller
 
         // Map invoice items to include supplier_item_price
         $invoiceItems = $invoice->items->map(function($item) {
-           $product = $item->product;
-           $supplierItem = $product->supplierItems->first(); 
-
+            $product = $item->product;
+            $supplierItem = $product->supplierItems->where('item_code', $item->supplier_product_code)->first();
+            $supplierPrice = $product->supplier_item_price
+                ?? optional($product->supplierItems->first())->item_price
+                ?? 0;
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -271,7 +273,7 @@ class InvoiceController extends Controller
                 'product' => [
                     'product_code' => $item->product->product_code,
                     'product_name' => $item->product->product_name,
-                    'supplier_item_price' => optional($supplierItem)->item_price ?? $item->price ?? 0
+                    'supplier_item_price' => $supplierPrice ?? 0
                 ]
             ];
         });
@@ -376,7 +378,7 @@ class InvoiceController extends Controller
                 // Adjust product stock
                 $product = Product::find($productId);
                 if ($product) {
-                    $product->remaining_stock = max(0, $product->quantity - $qty);
+                    $product->quantity = max(0, $product->quantity - $qty);
                     $this->updateProductStatus($product);
                 }
             }
