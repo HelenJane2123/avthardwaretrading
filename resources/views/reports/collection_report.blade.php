@@ -117,7 +117,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center">No collections found.</td>
+                                            <td colspan="14" class="text-center">No collections found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

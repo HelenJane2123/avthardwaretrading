@@ -31,7 +31,7 @@
                         <div class="row mb-4">
                             <div class="col-md-4 form-group">
                                 <label>Supplier</label>
-                                <select name="supplier_id" id="supplierSelect" class="form-control" required>
+                                <select name="supplier_id" id="supplierSelect" class="form-control form-control-sm" required>
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}" {{ $supplier->id == $purchase->supplier_id ? 'selected' : '' }}>
@@ -42,15 +42,15 @@
                             </div>
                             <div class="col-md-3 form-group">
                                 <label>Purchase Date</label>
-                                <input type="date" name="date" class="form-control" value="{{ old('date', $purchase->date) }}" required>
+                                <input type="date" name="date" class="form-control form-control-sm" value="{{ old('date', $purchase->date) }}" required>
                             </div>
                             <div class="col-md-3 form-group">
                                 <label>PO Number</label>
-                                <input type="text" name="po_number" class="form-control" value="{{ $purchase->po_number }}" readonly>
+                                <input type="text" name="po_number" class="form-control form-control-sm" value="{{ $purchase->po_number }}" readonly>
                             </div>
                             <div class="col-md-4 form-group">
                                 <label>Salesman</label>
-                                <select name="salesman_id" class="form-control" required>
+                                <select name="salesman_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}" {{ $salesmen->id == $purchase->salesman_id ? 'selected' : '' }}>
@@ -61,7 +61,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Mode of Payment</label>
-                                <select name="payment_id" class="form-control" required>
+                                <select name="payment_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}" {{ $mode->id == $purchase->payment_id ? 'selected' : '' }}>
@@ -112,7 +112,7 @@
                                     <tr>
                                         <th colspan="5" class="text-end">Discount Type</th>
                                         <th colspan="2">
-                                            <select id="discount_type" name="discount_type" class="form-control">
+                                            <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                                 <option value="all" {{ $purchase->discount_type == 'all' ? 'selected' : '' }}>All</option>
                                                 <option value="overall" {{ $purchase->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
                                                 <option value="per_item" {{ $purchase->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
@@ -121,23 +121,23 @@
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Tax/Discount</th>
-                                        <td colspan="2"><input type="text" class="form-control" name="discount_value" id="discount" value="{{ $purchase->discount_value }}"></td>
+                                        <td colspan="2"><input type="text" class="form-control form-control-sm" name="discount_value" id="discount" value="{{ $purchase->discount_value }}"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Shipping</th>
-                                        <td colspan="2"><input type="number" class="form-control" name="shipping" id="shipping" value="{{ $purchase->shipping }}"></td>
+                                        <td colspan="2"><input type="number" class="form-control form-control-sm" name="shipping" id="shipping" value="{{ $purchase->shipping }}"></td>
                                     </tr>
                                     <tr>
                                         <th colspan="5" class="text-end">Other Charges</th>
-                                        <td colspan="2"><input type="number" class="form-control" name="other_charges" id="other" value="{{ $purchase->other_charges }}"></td>
+                                        <td colspan="2"><input type="number" class="form-control form-control-sm" name="other_charges" id="other" value="{{ $purchase->other_charges }}"></td>
                                     </tr>
                                     <tr class="fw-bold">
                                         <th colspan="5" class="text-end">Subtotal</th>
-                                        <td colspan="2"><input type="text" class="form-control" name="subtotal" id="subtotal" value="{{ $purchase->subtotal }}" readonly></td>
+                                        <td colspan="2"><input type="text" class="form-control form-control-sm" name="subtotal" id="subtotal" value="{{ $purchase->subtotal }}" readonly></td>
                                     </tr>
                                     <tr class="fw-bold bg-secondary text-white">
                                         <th colspan="5" class="text-end">Grand Total</th>
-                                        <td colspan="2"><input type="text" class="form-control" name="grand_total" id="grand_total" value="{{ $purchase->grand_total }}" readonly></td>
+                                        <td colspan="2"><input type="text" class="form-control form-control-sm" name="grand_total" id="grand_total" value="{{ $purchase->grand_total }}" readonly></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -146,7 +146,7 @@
                         {{-- Remarks --}}
                         <div class="form-group mb-4">
                             <label class="form-label">Comments / Special Instructions</label>
-                            <textarea name="remarks" rows="3" class="form-control">{{ $purchase->remarks }}</textarea>
+                            <textarea name="remarks" rows="3" class="form-control form-control-sm">{{ $purchase->remarks }}</textarea>
                         </div>
 
                         {{-- Submit --}}

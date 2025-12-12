@@ -451,4 +451,58 @@ class PurchaseController extends Controller
 
         return response()->json(['success' => 'Purchase approved successfully!']);
     }
+
+    public function completePurchaseOrder($id)
+    {
+        $purchase = Purchase::with('items.product')->findOrFail($id);
+
+        // Prevent double receiving
+        if ($purchase->is_completed == 1) {
+            return response()->json(['error' => 'This purchase order is already completed.'], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($purchase->items as $item) {
+                $product = $item->product;
+
+                if (!$product) continue;
+
+                // Add purchased quantity to inventory
+                $product->remaining_stock += $item->qty;
+                $product->save();
+
+                // Update product threshold status
+                $this->updateProductStatus($product);
+            }
+
+            // Mark PO as completed
+            $purchase->is_completed = 1;
+            $purchase->save();
+
+            DB::commit();
+
+            return response()->json(['success' => 'Purchase order received and inventory updated!']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error completing purchase order: '.$e->getMessage());
+            return response()->json(['error' => 'Failed to complete purchase order.'], 500);
+        }
+    }
+
+    protected function updateProductStatus(Product $product)
+    {
+        $threshold = $product->threshold ?? 0;
+
+        if ($product->remaining_stock <= 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->remaining_stock <= $threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
+
+        $product->save();
+    }
 }

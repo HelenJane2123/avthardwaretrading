@@ -53,13 +53,12 @@ class ImportController extends Controller
             foreach ($itemsData as $index => $row) {
                 if ($index == 1) continue; // skip header
 
-                $supplierId = (int) $row['A']; // use supplier_id from Excel
+                $supplierId = (int) $row['A']; 
                 $supplier = Supplier::find($supplierId);
-                if (!$supplier) continue; // skip if supplier doesn't exist
+                if (!$supplier) continue;
 
                 $itemCode = trim(explode('/', $row['B'])[0]);
 
-                // Skip if item exists for this supplier
                 $existingItem = SupplierItem::where('supplier_id', $supplierId)
                     ->where('item_code', $itemCode)
                     ->first();
@@ -74,90 +73,102 @@ class ImportController extends Controller
                     'item_amount'      => trim($row['F']),
                     'unit_id'          => trim($row['G']),
                     'item_qty'         => trim($row['H']),
-                    'discount_1'       => trim($row['I']),
-                    'discount_2'       => trim($row['J']),
-                    'discount_3'       => trim($row['K']),
-                    'item_image'       => trim($row['L']),
-                    'volume_less'      => trim($row['M']),
-                    'regular_less'     => trim($row['N']),
+                    'discount_less_add'=> trim($row['I']),
+                    'discount_1'       => trim($row['J']),
+                    'discount_2'       => trim($row['K']),
+                    'discount_3'       => trim($row['L']),
+                    'item_image'       => trim($row['M']),
+                    'volume_less'      => trim($row['N']),
+                    'regular_less'     => trim($row['O']),
                 ]);
-                return back()->with('message', 'Suppliers and Supplier Items imported successfully!');
             }
-            } catch (\Exception $e) {
-                return back()->with('error', 'An error has occurred.');
-                return response()->json(['error' => $e->getMessage()], 500);
-            }
+            return back()->with('message', 'Suppliers and Supplier Items imported successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Import failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+           return redirect()->back()->with('error', 'An error has occurred.');
+        }
     }
 
     public function import_product(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls'
-        ]);
-
-        $file = $request->file('file');
-        $spreadsheet = IOFactory::load($file->getRealPath());
-
-        // =============================
-        // SHEET 1: PRODUCTS
-        // =============================
-        $productSheet = $spreadsheet->getSheetByName('Products');
-        $productData = $productSheet->toArray(null, true, true, true);
-
-        foreach ($productData as $index => $row) {
-            if ($index == 1) continue; // skip header row
-
-            $productCode = trim($row['B']); // column B = product_code
-            $supplierProductCode = trim($row['C']); // column C = supplier_product_code
-
-            if (empty($productCode) || empty($supplierProductCode)) continue;
-
-            // Skip existing product_code
-            $existing = Product::where('product_code', $productCode)->first();
-            if ($existing) continue;
-
-            // Get supplier price from supplier item table
-            $supplierItem = SupplierItem::where('item_code', $supplierProductCode)->first();
-            $supplierPrice = $supplierItem ? $supplierItem->item_price : 0;
-
-            // Create product
-            $product = Product::create([
-                'product_code'          => $productCode,
-                'supplier_product_code' => $supplierProductCode,
-                'product_name'          => $row['D'],
-                'description'           => $row['E'],
-                'serial_number'         => $row['F'],
-                'model'                 => $row['G'],
-                'category_id'           => $row['H'],
-                'sales_price'           => $row['I'],
-                'unit_id'               => $row['J'],
-                'quantity'              => $row['K'],
-                'remaining_stock'       => $row['L'],
-                'discount_1'            => $row['M'],
-                'discount_2'            => $row['N'],
-                'discount_3'            => $row['O'],
-                'image'                 => $row['P'],
-                'threshold'             => $row['Q'],
-                'status'                => $row['R'] ?? 'In Stock',
-                'volume_less'           => $row['S'],
-                'regular_less'          => $row['T'],
-                'created_at'            => Carbon::now(),
-                'updated_at'            => Carbon::now(),
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls'
             ]);
 
-            // Save supplier price automatically
-            if ($supplierItem) {
-                ProductSupplier::create([
-                    'product_id'  => $product->id,
-                    'supplier_id' => $supplierItem->supplier_id,
-                    'price'       => $supplierPrice,
-                    'created_at'  => Carbon::now(),
-                    'updated_at'  => Carbon::now(),
-                ]);
-            }
-        }
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getRealPath());
 
-        return back()->with('message', 'Products imported successfully with supplier prices!');
+            // =============================
+            // SHEET 1: PRODUCTS
+            // =============================
+            $productSheet = $spreadsheet->getSheetByName('Products');
+            $productData = $productSheet->toArray(null, true, true, true);
+
+            foreach ($productData as $index => $row) {
+                if ($index == 1) continue; // skip header row
+
+                $productCode = trim($row['B']); // column B = product_code
+                $supplierProductCode = trim($row['C']); // column C = supplier_product_code
+
+                if (empty($productCode) || empty($supplierProductCode)) continue;
+
+                // Skip existing product_code
+                $existing = Product::where('product_code', $productCode)->first();
+                if ($existing) continue;
+
+                // Get supplier price from supplier item table
+                $supplierItem = SupplierItem::where('item_code', $supplierProductCode)->first();
+                $supplierPrice = $supplierItem ? $supplierItem->item_price : 0;
+
+                // Create product
+                $product = Product::create([
+                    'product_code'          => $productCode,
+                    'supplier_product_code' => $supplierProductCode,
+                    'product_name'          => $row['D'],
+                    'description'           => $row['E'],
+                    'serial_number'         => $row['F'],
+                    'model'                 => $row['G'],
+                    'category_id'           => $row['H'],
+                    'sales_price'           => $row['I'],
+                    'unit_id'               => $row['J'],
+                    'quantity'              => $row['K'],
+                    'remaining_stock'       => $row['L'],
+                    'discount_type'         => $row['M'],
+                    'discount_1'            => $row['N'],
+                    'discount_2'            => $row['O'],
+                    'discount_3'            => $row['P'],
+                    'image'                 => $row['Q'],
+                    'threshold'             => $row['R'],
+                    'status'                => $row['S'] ?? 'In Stock',
+                    'volume_less'           => $row['T'],
+                    'regular_less'          => $row['U'],
+                    'created_at'            => Carbon::now(),
+                    'updated_at'            => Carbon::now(),
+                ]);
+
+                // Save supplier price automatically
+                if ($supplierItem) {
+                    ProductSupplier::create([
+                        'product_id'  => $product->id,
+                        'supplier_id' => $supplierItem->supplier_id,
+                        'price'       => $supplierPrice,
+                        'created_at'  => Carbon::now(),
+                        'updated_at'  => Carbon::now(),
+                    ]);
+                }
+            }
+
+            return back()->with('message', 'Products imported successfully with supplier prices!');
+        }
+        catch (\Exception $e) {
+            \Log::error('Import failed: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+           return redirect()->back()->with('error', 'An error has occurred.');
+        }
     }
 
 }

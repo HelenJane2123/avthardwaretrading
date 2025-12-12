@@ -95,6 +95,8 @@ Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation
 //get purchase details
 Route::get('/purchase/{id}/details', [PurchaseController::class, 'showDetails']);
 Route::put('/purchase/{id}/approve', [PurchaseController::class, 'approve'])->name('purchase.approve');
+Route::put('/purchase/{id}/complete', [PurchaseController::class, 'completePurchaseOrder'])
+    ->name('purchase.complete');
 
 //get invoice details
 Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->name('invoice.details');

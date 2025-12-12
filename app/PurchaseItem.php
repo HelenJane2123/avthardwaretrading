@@ -35,5 +35,10 @@ class PurchaseItem extends Model
     {
         return $this->belongsTo(Unit::class);
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_code','supplier_product_code');
+    }
 }
 

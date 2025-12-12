@@ -123,6 +123,9 @@
                                                         title="Print PO">
                                                             <i class="fa fa-print"></i>
                                                     </a>
+                                                    <button class="btn btn-success btn-sm" onclick="completePurchaseOrder({{ $purchase->id }})">
+                                                        <i class="fa fa-check"></i> Complete Order
+                                                    </button>
                                                 @endif
                                                 {{-- Edit --}}
                                                 @if ($purchase->is_approved !== 1)
@@ -139,7 +142,7 @@
                                                 @else
                                                     @if($status !== 'paid')
                                                         {{-- Not fully paid, show Make Payment button --}}
-                                                        <button class="btn btn-success btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
+                                                        <button class="btn btn-warning btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
                                                             <i class="fa fa-credit-card"></i> Make Payment
                                                         </button>
                                                     @endif
@@ -288,6 +291,42 @@
                 swal('Cancelled', 'Your record is safe :)', 'error');
             }
         })
+    }
+
+    function completePurchaseOrder(id) {
+        swal({
+            title: "Complete Purchase Order?",
+            text: "This will add all received items into your inventory.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            confirmButtonText: "Yes, Complete",
+            cancelButtonText: "Cancel"
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: `/purchase/${id}/complete`,
+                    type: "PUT",
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        swal({
+                            type: "success",
+                            title: "Purchase Completed!",
+                            text: response.success,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        setTimeout(() => location.reload(), 1500);
+                    },
+                    error: function(xhr) {
+                        swal("Error", xhr.responseJSON.error || "Something went wrong.", "error");
+                    }
+                });
+            }
+        });
     }
 
     // Load Purchase Details into Modal

@@ -42,7 +42,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select name="supplier_id" id="supplierSelect" class="form-control" required>
+                                <select name="supplier_id" id="supplierSelect" class="form-control form-control-sm" required>
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -51,15 +51,15 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Purchase Date</label>
-                                <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">PO Number</label>
-                                <input type="text" name="po_number" id="po_number" class="form-control" readonly>
+                                <input type="text" name="po_number" id="po_number" class="form-control form-control-sm" readonly>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                               <select name="salesman_id" id="salesman_id" class="form-control" required>
+                               <select name="salesman_id" id="salesman_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}">
@@ -70,7 +70,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                                <select name="payment_id" id="payment_id" class="form-control" required>
+                                <select name="payment_id" id="payment_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}">

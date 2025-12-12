@@ -129,7 +129,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="12" class="text-center">No records found.</td>
+                                                <td colspan="15" class="text-center">No records found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

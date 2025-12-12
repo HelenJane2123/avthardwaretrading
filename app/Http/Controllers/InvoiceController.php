@@ -170,13 +170,13 @@ class InvoiceController extends Controller
                 $product = Product::find($productId);
                 if ($product) {
                     $soldQty = $quantities[$index] ?? 0;
-                    $product->qty = max(0, $product->qty - $soldQty); // no negatives
+                    $product->remaining_stock = max(0, $product->remaining_stock - $soldQty); // no negatives
 
                     // Recalculate threshold status
                     $threshold = $product->threshold ?? 0;
-                    if ($product->qty <= 0) {
+                    if ($product->remaining_stock <= 0) {
                         $product->status = 'Out of Stock';
-                    } elseif ($product->qty <= $threshold) {
+                    } elseif ($product->remaining_stock <= $threshold) {
                         $product->status = 'Low Stock';
                     } else {
                         $product->status = 'In Stock';
@@ -376,11 +376,11 @@ class InvoiceController extends Controller
                 ]);
 
                 // Adjust product stock
-                $product = Product::find($productId);
-                if ($product) {
-                    $product->quantity = max(0, $product->quantity - $qty);
-                    $this->updateProductStatus($product);
-                }
+                // $product = Product::find($productId);
+                // if ($product) {
+                //     $product->quantity = max(0, $product->remaining_stock - $qty);
+                //     $this->updateProductStatus($product);
+                // }
             }
 
             // Optional: Log after update
@@ -390,25 +390,6 @@ class InvoiceController extends Controller
         return redirect()->route('invoice.index')
             ->with('message', 'Invoice updated successfully.');
     }
-
-    /**
-     * Helper function to update product stock status
-     */
-    protected function updateProductStatus(Product $product)
-    {
-        $threshold = $product->threshold ?? 0;
-
-        if ($product->quantity <= 0) {
-            $product->status = 'Out of Stock';
-        } elseif ($product->quantity <= $threshold) {
-            $product->status = 'Low Stock';
-        } else {
-            $product->status = 'In Stock';
-        }
-
-        $product->save();
-    }
-
 
     /**
      * Remove the specified resource from storage.
@@ -528,37 +509,81 @@ class InvoiceController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $invoice = Invoice::findOrFail($id);
+        $invoice = Invoice::with('items.product')->findOrFail($id);
 
-        // Find the super admin record
         $user = User::where('user_role', 'super_admin')->first();
-
-        // Check if super admin record exists
         if (!$user) {
             return response()->json(['error' => 'Super Admin account not found.'], 404);
         }
 
-        // Validate password input
         $request->validate([
             'password' => 'required|string',
         ]);
 
-        // Check password match
         if (!\Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Incorrect password.'], 403);
         }
 
-        \Log::info('Approval attempt:', [
-            'user_found' => $user ? true : false,
-            'role' => $user->user_role ?? 'none',
-            'entered_password' => $request->password,
-        ]);
+        if ($invoice->invoice_status === 'approved') {
+            return response()->json(['error' => 'Invoice is already approved.'], 400);
+        }
 
-        // Approve the invoice
-        $invoice->invoice_status = 'approved';
-        $invoice->discount_approved = 1;
-        $invoice->save();
+        DB::beginTransaction();
+        try {
 
-        return response()->json(['success' => 'Invoice approved successfully!']);
+            foreach ($invoice->items as $item) {
+                $product = $item->product;
+                if (!$product) continue;
+
+                // Deduct stock
+                $newStock = $product->remaining_stock - $item->qty;
+
+                if ($newStock < 0) {
+                    DB::rollBack();
+                    return response()->json([
+                        'error' => "Insufficient stock for {$product->product_name}."
+                    ], 400);
+                }
+
+                $product->remaining_stock = $newStock;
+                $product->save();
+
+                // ⭐ Update product status based on threshold
+                $this->updateProductStatus($product);
+            }
+
+            // Approve invoice
+            $invoice->invoice_status = 'approved';
+            $invoice->discount_approved = 1;
+            $invoice->save();
+
+            DB::commit();
+
+            return response()->json(['success' => 'Invoice approved and stock updated successfully!']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating stock: '.$e->getMessage());
+            return response()->json(['error' => 'Approval failed.'], 500);
+        }
     }
+
+     /**
+     * Helper function to update product stock status
+     */
+    protected function updateProductStatus(Product $product)
+    {
+        $threshold = $product->threshold ?? 0;
+
+        if ($product->remaining_stock <= 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->remaining_stock <= $threshold) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
+
+        $product->save();
+    }
+
 }

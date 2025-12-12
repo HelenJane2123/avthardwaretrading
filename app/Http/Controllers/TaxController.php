@@ -105,7 +105,7 @@ class TaxController extends Controller
     public function destroy($id)
     {
         $tax = Tax::findOrFail($id);
-        $isUsedInProducts = $unit->products()->exists();
+        $isUsedInProducts = $tax->products()->exists();
 
          // If used in products
         if ($isUsedInProducts) {

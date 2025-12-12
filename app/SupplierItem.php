@@ -16,11 +16,12 @@ class SupplierItem extends Model
         'item_description',
         'item_price',
         'item_amount',
+        'unit_id',
         'item_qty',
+        'discount_less_add',
         'discount_1',
         'discount_2',
         'discount_3',
-        'unit_id',
         'item_image',
         'volume_less',
         'regular_less'
