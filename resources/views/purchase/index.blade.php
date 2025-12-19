@@ -53,7 +53,8 @@
                                     <th>Discount Type</th>
                                     <th>Total Purchased</th>
                                     <th>Payment Status</th>
-                                    <th>Status</th>
+                                    <th>Purchase Status</th>
+                                    <th>Order Status</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -107,6 +108,13 @@
                                                 <span class="badge bg-warning">Pending</span>
                                             @endif
                                         </td>
+                                         <td>
+                                            @if ($purchase->is_completed === 1)
+                                                <span class="badge bg-success">Completed</span>
+                                            @else
+                                                <span class="badge bg-warning">Pending</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
                                                 {{-- View Details --}}
@@ -123,9 +131,11 @@
                                                         title="Print PO">
                                                             <i class="fa fa-print"></i>
                                                     </a>
-                                                    <button class="btn btn-success btn-sm" onclick="completePurchaseOrder({{ $purchase->id }})">
-                                                        <i class="fa fa-check"></i> Complete Order
-                                                    </button>
+                                                    @if ($purchase->is_completed !== 1)
+                                                        <button class="btn btn-success btn-sm" onclick="completePurchaseOrder({{ $purchase->id }})">
+                                                            <i class="fa fa-check"></i> Complete Order
+                                                        </button>
+                                                    @endif
                                                 @endif
                                                 {{-- Edit --}}
                                                 @if ($purchase->is_approved !== 1)

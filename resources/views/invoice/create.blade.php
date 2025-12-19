@@ -274,48 +274,59 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <div class="mb-2">
+                    <label for="filterSupplier" class="form-label">Filter by Supplier</label>
+                    <select id="filterSupplier" class="form-control form-control-sm">
+                        <option value="">-- All Suppliers --</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
                 <div class="table-responsive">
-                <table class="table table-bordered" id="productTable">
-                    <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Unit Cost</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Unit</th>
-                        <th>Select</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($products as $product)
-                        <tr data-id="{{ $product->id }}"
-                            data-code="{{ $product->product_code }}"
-                            data-name="{{ $product->product_name }}"
-                            data-price="{{ $product->sales_price }}"
-                            data-stock="{{ $product->remaining_stock }}"
-                            data-unit="{{ $product->unit_id }}"
-                            data-discounttype="{{ $product->discount_type }}"
-                            data-discount1="{{ $product->discount_1 }}"
-                            data-discount2="{{ $product->discount_2 }}"
-                            data-discount3="{{ $product->discount_3 }}"
-                            data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
-                            <td>{{ $product->product_code }}</td>
-                            <td>{{ $product->product_name }}</td>
-                            <td>{{ optional($product->supplierItems->first())->item_price }}</td>
-                            <td>{{ $product->sales_price }}</td>
-                            <td>{{ $product->remaining_stock }}</td>
-                            <td>{{ $product->unit->name }}</td>
-                            <td>
-                            <button type="button" class="btn btn-success btn-sm select-this">Select</button>
-                            </td>
+                    <table class="table table-bordered" id="productTable">
+                        <thead>
+                        <tr>
+                            <th>Product Code</th>
+                            <th>Supplier Product Code</th>
+                            <th>Name</th>
+                            <th>Unit Cost</th>
+                            <th>Price</th>
+                            <th>Quantity on Hand</th>
+                            <th>Unit</th>
+                            <th>Select</th>
                         </tr>
-                    @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        @foreach($products as $product)
+                            <tr data-id="{{ $product->id }}"
+                                data-code="{{ $product->product_code }}"
+                                data-name="{{ $product->product_name }}"
+                                data-price="{{ $product->sales_price }}"
+                                data-stock="{{ $product->remaining_stock }}"
+                                data-unit="{{ $product->unit_id }}"
+                                data-supplier="{{ optional($product->supplierItems->first())->supplier_id }}"
+                                data-discounttype="{{ $product->discount_type }}"
+                                data-discount1="{{ $product->discount_1 }}"
+                                data-discount2="{{ $product->discount_2 }}"
+                                data-discount3="{{ $product->discount_3 }}"
+                                data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                                <td>{{ $product->product_code }}</td>
+                                <td>{{ $product->supplier_product_code }}</td>
+                                <td>{{ $product->product_name }}</td>
+                                <td>{{ optional($product->supplierItems->first())->item_price }}</td>
+                                <td>{{ $product->sales_price }}</td>
+                                <td>{{ $product->remaining_stock }}</td>
+                                <td>{{ $product->unit->name }}</td>
+                                <td>
+                                <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            </div>
             </div>
         </div>
     </div>
@@ -344,6 +355,29 @@
                         autoWidth: false
                     });
                 }
+            });
+
+            $('#filterSupplier').on('change', function () {
+                let supplierId = $(this).val();
+
+                $.fn.dataTable.ext.search = []; // clear old filters first
+
+                if (!supplierId) {
+                    productTable.draw();
+                    return;
+                }
+
+                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+
+                    // Correct row reference
+                    let rowNode = productTable.row(dataIndex).node();
+
+                    let rowSupplier = $(rowNode).data('supplier');
+
+                    return rowSupplier == supplierId;
+                });
+
+                productTable.draw();
             });
 
             // Open modal when search button clicked
@@ -399,6 +433,8 @@
                 currentRow.find('.dis1').val(discount_1).trigger('change');
                 currentRow.find('.dis2').val(discount_2).trigger('change');
                 currentRow.find('.dis3').val(discount_3).trigger('change');
+
+                currentRow.find('.available-stock').text("Available: " + stock);
 
                 currentRow.find('.selected-product-info').html(name);
                 currentRow.find('.show-base-price').html("Unit Cost: " +basePrice);

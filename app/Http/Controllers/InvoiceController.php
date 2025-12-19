@@ -67,8 +67,10 @@ class InvoiceController extends Controller
                 'discount_1',
                 'discount_2',
                 'discount_3')
-            ->with(['supplierItems:id,item_code,item_price',
-                    'unit:id,name'])
+             ->with([
+                    'supplierItems:id,item_code,item_price,supplier_id',
+                    'unit:id,name'
+                ])
             ->get();
             
         $customers = Customer::where('status', 1)->get();
@@ -76,9 +78,10 @@ class InvoiceController extends Controller
         $taxes = Tax::all();
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
         $salesman = Salesman::where('status',1)->get();
+        $suppliers = Supplier::all();
 
         return view('invoice.create', compact(
-            'customers','products','paymentModes','units','taxes','salesman'
+            'customers','products','paymentModes','units','taxes','salesman','suppliers'
         ));
     }
 
@@ -251,6 +254,7 @@ class InvoiceController extends Controller
         $paymentModes = ModeofPayment::all();
         $taxes = Tax::all();
         $salesman = Salesman::where('status', 1)->get();
+        $suppliers = Supplier::all('status', 1)->get();
 
         // Map invoice items to include supplier_item_price
         $invoiceItems = $invoice->items->map(function($item) {
@@ -287,7 +291,8 @@ class InvoiceController extends Controller
             'paymentModes', 
             'taxes', 
             'salesman',
-            'invoiceItems'
+            'invoiceItems',
+            'suppliers'
         ));
     }
 
