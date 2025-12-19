@@ -64,7 +64,7 @@
                         </thead>
                         <tbody>
                         @foreach($salesmen as $salesman)
-                            <tr>
+                            <tr d="row-{{ $salesman->id }}">
                                 <td><span class="badge badge-info">{{ $salesman->salesman_code }}</span></td>
                                 <td>{{ $salesman->salesman_name }}</td>
                                 <td>{{ $salesman->address }}</td>
@@ -84,20 +84,11 @@
                                            title="Edit">
                                             <i class="fa fa-edit"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-danger" 
-                                                type="button" 
-                                                onclick="deleteTag({{ $salesman->id }})"
-                                                title="Delete">
-                                            <i class="fa fa-trash"></i>
+                                        <button class="btn btn-danger btn-sm" type="button" 
+                                                    onclick="deleteTag('{{ $salesman->id }}','{{ $salesman->salesman_name }}')">
+                                                <i class="fa fa-trash"></i>
                                         </button>
                                     </div>
-                                    <form id="delete-form-{{ $salesman->id }}" 
-                                          action="{{ route('salesmen.destroy',$salesman->id) }}" 
-                                          method="POST" 
-                                          class="d-none">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
                                 </td>
                             </tr>
                         @endforeach
@@ -108,38 +99,53 @@
         </div>
     </main>
 @endsection
-
 @push('js')
     <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         $('#sampleTable').DataTable({
             "order": [[ 0, "desc" ]],
             "pageLength": 10,
             "responsive": true
         });
-    </script>
-    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-    <script>
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
+        function deleteTag(salesmanId, salesmanName) {
+            Swal.fire({
+                title: 'Delete "' + salesmanName + '"?',
                 text: "This action cannot be undone!",
-                type: 'warning',
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: '<i class="fa fa-check"></i> Yes, delete it!',
-                cancelButtonText: '<i class="fa fa-times"></i> Cancel',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-' + id).submit();
-                } else if (result.dismiss === swal.DismissReason.cancel) {
-                    swal('Cancelled', 'Your data is safe :)', 'error')
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("salesmen.destroy", ":id") }}'.replace(':id', salesmanId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + salesmanId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
     </script>
 @endpush

@@ -53,28 +53,23 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                @foreach( $units as $unit)
-                                <tr>
-                                    <td>{{ $unit->name }} </td>
-                                    @if($unit->status)
-                                    <td>Active</td>
-                                        @else
-                                        <td>Inactive</td>
-                                    @endif
-
-
-                                    <td>
-                                        <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
-                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $unit->id }})">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                        <form id="delete-form-{{ $unit->id }}" action="{{ route('unit.destroy',$unit->id) }}" method="POST" style="display: none;">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                    </td>
-                                </tr>
-                                @endforeach
+                                    @foreach( $units as $unit)
+                                    <tr id="row-{{ $unit->id }}">
+                                        <td>{{ $unit->name }} </td>
+                                        @if($unit->status)
+                                        <td>Active</td>
+                                            @else
+                                            <td>Inactive</td>
+                                        @endif
+                                        <td>
+                                            <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
+                                            <button class="btn btn-danger btn-sm" type="button" 
+                                                    onclick="deleteTag('{{ $unit->id }}', '{{ $unit->name }}')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -83,9 +78,6 @@
             </div>
         </div>
     </main>
-
-
-
 @endsection
 
 @push('js')
@@ -94,35 +86,43 @@
     <script type="text/javascript">$('#sampleTable').DataTable();</script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                type: 'warning',
+        function deleteTag(unitId, name) {
+            Swal.fire({
+                title: 'Delete "' + name + '"?',
+                text: "This action cannot be undone!",
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!',
-                confirmButtonClass: 'btn btn-success',
-                cancelButtonClass: 'btn btn-danger',
-                buttonsStyling: false,
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-'+id).submit();
-                } else if (
-                    // Read more about handling dismissals
-                    result.dismiss === swal.DismissReason.cancel
-                ) {
-                    swal(
-                        'Cancelled',
-                        'Your data is safe :)',
-                        'error'
-                    )
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("unit.destroy", ":id") }}'.replace(':id', unitId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + unitId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
     </script>
 @endpush

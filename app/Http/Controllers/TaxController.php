@@ -102,17 +102,23 @@ class TaxController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($name)
     {
-        $tax = Tax::findOrFail($id);
+        $tax = Tax::where('name', $name)->firstOrFail();
+        $isUsedInSupplier = $tax->supplierItems()->exists();
         $isUsedInProducts = $tax->products()->exists();
 
          // If used in products
-        if ($isUsedInProducts) {
-            return redirect()->back()->with('error', 'Cannot delete this discount because it is used by existing products.');
+        if ($isUsedInProducts || $isUsedInSupplier) {
+             return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this discount because it is used by existing products.'
+            ]);
         }
         $tax->delete();
-        return redirect()->back();
-
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Discount deleted successfully.'
+        ]);
     }
 }

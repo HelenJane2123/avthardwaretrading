@@ -109,19 +109,19 @@ class UnitController extends Controller
         $isUsedInPurchase = $unit->purchaseItems()->exists();
         $isUsedInSupplier = $unit->supplierItems()->exists();
         $isUsedInProducts = $unit->products()->exists();
-
-        // If used in products
-        if ($isUsedInProducts) {
-            return redirect()->back()->with('error', 'Cannot delete this unit because it is used by existing products.');
-        }
-
         // If used in purchase or supplier items
-        if ($isUsedInPurchase || $isUsedInSupplier) {
-            return redirect()->back()->with('error', 'Cannot delete this unit because it is used by existing modules.');
+        if ($isUsedInPurchase || $isUsedInSupplier || $isUsedInProduct) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this unit because it is used by existing modules.'
+            ]);
         }
 
         // Safe to delete
         $unit->delete();
-        return redirect()->back();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Unit deleted successfully.'
+        ]);
     }
 }

@@ -117,9 +117,15 @@ class CategoryController extends Controller
         $isUsedInSupplierItems = $category->products()->exists();
 
         if ($isUsedInProducts || $isUsedInSupplierItems) {
-            return redirect()->back()->with('error', 'Cannot delete this category because it is used in products or supplier items.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this category because it is used in products or supplier items.'
+            ]);
         }
         $category->delete();
-        return redirect()->back();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Category deleted successfully.'
+        ]);
     }
 }
