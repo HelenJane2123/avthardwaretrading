@@ -107,36 +107,36 @@
                                         <div class="form-group col-md-8 position-relative">
                                             <label class="control-label">Product</label>
                                             <div class="input-group">
-                                                <input type="text" id="product_name" name="product_name" class="form-control" readonly placeholder="Select product...">
+                                                <input type="text" id="product_name" name="product_name" class="form-control form-control-sm" readonly placeholder="Select product...">
                                                 <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
                                                 <!-- <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div> -->
                                             </div>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Product Code</label>
-                                            <input name="product_code" id="product_code" class="form-control" type="text" value="{{ $product_code }}" readonly>
+                                            <input name="product_code" id="product_code" class="form-control form-control-sm" type="text" value="{{ $product_code }}" readonly>
                                             <!-- <input name="product_code" id="product_code" class="form-control" type="text" readonly> -->
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Supplier Product Code</label>
-                                            <input name="supplier_product_code" id="supplier_product_code" class="form-control" type="text" readonly>
+                                            <input name="supplier_product_code" id="supplier_product_code" class="form-control form-control-sm" type="text" readonly>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Product Description</label>
                                             <textarea name="description"
-                                                class="form-control"
+                                                class="form-control form-control-sm"
                                                 rows="2"></textarea>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Volume Less</label>
                                             <textarea name="volume_less"
-                                                class="form-control"
+                                                class="form-control form-control-sm"
                                                 rows="2"></textarea>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Regular Less</label>
                                             <textarea name="regular_less"
-                                                class="form-control"
+                                                class="form-control form-control-sm"
                                                 rows="2"></textarea>
                                         </div>
                                         <!-- <div class="form-group col-md-4">
@@ -151,7 +151,7 @@
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Category</label>
-                                            <select name="category_id" class="form-control">
+                                            <select name="category_id" class="form-control form-control-sm">
                                                 <option>---Select Category---</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{$category->id}}">{{$category->name}}</option>
@@ -176,17 +176,17 @@
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Initial Quantity</label>
-                                            <input name="quantity" class="form-control" type="number" min="0" placeholder="Enter Initial Stock">
+                                            <input name="quantity" class="form-control form-control-sm" type="number" min="0" placeholder="Enter Initial Stock">
                                         </div>
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Remaining Stock</label>
-                                            <input name="remaining_stock" id="remaining_stock" class="form-control" type="number" readonly>
+                                            <input name="remaining_stock" id="remaining_stock" class="form-control form-control-sm" type="number" readonly>
                                         </div>
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Selling Price</label>
-                                            <input name="sales_price" id="sales_price" class="form-control @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
+                                            <input name="sales_price" id="sales_price" class="form-control form-control-sm @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                             @error('sales_price')
                                             <span class="invalid-feedback" role="alert">
                                                 <strong>{{ $message }}</strong>
@@ -195,7 +195,7 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Unit</label>
-                                            <select name="unit_id" class="form-control">
+                                            <select name="unit_id" class="form-control form-control-sm">
                                                 <option value="">---Select Unit---</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{$unit->id}}">{{$unit->name}}</option>
@@ -221,14 +221,14 @@
                                             <div class="col-md-6">
                                                 <label for="supplier_name" class="form-label">Supplier</label>
                                                 <input type="text" id="supplier_name" name="supplier_name" 
-                                                    class="form-control" autocomplete="off">
+                                                    class="form-control form-control-sm" autocomplete="off">
                                                 <div id="supplierSuggestions" class="list-group shadow-sm"></div>
                                                 <input type="hidden" id="supplier_id" name="supplier_id[]">
                                             </div>
                                             <div class="col-md-4">
                                                 <label for="supplier_price" class="form-label">Base Price (Unit Cost)</label>
                                                 <input type="number" id="supplier_price" name="supplier_price[]" 
-                                                    class="form-control" placeholder="Base Price">
+                                                    class="form-control form-control-sm" placeholder="Base Price">
                                             </div>
                                         </div>
                                     </div>
@@ -243,14 +243,14 @@
                                     <div class="row">
                                         <div class="form-group col-md-2">
                                             <label class="control-label">Choose Discount Type</label>
-                                            <select name="discount_type" class="form-control">
+                                            <select name="discount_type" class="form-control form-control-sm">
                                                 <option value="less">Less (-)</option>
                                                 <option value="add">Add (+)</option>
                                             </select>
                                         </div>
                                         <div class="form-group col-md-3">
                                             <label class="control-label">Discount 1</label>
-                                            <select name="discount_1" class="form-control">
+                                            <select name="discount_1" class="form-control form-control-sm">
                                                 <option value="0">---Select Discount---</option>
                                                 @foreach($taxes as $tax)
                                                     <option value="{{$tax->name}}">{{$tax->name}} %</option>
@@ -264,7 +264,7 @@
                                         </div>
                                         <div class="form-group col-md-3">
                                             <label class="control-label">Discount 2</label>
-                                            <select name="discount_2" class="form-control">
+                                            <select name="discount_2" class="form-control form-control-sm">
                                                 <option value="0">---Select Discount---</option>
                                                 @foreach($taxes as $tax)
                                                     <option value="{{$tax->name}}">{{$tax->name}} %</option>
@@ -278,7 +278,7 @@
                                         </div>
                                         <div class="form-group col-md-3">
                                             <label class="control-label">Discount 3</label>
-                                            <select name="discount_3" class="form-control">
+                                            <select name="discount_3" class="form-control form-control-sm">
                                                 <option value="0">---Select Discount---</option>
                                                 @foreach($taxes as $tax)
                                                     <option value="{{$tax->name}}">{{$tax->name}} %</option>
@@ -294,7 +294,7 @@
                                 </div>      
                             </div>
                             {{-- Adjustment Section --}}
-                            <div class="card mt-4">
+                            <!-- <div class="card mt-4">
                                 <div class="card-header bg-secondary text-white">
                                     <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Adjustments</h6>
                                 </div>
@@ -311,25 +311,25 @@
                                         <tbody>
                                             <tr>
                                                 <td>
-                                                    <input type="number" name="adjustment[]" class="form-control adjustment" value="0" min="0">
+                                                    <input type="number" name="adjustment[]" class="form-control form-control-sm adjustment" value="0" min="0">
                                                 </td>
                                                 <td>
-                                                    <select name="adjustment_status[]" class="form-control">
+                                                    <select name="adjustment_status[]" class="form-control form-control-sm">
                                                         <option value="Return">Return</option>
                                                         <option value="Others">Others</option>
                                                     </select>
                                                 </td>
                                                 <td>
-                                                    <input type="text" name="adjustment_remarks[]" class="form-control" placeholder="Enter remarks">
+                                                    <input type="text" name="adjustment_remarks[]" class="form-control form-control-sm" placeholder="Enter remarks">
                                                 </td>
                                                 <td>
-                                                    <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" readonly>
+                                                    <input type="number" name="new_initial_qty[]" class="form-control  form-control-sm new-initial-qty" readonly>
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="form-group col-md-4 mt-4 align-self-end">
                                 <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
                                 <a href="{{ route('product.index') }}" class="btn btn-secondary px-4">

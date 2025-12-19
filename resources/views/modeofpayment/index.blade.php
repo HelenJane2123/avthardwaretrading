@@ -49,24 +49,21 @@
                                 </thead>
                                 <tbody>
                                 @foreach( $modeofpayments as $modeofpayment)
-                                <tr>
-                                    <td>{{ $modeofpayment->id }} </td>
-                                    <td>{{ $modeofpayment->name }} </td>
-                                    <td>{{ $modeofpayment->description }} </td>
-                                    <td>{{ $modeofpayment->term }} </td>
-                                    <td>{{ $modeofpayment->created_at }} </td>
-                                    <td>{{ $modeofpayment->updated_at }} </td>
-                                    <td>
-                                        <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
-                                        <button class="btn btn-danger btn-sm waves-effect" type="submit" onclick="deleteTag({{ $modeofpayment->id }})">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                        <form id="delete-form-{{ $modeofpayment->id }}" action="{{ route('modeofpayment.destroy',$modeofpayment->id) }}" method="POST" style="display: none;">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-                                    </td>
-                                </tr>
+                                    <tr id="row-{{ $modeofpayment->id }}">
+                                        <td>{{ $modeofpayment->id }} </td>
+                                        <td>{{ $modeofpayment->name }} </td>
+                                        <td>{{ $modeofpayment->description }} </td>
+                                        <td>{{ $modeofpayment->term }} </td>
+                                        <td>{{ $modeofpayment->created_at }} </td>
+                                        <td>{{ $modeofpayment->updated_at }} </td>
+                                        <td>
+                                            <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
+                                            <button class="btn btn-danger btn-sm" type="button" 
+                                                    onclick="deleteTag('{{ $modeofpayment->id }}', '{{ $modeofpayment->name }}','{{ $modeofpayment->term }}')">
+                                                <i class="fa fa-trash"></i>
+                                            </button>   
+                                        </td>
+                                    </tr>
                                 @endforeach
                                 </tbody>
                             </table>
@@ -75,9 +72,6 @@
             </div>
         </div>
     </main>
-
-
-
 @endsection
 
 @push('js')
@@ -86,35 +80,43 @@
     <script type="text/javascript">$('#modeofpaymentTable').DataTable();</script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                type: 'warning',
+        function deleteTag(modeofpaymentId, name, term) {
+            Swal.fire({
+                title: 'Delete "' + name + ' (' + term + ')?',
+                text: "This action cannot be undone!",
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!',
-                confirmButtonClass: 'btn btn-success',
-                cancelButtonClass: 'btn btn-danger',
-                buttonsStyling: false,
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-'+id).submit();
-                } else if (
-                    // Read more about handling dismissals
-                    result.dismiss === swal.DismissReason.cancel
-                ) {
-                    swal(
-                        'Cancelled',
-                        'Your data is safe :)',
-                        'error'
-                    )
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("modeofpayment.destroy", ":id") }}'.replace(':id', modeofpaymentId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + productId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
     </script>
 @endpush

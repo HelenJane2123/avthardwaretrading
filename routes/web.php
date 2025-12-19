@@ -84,6 +84,8 @@ Route::get('/products/details', [ProductController::class, 'getProductDetails'])
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::post('/import-product', [ImportController::class, 'import_product'])->name('import.product');
 Route::get('/products', [ProductController::class, 'list'])->name('products.list');
+Route::post('/product/{id}/adjustment', [ProductController::class, 'storeAdjustment'])->name('product.adjustment.store');
+
 
 //get supplier information and items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);

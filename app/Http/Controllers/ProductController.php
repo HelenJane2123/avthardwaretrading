@@ -278,36 +278,72 @@ class ProductController extends Controller
             }
         }
 
-        // Delete old adjustments
-        \DB::table('product_adjustments')->where('product_id', $product->id)->delete();
+        // // Delete old adjustments
+        // \DB::table('product_adjustments')->where('product_id', $product->id)->delete();
 
-        // Insert new adjustments and update remaining stock
-        $totalAdjustment = 0;
-        if ($request->filled('adjustment')) {
-            foreach ($request->adjustment as $index => $adjValue) {
-                $adjValue = (int) $adjValue;
-                if ($adjValue !== 0) {
-                    \DB::table('product_adjustments')->insert([
-                        'product_id' => $product->id,
-                        'adjustment' => $adjValue,
-                        'adjustment_status' => $request->adjustment_status[$index] ?? 'Others',
-                        'remarks' => $request->adjustment_remarks[$index] ?? null,
-                        'new_initial_qty' => $request->new_initial_qty[$index] ?? ($product->remaining_stock + $adjValue),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                    $totalAdjustment += $adjValue;
-                }
-            }
-        }
+        // // Insert new adjustments and update remaining stock
+        // $totalAdjustment = 0;
+        // if ($request->filled('adjustment')) {
+        //     foreach ($request->adjustment as $index => $adjValue) {
+        //         $adjValue = (int) $adjValue;
+        //         if ($adjValue !== 0) {
+        //             \DB::table('product_adjustments')->insert([
+        //                 'product_id' => $product->id,
+        //                 'adjustment' => $adjValue,
+        //                 'adjustment_status' => $request->adjustment_status[$index] ?? 'Others',
+        //                 'remarks' => $request->adjustment_remarks[$index] ?? null,
+        //                 'new_initial_qty' => $request->new_initial_qty[$index] ?? ($product->remaining_stock + $adjValue),
+        //                 'created_at' => now(),
+        //                 'updated_at' => now(),
+        //             ]);
+        //             $totalAdjustment += $adjValue;
+        //         }
+        //     }
+        // }
 
-        // Update remaining stock with total adjustments
-        $product->remaining_stock += $totalAdjustment;
+        // // Update remaining stock with total adjustments
+        // $product->remaining_stock += $totalAdjustment;
         $product->save();
 
         return redirect()->route('product.index')->with('message', 'Product updated successfully!');
     }
 
+    public function storeAdjustment(Request $request, $id)
+    {
+        $request->validate([
+            'adjustment' => 'required|numeric',
+            'adjustment_status' => 'required|string',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $product = Product::findOrFail($id);
+
+        // Compute new remaining stock
+        $newRemainingStock = $product->remaining_stock + $request->adjustment;
+
+        // Save adjustment history
+        $adj = $product->adjustments()->create([
+            'adjustment' => $request->adjustment,
+            'adjustment_status' => $request->adjustment_status,
+            'remarks' => $request->remarks,
+            'new_initial_qty' => $newRemainingStock, // historical snapshot
+        ]);
+
+        // Update product inventory
+        $product->update([
+            'remaining_stock' => $newRemainingStock,
+        ]);
+
+        return response()->json([
+            'adjustment' => [
+                'adjustment' => $adj->adjustment,
+                'adjustment_status' => $adj->adjustment_status,
+                'remarks' => $adj->remarks,
+                'new_initial_qty' => $newRemainingStock,
+                'created_at' => $adj->created_at->format('M d, Y H:i'),
+            ],
+        ]);
+    }
 
     public function getProductInfo($id)
     {
@@ -377,16 +413,22 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
-        $isUsedInvoiceSales = $product->product()->exists();
 
-        if ($isUsedInvoiceSales) {
-            return redirect()->back()->with('error', 'Cannot delete this product because it is used by invoices.');
+        // Check if product exists in any invoice sales
+        if ($product->sales()->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this product because it is used by invoices.'
+            ]);
         }
 
         // Delete the product
         $product->delete();
 
-        return redirect()->back()->with('message', 'Product and its suppliers deleted successfully.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product deleted successfully.'
+        ]);
     }
 
     public function search(Request $request)

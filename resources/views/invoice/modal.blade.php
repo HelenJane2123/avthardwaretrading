@@ -39,7 +39,7 @@
                     </tr>
                     <tr>
                         <th>Payment Terms</th>
-                        <td>{{ $invoice->paymentMode->name ?? 'N/A' }}</td>
+                        <td>{{ $invoice->paymentMode->name ?? 'N/A' }} - {{ $invoice->paymentMode->term ?? '' }}</td>
                     </tr>
                 </table>
             </div>

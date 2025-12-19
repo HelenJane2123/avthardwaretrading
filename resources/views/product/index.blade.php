@@ -33,7 +33,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="tile">
-                    @if(session()->has('message'))
+                    <!-- @if(session()->has('message'))
                         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                             <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -48,7 +48,7 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                    @endif
+                    @endif -->
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
                         <div class="table-responsive">
@@ -69,7 +69,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($additional as $add)
-                                        <tr>
+                                        <tr id="row-{{ $add->product->id }}">
                                             <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
                                             <td>{{ $add->product->product_name }}</td>
                                             <td>{{ $add->product->quantity }}</td>
@@ -103,17 +103,10 @@
                                                     </a>
 
                                                     <!-- Delete -->
-                                                    <button class="btn btn-danger btn-sm" type="submit" onclick="deleteTag({{ $add->product->id }})">
+                                                    <button class="btn btn-danger btn-sm" type="button" 
+                                                            onclick="deleteTag('{{ $add->product->id }}', '{{ $add->product->product_name }}')">
                                                         <i class="fa fa-trash"></i>
-                                                    </button>
-
-                                                    <!-- Hidden Delete Form -->
-                                                    <form id="delete-form-{{ $add->product->id }}" 
-                                                        action="{{ route('product.destroy', $add->product->id) }}" 
-                                                        method="POST" style="display:none;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                    </form>
+                                                    </button>                                             
                                                 </div>
                                             </td>
                                         </tr>
@@ -149,33 +142,48 @@
 @push('js')
     <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         $('#sampleTable').DataTable();
 
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
+        function deleteTag(productId, productName) {
+            Swal.fire({
+                title: 'Delete "' + productName + '"?',
                 text: "This action cannot be undone!",
-                type: 'warning',
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!',
-                confirmButtonClass: 'btn btn-success',
-                cancelButtonClass: 'btn btn-danger',
-                buttonsStyling: false,
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-'+id).submit();
-                } else if (result.dismiss === swal.DismissReason.cancel) {
-                    swal('Cancelled','Your data is safe :)','error');
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("product.destroy", ":id") }}'.replace(':id', productId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + productId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
-        
         $(document).on("click", ".view-btn", function () {
             let productId = $(this).data("id");
             $.ajax({

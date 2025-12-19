@@ -65,30 +65,30 @@
                                         <div class="col-md-8">
                                             <label class="fw-bold">Product Name</label>
                                             <div class="input-group">
-                                                <input type="text" id="product_name" name="product_name" class="form-control" readonly value="{{ $product->product_name }}">
+                                                <input type="text" id="product_name" name="product_name" class="form-control form-control-sm" readonly value="{{ $product->product_name }}">
                                                 <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
                                                 <!-- <div id="productSuggestions" class="list-group" style="display:none; position:absolute; z-index:1000;"></div> -->
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="fw-bold">Product Code</label>
-                                            <input type="text" class="form-control" value="{{ $product->product_code }}" readonly>
+                                            <input type="text" class="form-control form-control-sm" value="{{ $product->product_code }}" readonly>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="fw-bold">Supplier Product Code</label>
-                                            <input type="text" class="form-control" name="supplier_product_code" 
+                                            <input type="text" class="form-control form-control-sm" name="supplier_product_code" 
                                                 id="supplier_product_code" value="{{ $product->supplier_product_code }}" readonly>
                                         </div>
                                         <div class="form-group col-md-4">
                                                 <label class="control-label fw-bold">Product Description</label>
                                                 <textarea name="description"
-                                                    class="form-control"
+                                                    class="form-control form-control-sm"
                                                     rows="2">{{ $product->description }}</textarea>
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Volume Less</label>
                                             <textarea name="volume_less"
-                                                class="form-control"
+                                                class="form-control form-control-sm"
                                                 rows="2">{{ $product->volume_less }}</textarea>
                                         </div>
                                     </div>
@@ -96,7 +96,7 @@
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Regular Less</label>
                                             <textarea name="regular_less"
-                                                class="form-control"
+                                                class="form-control form-control-sm"
                                                 rows="2">{{ $product->regular_less }}</textarea>
                                         </div>
                                         <!-- <div class="col-md-3">
@@ -105,7 +105,7 @@
                                         </div> -->
                                         <div class="col-md-3">
                                             <label>Category</label>
-                                            <select name="category_id" class="form-control" required>
+                                            <select name="category_id" class="form-control form-control-sm" required>
                                                 <option value="">--Select--</option>
                                                 @foreach ($categories as $category)
                                                     <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
@@ -120,7 +120,7 @@
                                         </div> -->
                                         <div class="col-md-3">
                                             <label>Unit</label>
-                                            <select name="unit_id" class="form-control">
+                                            <select name="unit_id" class="form-control form-control-sm">
                                                 <option>--Select--</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{$unit->id}}" {{ $product->unit_id == $unit->id ? 'selected' : '' }}>
@@ -142,15 +142,15 @@
                             <div class="card-body row g-3">
                                 <div class="col-md-2">
                                     <label>Initial Quantity</label>
-                                    <input type="number" name="quantity" class="form-control" value="{{ $product->quantity }}">
+                                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ $product->quantity }}" readonly>
                                 </div>
                                 <div class="col-md-2">
                                     <label>Remaining Stock</label>
-                                    <input type="number" name="remaining_stock" class="form-control" value="{{ $product->remaining_stock }}" readonly>
+                                    <input type="number" name="remaining_stock" class="form-control form-control-sm" value="{{ $product->remaining_stock }}" readonly>
                                 </div>
                                 <div class="col-md-2">
                                     <label>Selling Price</label>
-                                    <input type="number" step="0.01" name="sales_price" class="form-control" value="{{ $product->sales_price }}" required>
+                                    <input type="number" step="0.01" name="sales_price" class="form-control form-control-sm" value="{{ $product->sales_price }}" required>
                                 </div>
                                 <div class="col-md-3 d-flex align-items-center">
                                     <label class="me-2">Status: </label>
@@ -179,12 +179,12 @@
                                             <div class="row mb-2">
                                                 <div class="col-md-5">
                                                     <label class="control-label">Supplier</label>
-                                                    <input type="text" class="form-control" value="{{ $supplierItem->supplier->name ?? '' }}" readonly>
+                                                    <input type="text" class="form-control form-control-sm" value="{{ $supplierItem->supplier->name ?? '' }}" readonly>
                                                     <input type="hidden" name="supplier_id[]" value="{{ $supplierItem->supplier_id }}">
                                                 </div>
                                                 <div class="col-md-5">
                                                     <label class="control-label">Base Price (Unit Cost)</label>
-                                                    <input type="number" name="supplier_price[]" class="form-control" 
+                                                    <input type="number" name="supplier_price[]" class="form-control form-control-sm" 
                                                         placeholder="Purchase Price" value="{{ $supplierItem->price }}" required>
                                                 </div>
                                                 <div class="col-md-2 d-flex align-items-center">
@@ -203,14 +203,14 @@
                             <div class="card-body row g-3">
                                 <div class="form-group col-md-2">
                                     <label class="control-label">Choose Discount Type</label>
-                                    <select name="discount_type" class="form-control">
+                                    <select name="discount_type" class="form-control form-control-sm">
                                         <option value="less" {{ $product->discount_type == 'less' ? 'selected' : '' }}>Less (-)</option>
                                         <option value="add" {{ $product->discount_type == 'add' ? 'selected' : '' }}>Add (+)</option>
                                     </select>
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label class="control-label">Discount 1</label>
-                                    <select name="discount_1" class="form-control">
+                                    <select name="discount_1" class="form-control form-control-sm">
                                         <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
                                             <option value="{{$tax->name}}" {{ $product->discount_1 == $tax->name ? 'selected' : '' }}>
@@ -226,7 +226,7 @@
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label class="control-label">Discount 2</label>
-                                    <select name="discount_2" class="form-control">
+                                    <select name="discount_2" class="form-control form-control-sm">
                                         <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
                                             <option value="{{$tax->name}}" {{ $product->discount_2 == $tax->name ? 'selected' : '' }}>
@@ -242,7 +242,7 @@
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label class="control-label">Discount 2</label>
-                                    <select name="discount_3" class="form-control">
+                                    <select name="discount_3" class="form-control form-control-sm">
                                         <option value="0">---Select Discount---</option>
                                         @foreach($taxes as $tax)
                                             <option value="{{$tax->name}}" {{ $product->discount_3 == $tax->name ? 'selected' : '' }}>
@@ -263,60 +263,36 @@
                                 <h5 class="mb-0">Adjustments</h5>
                             </div>
                             <div class="card-body">
-                                <table class="table table-bordered table-sm" id="adjustmentTable">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Adjustment</th>
-                                            <th>Adjustment Status</th>
-                                            <th>Remarks</th>
-                                            <th>New Initial Qty</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if($product->adjustments && $product->adjustments->count() > 0)
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        data-toggle="modal"
+                                        data-target="#addAdjustmentModal">
+                                    <i class="fa fa-plus"></i> Add Adjustment
+                                </button>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped" id="adjustmentTable">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Adjustment</th>
+                                                <th>Status</th>
+                                                <th>New Remaining Stock</th>
+                                                <th>Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
                                             @foreach($product->adjustments as $adj)
                                                 <tr>
-                                                    <td>
-                                                        <input type="number" name="adjustment[]" class="form-control adjustment" 
-                                                            value="{{ $adj->adjustment }}" min="0">
-                                                    </td>
-                                                    <td>
-                                                        <select name="adjustment_status[]" class="form-control">
-                                                            <option value="Return" {{ $adj->adjustment_status == 'Return' ? 'selected' : '' }}>Return</option>
-                                                            <option value="Others" {{ $adj->adjustment_status == 'Others' ? 'selected' : '' }}>Others</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="adjustment_remarks[]" class="form-control" 
-                                                            placeholder="Enter remarks" value="{{ $adj->remarks }}">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" 
-                                                            value="{{ $adj->new_initial_qty }}" readonly>
-                                                    </td>
+                                                    <td>{{ $adj->created_at->format('M d, Y') }}</td>
+                                                    <td>{{ $adj->adjustment }}</td>
+                                                    <td>{{ $adj->adjustment_status }}</td>
+                                                    <td>{{ $adj->new_initial_qty }}</td>
+                                                    <td>{{ $adj->remarks }}</td>
                                                 </tr>
                                             @endforeach
-                                        @else
-                                            <tr>
-                                                <td>
-                                                    <input type="number" name="adjustment[]" class="form-control adjustment" value="0" min="0">
-                                                </td>
-                                                <td>
-                                                    <select name="adjustment_status[]" class="form-control">
-                                                        <option value="Return">Return</option>
-                                                        <option value="Others">Others</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="adjustment_remarks[]" class="form-control" placeholder="Enter remarks">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="new_initial_qty[]" class="form-control new-initial-qty" readonly>
-                                                </td>
-                                            </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <!-- Submit -->
@@ -335,41 +311,87 @@
         </div>
     </div>
      <!-- Product Selection Modal -->
-        <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="productModalLabel">Select Product</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-bordered table-hover" id="productTable">
-                    <thead>
-                        <tr>
-                        <th>Item Code</th>
-                        <th>Description</th>
-                        <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Product rows will be loaded here via AJAX -->
-                    </tbody>
-                    </table>
-                </div>
-                </div>
+    <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="productModalLabel">Select Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-hover" id="productTable">
+                <thead>
+                    <tr>
+                    <th>Item Code</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Product rows will be loaded here via AJAX -->
+                </tbody>
+                </table>
+            </div>
             </div>
         </div>
-     </main>
+    </div>
+     <!-- Adjustment Modal -->
+    <div class="modal fade" id="addAdjustmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="addAdjustmentForm"
+                action="{{ route('product.adjustment.store', $product->id) }}"
+                method="POST">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title">Add Product Adjustment</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Adjustment Quantity</label>
+                            <input type="number" name="adjustment" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="adjustment_status" class="form-control" required>
+                                <option value="Return">Return</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Save</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </main>
 @endsection
 
 
 @push('js')
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
-<script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
-<script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script type="text/javascript">
     const suppliers = @json($suppliers);
     $(document).ready(function () {
@@ -619,38 +641,65 @@
             $('body').removeClass('modal-open');
         });
 
-        // const salesPriceInput = $('input[name="sales_price"]');
-        // // Store the original price as the base for discount calculation
-        // function storeOriginalPrice() {
-        //     if (!salesPriceInput.data('original')) {
-        //         let val = parseFloat(salesPriceInput.val()) || 0;
-        //         salesPriceInput.data('original', val);
-        //     }
-        // }
-        // function applyDiscounts() {
-        //     // Make sure we have the original price
-        //     storeOriginalPrice();
-        //     let basePrice = parseFloat(salesPriceInput.data('original')) || 0;
+        const adjustmentTable = $('#adjustmentTable').DataTable();
 
-        //     // Get discount percentages
-        //     let discount1 = parseFloat($('select[name="discount_1"]').val()) || 0;
-        //     let discount2 = parseFloat($('select[name="discount_2"]').val()) || 0;
-        //     let discount3 = parseFloat($('select[name="discount_3"]').val()) || 0;
+        // Reset form when modal opens
+        $('#addAdjustmentModal').on('show.bs.modal', function () {
+            $('#addAdjustmentForm')[0].reset();
+        });
 
-        //     // Sequential discount calculation
-        //     let finalPrice = basePrice * (1 - discount1 / 100) * (1 - discount2 / 100) * (1 - discount3 / 100);
+        $('#addAdjustmentModal').on('hidden.bs.modal', function () {
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        });
 
-        //     // Update the sales price field with final price
-        //     salesPriceInput.val(finalPrice.toFixed(2));
-        // }
+        // Submit adjustment via AJAX
+        $('#addAdjustmentForm').on('submit', function (e) {
+            e.preventDefault();
 
-        // // Trigger calculation when the user changes the price or selects discounts
-        // salesPriceInput.on('input', function() {
-        //     // Reset original price if user manually edits
-        //     salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
-        // });
+            const form = $(this);
+            const url = form.attr('action');
 
-        // $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: form.serialize(),
+                success: function (response) {
+                    const adj = response.adjustment;
+
+                    // Close modal
+                    $('#addAdjustmentModal').modal('hide');
+
+                    // Add row to DataTable
+                    adjustmentTable.row.add([
+                        adj.created_at,
+                        adj.adjustment,
+                        adj.adjustment_status,
+                        adj.new_initial_qty,
+                        adj.remarks ?? ''
+                    ]).draw(false);
+
+                    // Update remaining stock field
+                    $('input[name="remaining_stock"]').val(adj.new_initial_qty);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Adjustment Added',
+                        text: 'The stock adjustment was saved successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                },
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: 'Something went wrong while saving the adjustment.',
+                    });
+                }
+            });
+        });
     });
 </script>
 @endpush

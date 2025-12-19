@@ -115,12 +115,18 @@ class ModeofPaymentController extends Controller
         $isUsedInInvoices = $modeofpayment->invoices()->exists();
 
         if ($isUsedInPurchases || $isUsedInInvoices) {
-            return redirect()->back()->with('error', 'Cannot delete this mode of payment because it is used in purchases or invoices.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this mode of payment because it is used in purchases or invoices.'
+            ]);
         }
 
         // Safe to delete
         $modeofpayment->delete();
-        return redirect()->back();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Mode of Payment deleted successfully.'
+        ]);
     }
 
 }

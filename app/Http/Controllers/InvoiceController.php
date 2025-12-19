@@ -157,36 +157,6 @@ class InvoiceController extends Controller
                 $product->discount_3 =  $discount_3[$index] ?? 0;
                 $product->amount = $amounts[$index] ?? 0;
                 $product->save();
-
-                // Save multiple discounts for this product (if any)
-                // if (isset($discounts[$index]) && is_array($discounts[$index])) {
-                //     foreach ($discounts[$index] as $discountValue) {
-                //         InvoiceSalesDiscount::create([
-                //             'invoice_sale_id' => $product->id,
-                //             'discount_name' => 'Discount', // optional label
-                //             'discount_type' => 'percent',  // assuming these are % values
-                //             'discount_value' => $discountValue,
-                //         ]);
-                //     }
-                // }
-
-                $product = Product::find($productId);
-                if ($product) {
-                    $soldQty = $quantities[$index] ?? 0;
-                    $product->remaining_stock = max(0, $product->remaining_stock - $soldQty); // no negatives
-
-                    // Recalculate threshold status
-                    $threshold = $product->threshold ?? 0;
-                    if ($product->remaining_stock <= 0) {
-                        $product->status = 'Out of Stock';
-                    } elseif ($product->remaining_stock <= $threshold) {
-                        $product->status = 'Low Stock';
-                    } else {
-                        $product->status = 'In Stock';
-                    }
-
-                    $product->save();
-                }
             }
 
             \Log::info('Invoice successfully created', ['invoice_id' => $invoice->id]);
@@ -254,7 +224,7 @@ class InvoiceController extends Controller
         $paymentModes = ModeofPayment::all();
         $taxes = Tax::all();
         $salesman = Salesman::where('status', 1)->get();
-        $suppliers = Supplier::all('status', 1)->get();
+        $suppliers = Supplier::where('status', 1)->get();
 
         // Map invoice items to include supplier_item_price
         $invoiceItems = $invoice->items->map(function($item) {
@@ -553,7 +523,7 @@ class InvoiceController extends Controller
                 $product->remaining_stock = $newStock;
                 $product->save();
 
-                // ⭐ Update product status based on threshold
+                // Update product status based on threshold
                 $this->updateProductStatus($product);
             }
 
