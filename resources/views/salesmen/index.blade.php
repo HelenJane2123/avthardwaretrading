@@ -64,7 +64,7 @@
                         </thead>
                         <tbody>
                         @foreach($salesmen as $salesman)
-                            <tr d="row-{{ $salesman->id }}">
+                            <tr id="row-{{ $salesman->id }}">
                                 <td><span class="badge badge-info">{{ $salesman->salesman_code }}</span></td>
                                 <td>{{ $salesman->salesman_name }}</td>
                                 <td>{{ $salesman->address }}</td>

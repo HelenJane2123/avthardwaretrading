@@ -111,12 +111,20 @@ class AdjustmentCollectionController extends Controller
     {
         // Find the adjustment by ID or fail
         $adjustment = AdjustmentCollection::findOrFail($id);
+        $isUsedInInvoices = $adjustment->invoice()->exists();
 
+        if ($isUsedInInvoices) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this adjustment collection because it is used by invoices.'
+            ]);
+        }
+        
         // Delete the record
         $adjustment->delete();
-
-        // Redirect back with a success message
-        return redirect()->route('adjustment_collection.index')
-                        ->with('message', 'Collection adjustment deleted successfully!');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Adjustment Collection deleted successfully.'
+        ]);    
     }
 }

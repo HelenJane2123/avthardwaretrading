@@ -57,7 +57,7 @@
                                             $latestPayment = $collection->invoice->collections->sortByDesc('payment_date')->first();
                                             $isLatest = $collection->id === $latestPayment->id;
                                         @endphp
-                                        <tr>
+                                        <tr id="row-{{ $collection->id }}">
                                             <td><span class="badge badge-info">{{ $collection->collection_number }}</span></td>
                                             <td>{{ $collection->invoice->invoice_number }}</td>
                                             <td>{{ $collection->invoice->customer->name }}</td>
@@ -112,15 +112,11 @@
                                                         </a>
                                                     @endif
                                                 @endif
-
                                                 <!-- Delete Button -->
-                                                <form action="{{ route('collection.destroy', $collection->id) }}" method="POST" class="d-inline delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $collection->id }}','{{ $collection->collection_number }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -162,8 +158,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('.view-collection').on('click', function() {
-                var url = $(this).data('url'); // Directly use data-url
-                
+                var url = $(this).data('url'); 
                 $.ajax({
                     url: url,
                     type: 'GET',
@@ -177,25 +172,45 @@
                 });
             });
 
-             // Delete confirmation
-            $('.btn-delete').on('click', function(e) {
-                e.preventDefault();
-                var form = $(this).closest('form');
-                
+            // Delete confirmation
+            function deleteTag(collectionId, collectionNumber) {
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "This action cannot be undone.",
-                    type: 'warning',
+                    title: 'Delete "' + collectionNumber + '"?',
+                    text: "This action cannot be undone!",
+                    type: 'warning', 
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Yes, delete it!'
-                }).then((result) => {
-                    if (result.value) {
-                        form.submit();
+                }).then(function(result) {
+                    if (result.value) { 
+                        fetch('{{ route("collection.destroy", ":id") }}'.replace(':id', collectionId), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            Swal.fire({
+                                title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                                text: data.message,
+                                type: data.status === 'success' ? 'success' : 'error'
+                            }).then(function() {
+                                if (data.status === 'success') {
+                                    // Remove row dynamically
+                                    var row = document.getElementById('row-' + salesmanId);
+                                    if (row) row.remove();
+                                }
+                            });
+                        })
+                        .catch(function() {
+                            Swal.fire('Error', 'Something went wrong!', 'error');
+                        });
                     }
                 });
-            });
+            }
         });
         function approveCollection(id) {
                 swal({

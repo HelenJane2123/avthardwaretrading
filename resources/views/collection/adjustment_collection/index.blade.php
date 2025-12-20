@@ -54,7 +54,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($adjustments as $adjustment)
-                                        <tr>
+                                        <tr id="row-{{ $adjustment->id }}">
                                             <td><span class="badge badge-info">{{ $adjustment->adjustment_no }}</span></td>
                                             <td>{{ $adjustment->invoice_no }}</td>
                                             <td>
@@ -71,13 +71,10 @@
                                                 <a href="{{ route('adjustment_collection.edit', $adjustment->id) }}" class="btn btn-info btn-sm">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('adjustment_collection.destroy', $adjustment->id) }}" method="POST" class="d-inline delete-form">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-danger btn-sm btn-delete">
-                                                        <i class="fa fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $adjustment->id }}','{{ $adjustment->adjustment_no }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -98,23 +95,43 @@
     <script type="text/javascript">
         $('#adjustmentTable').DataTable();
 
-        // SweetAlert delete confirmation
-        $(document).on('click', '.btn-delete', function(e) {
-            e.preventDefault();
-            let form = $(this).closest('form');
+        function deleteTag(adjustmentId, adjustmentNumber) {
             Swal.fire({
-                title: 'Are you sure?',
-                text: "This adjustment entry will be permanently deleted.",
-                icon: 'warning',
+                title: 'Delete "' + adjustmentNumber + '"?',
+                text: "This action cannot be undone!",
+                type: 'warning', 
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.value) {
-                    form.submit();
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("adjustment_collection.destroy", ":id") }}'.replace(':id', adjustmentId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + salesmanId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
             });
-        });
+        }
     </script>
 @endpush

@@ -23,6 +23,6 @@ class AdjustmentCollection extends Model
 
     public function invoice()
     {
-        return $this->belongsTo(Invoice::class, 'invoice_no', 'invoice_no');
+        return $this->belongsTo(Invoice::class, 'invoice_number', 'invoice_no');
     }
 }

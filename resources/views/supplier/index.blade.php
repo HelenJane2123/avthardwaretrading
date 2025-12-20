@@ -68,42 +68,39 @@
                                 </thead>
                                 <tbody>
                                     @foreach($suppliers as $supplier)
-                                    <tr>
-                                        <td><span class="badge badge-info">{{ $supplier->supplier_code }}</span></td>
-                                        <td>{{ $supplier->name }}</td>
-                                        <td>{{ $supplier->address }}</td>
-                                        <td>{{ $supplier->mobile }}</td>
-                                        <td>{{ $supplier->email }}</td>
-                                        <td>{{ $supplier->tax }}</td>
-                                        <td>{{ $supplier->details }}</td>
-                                        <td>
-                                            <span class="badge {{ $supplier->status == 1 ? 'bg-success' : 'bg-secondary' }}">
-                                                {{ $supplier->status == 1 ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </td>
-                                        <td>{{\Carbon\Carbon::parse($supplier->created_at)->format('M d, Y')}}</td>
-                                        <td>{{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y') }}</td>
-                                        <td class="text-center">
-                                            <div class="btn-group" role="group">
-                                                <a class="btn btn-sm btn-info" href="{{ route('supplier.supplier-products', $supplier->id) }}" title="View Products">
-                                                    <i class="fa fa-eye"></i>
-                                                </a>
-                                                <a class="btn btn-sm btn-primary" href="{{ route('supplier.edit', $supplier->id) }}" title="Edit">
-                                                    <i class="fa fa-edit"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteTag({{ $supplier->id }})" title="Delete">
-                                                    <i class="fa fa-trash-o"></i>
-                                                </button>
-                                                <form id="delete-form-{{ $supplier->id }}" action="{{ route('supplier.destroy', $supplier->id) }}" method="POST" style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                                <a class="btn btn-sm btn-warning" href="{{ route('supplier.supplier-products.export', $supplier->id) }}" title="Export">
-                                                    <i class="fa fa-download"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        <tr id="row-{{ $supplier->id }}">
+                                            <td><span class="badge badge-info">{{ $supplier->supplier_code }}</span></td>
+                                            <td>{{ $supplier->name }}</td>
+                                            <td>{{ $supplier->address }}</td>
+                                            <td>{{ $supplier->mobile }}</td>
+                                            <td>{{ $supplier->email }}</td>
+                                            <td>{{ $supplier->tax }}</td>
+                                            <td>{{ $supplier->details }}</td>
+                                            <td>
+                                                <span class="badge {{ $supplier->status == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $supplier->status == 1 ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td>{{\Carbon\Carbon::parse($supplier->created_at)->format('M d, Y')}}</td>
+                                            <td>{{ \Carbon\Carbon::parse($supplier->updated_at)->format('M d, Y') }}</td>
+                                            <td class="text-center">
+                                                <div class="btn-group" role="group">
+                                                    <a class="btn btn-sm btn-info" href="{{ route('supplier.supplier-products', $supplier->id) }}" title="View Products">
+                                                        <i class="fa fa-eye"></i>
+                                                    </a>
+                                                    <a class="btn btn-sm btn-primary" href="{{ route('supplier.edit', $supplier->id) }}" title="Edit">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
+                                                    <button class="btn btn-danger btn-sm" type="button" 
+                                                            onclick="deleteTag('{{ $supplier->id }}','{{ $supplier->name }}')">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                    <a class="btn btn-sm btn-warning" href="{{ route('supplier.supplier-products.export', $supplier->id) }}" title="Export">
+                                                        <i class="fa fa-download"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -118,33 +115,49 @@
 @push('js')
     <script type="text/javascript" src="{{ asset('js/plugins/jquery.dataTables.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('js/plugins/dataTables.bootstrap.min.js') }}"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         $('#sampleTable').DataTable({
             pageLength: 10,
             responsive: true
         });
-    </script>
-    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-    <script type="text/javascript">
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
+        function deleteTag(supplierId, supplierName) {
+            Swal.fire({
+                title: 'Delete "' + supplierName + '"?',
                 text: "This action cannot be undone!",
-                type: 'warning',
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'No, cancel!',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-' + id).submit();
-                } else if (result.dismiss === swal.DismissReason.cancel) {
-                    swal('Cancelled', 'The supplier record is safe 🙂', 'error');
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("supplier.destroy", ":id") }}'.replace(':id', supplierId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + salesmanId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
     </script>
 @endpush

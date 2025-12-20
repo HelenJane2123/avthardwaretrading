@@ -194,10 +194,22 @@ class CollectionController extends Controller
     }
 
 
-    public function destroy(Collection $collection)
+    public function destroy($id)
     {
+        $collection = Collection::findOrFail($id);
+        $isUsedInInvoices = $collection->invoice()->exists();
+
+        if ($isUsedInInvoices) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this collection because it is used by invoices.'
+            ]);
+        }
         $collection->delete();
-        return redirect()->route('collection.index')->with('message', 'Collection deleted successfully!');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Collection deleted successfully.'
+        ]);    
     }
 
     public function showDetails($collectionId)

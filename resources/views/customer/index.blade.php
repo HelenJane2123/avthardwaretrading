@@ -65,46 +65,37 @@
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach($customers as $customer)
-                            <tr>
-                                <td><span class="badge badge-info">{{ $customer->customer_code }}</span></td>
-                                <td>{{ $customer->name }}</td>
-                                <td>{{ $customer->address }}</td>
-                                <td>{{ $customer->mobile }}</td>
-                                <td>{{ $customer->email }}</td>
-                                <td>{{ $customer->tax }}</td>
-                                <td>{{ $customer->details }}</td>
-                                <td>
-                                    <span class="badge {{ $customer->status == 1 ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $customer->status == 1 ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </td>
-                                <td>{{ \Carbon\Carbon::parse($customer->created_at)->format('M d, Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($customer->updated_at)->format('M d, Y') }}</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a class="btn btn-sm btn-primary" 
-                                           href="{{ route('customer.edit', $customer->id) }}" 
-                                           title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-danger" 
-                                                type="button" 
-                                                onclick="deleteTag({{ $customer->id }})"
-                                                title="Delete">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                    <form id="delete-form-{{ $customer->id }}" 
-                                          action="{{ route('customer.destroy',$customer->id) }}" 
-                                          method="POST" 
-                                          class="d-none">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
+                            @foreach($customers as $customer)
+                                <tr id="row-{{ $customer->id }}">
+                                    <td><span class="badge badge-info">{{ $customer->customer_code }}</span></td>
+                                    <td>{{ $customer->name }}</td>
+                                    <td>{{ $customer->address }}</td>
+                                    <td>{{ $customer->mobile }}</td>
+                                    <td>{{ $customer->email }}</td>
+                                    <td>{{ $customer->tax }}</td>
+                                    <td>{{ $customer->details }}</td>
+                                    <td>
+                                        <span class="badge {{ $customer->status == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ $customer->status == 1 ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($customer->created_at)->format('M d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($customer->updated_at)->format('M d, Y') }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-sm btn-primary" 
+                                            href="{{ route('customer.edit', $customer->id) }}" 
+                                            title="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $customer->id }}','{{ $customer->name }}')">
+                                                    <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -116,34 +107,50 @@
 @push('js')
     <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         $('#sampleTable').DataTable({
             "order": [[ 0, "desc" ]],
             "pageLength": 10,
             "responsive": true
         });
-    </script>
-    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-    <script>
-        function deleteTag(id) {
-            swal({
-                title: 'Are you sure?',
+        function deleteTag(customerId, customerName) {
+            Swal.fire({
+                title: 'Delete "' + customerName + '"?',
                 text: "This action cannot be undone!",
-                type: 'warning',
+                type: 'warning', 
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: '<i class="fa fa-check"></i> Yes, delete it!',
-                cancelButtonText: '<i class="fa fa-times"></i> Cancel',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.value) {
-                    event.preventDefault();
-                    document.getElementById('delete-form-' + id).submit();
-                } else if (result.dismiss === swal.DismissReason.cancel) {
-                    swal('Cancelled', 'Your data is safe :)', 'error')
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(function(result) {
+                if (result.value) { 
+                    fetch('{{ route("customer.destroy", ":id") }}'.replace(':id', customerId), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire({
+                            title: data.status === 'success' ? 'Deleted!' : 'Error!',
+                            text: data.message,
+                            type: data.status === 'success' ? 'success' : 'error'
+                        }).then(function() {
+                            if (data.status === 'success') {
+                                // Remove row dynamically
+                                var row = document.getElementById('row-' + salesmanId);
+                                if (row) row.remove();
+                            }
+                        });
+                    })
+                    .catch(function() {
+                        Swal.fire('Error', 'Something went wrong!', 'error');
+                    });
                 }
-            })
+            });
         }
     </script>
 @endpush

@@ -276,10 +276,16 @@ class SupplierController extends Controller
         $isUsedInPurchases = $supplier->purchases()->exists();
 
         if ($isUsedInSupplierItems || $isUsedInProductSupplier || $isUsedInPurchases) {
-            return redirect()->back()->with('error', 'Cannot delete this supplier because it is used by either supplier items, products or purchases.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this supplier because it is used by either supplier items, products or purchases.'
+            ]);
         }
         $supplier->delete();
-        return redirect()->back()->with('success', 'Supplier and all items deleted successfully.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Supplier deleted successfully.'
+        ]);    
     }
 
 }

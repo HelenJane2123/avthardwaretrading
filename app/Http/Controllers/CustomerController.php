@@ -142,11 +142,17 @@ class CustomerController extends Controller
         $isUsedInInvoice = $customer->invoice()->exists();
 
         if ($isUsedInInvoice) {
-            return redirect()->back()->with('error', 'Cannot delete this customer because it is used by invoices.');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete this customer because it is used by invoices.'
+            ]);
         }
         
         $customer->delete();
-        return redirect()->back();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Customer deleted successfully.'
+        ]);
     }
 
     /**
