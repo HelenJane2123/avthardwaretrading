@@ -37,44 +37,44 @@
                             <div class="row">
                                 <div class="form-group col-md-4">
                                     <label>Supplier Code</label>
-                                    <input id="supplier_code" class="form-control" type="text" name="supplier_code"
+                                    <input id="supplier_code" class="form-control form-control-sm" type="text" name="supplier_code"
                                            value="{{ $supplier->supplier_code }}" readonly>
                                 </div>
 
                                 <div class="form-group col-md-6">
                                     <label>Supplier Name</label>
-                                    <input id="supplier_name" class="form-control" type="text" name="name"
+                                    <input id="supplier_name" class="form-control form-control-sm" type="text" name="name"
                                            value="{{ $supplier->name }}">
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label>Contact</label>
-                                    <input class="form-control" type="text" name="mobile" value="{{ $supplier->mobile }}">
+                                    <input class="form-control form-control-sm" type="text" name="mobile" value="{{ $supplier->mobile }}">
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label>Email</label>
-                                    <input class="form-control" type="email" name="email" value="{{ $supplier->email }}">
+                                    <input class="form-control form-control-sm" type="email" name="email" value="{{ $supplier->email }}">
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label>Tax ID</label>
-                                    <input class="form-control" type="text" name="tax" value="{{ $supplier->tax }}">
+                                    <input class="form-control form-control-sm" type="text" name="tax" value="{{ $supplier->tax }}">
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label>Address</label>
-                                    <textarea class="form-control" name="address">{{ $supplier->address }}</textarea>
+                                    <textarea class="form-control form-control-sm" name="address">{{ $supplier->address }}</textarea>
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label>Details</label>
-                                    <textarea class="form-control" name="details">{{ $supplier->details }}</textarea>
+                                    <textarea class="form-control form-control-sm" name="details">{{ $supplier->details }}</textarea>
                                 </div>
 
                                 <div class="form-group col-md-4">
                                     <label for="status">Status</label>
-                                    <select name="status" id="term" class="form-control col-md-20">
+                                    <select name="status" id="term" class="form-control form-control-sm col-md-20">
                                         <option value="1" {{ old('status', $supplier->status) == 'Active' ? 'selected' : '' }}>Active</option>
                                         <option value="2" {{ old('status', $supplier->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                     </select>

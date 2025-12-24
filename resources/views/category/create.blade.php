@@ -24,10 +24,9 @@
         @endif
 
         <div class="">
-            <a class="btn btn-primary" href="{{route('category.index')}}"><i class="fa fa-cogs"></i> Manage Categories</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{route('category.index')}}"><i class="fa fa-cogs"></i> Manage Categories</a>
         </div>
         <div class="row mt-2">
-
             <div class="clearix"></div>
             <div class="col-md-12">
                 <div class="tile">
@@ -37,7 +36,7 @@
                             @csrf
                             <div class="form-group col-md-12">
                                 <label class="control-label">Category Name</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Category Name">
+                                <input name="name" class="form-control form-control-sm @error('name') is-invalid @enderror" type="text" placeholder="Enter Category Name">
                                 @error('name')
                                 <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -46,7 +45,7 @@
                             </div>
 
                             <div class="form-group col-md-4 align-self-end">
-                                <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-plus"></i>Create</button>
+                                <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-fw fa-lg fa-plus"></i>Create</button>
                             </div>
                         </form>
                     </div>

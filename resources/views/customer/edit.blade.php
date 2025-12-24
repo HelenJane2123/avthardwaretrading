@@ -46,7 +46,7 @@
                                 <label class="control-label">Customer Code</label>
                                 <input type="text" name="customer_code" 
                                        value="{{ $customer->customer_code }}" 
-                                       class="form-control @error('customer_code') is-invalid @enderror" 
+                                       class="form-control form-control-sm @error('customer_code') is-invalid @enderror" 
                                        readonly>
                                 @error('customer_code')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -59,7 +59,7 @@
                                 <input type="text" name="name" 
                                        value="{{ $customer->name }}" 
                                        placeholder="Enter customer's full name" 
-                                       class="form-control @error('name') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('name') is-invalid @enderror">
                                 @error('name')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -71,31 +71,43 @@
                                 <input type="text" name="mobile" 
                                        value="{{ $customer->mobile }}" 
                                        placeholder="Enter contact number" 
-                                       class="form-control @error('mobile') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('mobile') is-invalid @enderror">
                                 @error('mobile')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
 
                             <!-- Email -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Email Address</label>
                                 <input type="email" name="email" 
                                        value="{{ $customer->email }}" 
                                        placeholder="customer@email.com"
-                                       class="form-control @error('email') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('email') is-invalid @enderror">
                                 @error('email')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
 
                             <!-- Address -->
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-4">
                                 <label class="control-label">Address</label>
                                 <textarea name="address" rows="2" 
-                                          class="form-control @error('address') is-invalid @enderror"
+                                          class="form-control form-control-sm @error('address') is-invalid @enderror"
                                           placeholder="Street, Barangay, City, Province">{{ $customer->address }}</textarea>
                                 @error('address')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <!-- Location -->
+                            <div class="form-group col-md-4">
+                                <label class="control-label fw-bold">Location</label>
+                                <input type="location" name="location"
+                                    value="{{ $customer->location }}" 
+                                    class="form-control form-control-sm @error('location') is-invalid @enderror"
+                                    placeholder="Enter Location">
+                                @error('location')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -104,7 +116,7 @@
                             <div class="form-group col-md-4">
                                 <label class="control-label">Details / Notes</label>
                                 <textarea name="details" rows="2" 
-                                          class="form-control @error('details') is-invalid @enderror"
+                                          class="form-control form-control-sm @error('details') is-invalid @enderror"
                                           placeholder="Notes or customer preferences">{{ $customer->details }}</textarea>
                                 @error('details')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -117,7 +129,7 @@
                                 <input type="text" name="tax" 
                                        value="{{ $customer->tax }}" 
                                        placeholder="123-456-789-000" 
-                                       class="form-control @error('tax') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('tax') is-invalid @enderror">
                                 @error('tax')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -125,7 +137,7 @@
 
                             <div class="form-group col-md-4">
                                 <label for="status">Status</label>
-                                <select name="status" id="term" class="form-control col-md-20">
+                                <select name="status" id="status" class="form-control form-control-sm col-md-20">
                                     <option value="1" {{ old('status', $customer->status) == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="2" {{ old('status', $customer->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                 </select>
@@ -133,10 +145,10 @@
 
                             <!-- Submit -->
                             <div class="form-group col-md-12 mt-3 text-right">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-sm btn-success">
                                     <i class="fa fa-check-circle"></i> Update Customer
                                 </button>
-                                <a href="{{ route('customer.index') }}" class="btn btn-secondary px-4">
+                                <a href="{{ route('customer.index') }}" class="btn btn-sm btn-secondary px-4">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                             </div>

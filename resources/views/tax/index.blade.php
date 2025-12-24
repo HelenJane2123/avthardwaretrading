@@ -20,7 +20,7 @@
             </ul>
         </div>
         <div class="">
-            <a class="btn btn-primary" href="{{route('tax.create')}}"><i class="fa fa-plus"> </i> Add New Tax</a>
+            <a class="btn btn-sm btn-primary" href="{{route('tax.create')}}"><i class="fa fa-plus"> </i> Add New Tax</a>
         </div>
         @if(session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -45,31 +45,31 @@
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Discount Records</h3>
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
+                                <thead class="thead-dark medium">
                                 <tr>
                                     <th>Tax </th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
-                                <tbody>
-                                @foreach( $taxes as $tax)
-                                    <tr id="row-{{ $tax->id }}">
-                                        <td>{{ $tax->name }} %</td>
-                                        @if($tax->status)
-                                        <td>Active</td>
-                                            @else
-                                            <td>Inactive</td>
-                                        @endif
-                                        <td>
-                                            <a class="btn btn-primary btn-sm" href="{{route('tax.edit', $tax->id)}}"><i class="fa fa-edit" ></i></a>
-                                            <button class="btn btn-danger btn-sm" type="button" 
-                                                    onclick="deleteTag('{{ $tax->name }}')">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                <tbody class="medium">
+                                    @foreach( $taxes as $tax)
+                                        <tr id="row-{{ $tax->id }}">
+                                            <td>{{ $tax->name }} %</td>
+                                            @if($tax->status)
+                                            <td>Active</td>
+                                                @else
+                                                <td>Inactive</td>
+                                            @endif
+                                            <td>
+                                                <a class="btn btn-primary btn-sm" href="{{route('tax.edit', $tax->id)}}"><i class="fa fa-edit" ></i></a>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $tax->name }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>

@@ -19,7 +19,7 @@
     </div>
 
     <div class="mb-3">
-        <a class="btn btn-outline-primary" href="{{ route('collection.index') }}">
+        <a class="btn btn-sm btn-outline-primary" href="{{ route('collection.index') }}">
             <i class="fa fa-list"></i> Manage Collections
         </a>
     </div>
@@ -115,42 +115,42 @@
                         {{-- Editable Fields --}}
                         <div class="mb-3">
                             <label>Collection Number</label>
-                            <input type="text" name="collection_number" class="form-control" 
+                            <input type="text" name="collection_number" class="form-control form-control-sm" 
                                    value="{{ $collection->collection_number }}" readonly>
                         </div>
 
                         <div class="mb-3">
                             <label>Last Payment Date</label>
-                            <input type="date" class="form-control"
+                            <input type="date" class="form-control form-control-sm"
                                 value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" disabled>
                         </div>
 
                         <div class="mb-3">
                             <label>Last Amount Paid</label>
-                            <input type="number" step="0.01" name="last_paid_amount" class="form-control" 
+                            <input type="number" step="0.01" name="last_paid_amount" class="form-control form-control-sm" 
                                    value="{{ $collection->last_paid_amount }}" required disabled>
                         </div>
 
                         <div class="mb-3">
                             <label>Payment Date</label>
-                            <input type="date" name="payment_date" class="form-control" 
+                            <input type="date" name="payment_date" class="form-control form-control-sm" 
                                    value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" required>
                         </div>
 
                         <div class="mb-3">
                             <label>Amount Paid</label>
-                            <input type="number" step="0.01" name="amount_paid" class="form-control" 
+                            <input type="number" step="0.01" name="amount_paid" class="form-control form-control-sm" 
                                 value="{{ old('last_paid_amount', $collection->last_paid_amount ?? '') }}"
                                 required>
                         </div>
                         <div id="pdcCheck" class="mb-3" style="display: none;">
                             <label>Check Date</label>
-                            <input type="date" name="check_date" class="form-control" 
+                            <input type="date" name="check_date" class="form-control form-control-sm" 
                                 value="{{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') : '' }}">
                         </div>
                         <div id="pdcFields" class="mb-3" style="display: none;">
                             <label>Check Number</label>
-                            <input type="text" name="check_number" class="form-control"
+                            <input type="text" name="check_number" class="form-control form-control-sm"
                                 value="{{ old('check_number', $collection->check_number ?? '') }}"
                                 placeholder="Enter check number">
                         </div>
@@ -158,13 +158,13 @@
                         <div id="gcashFields" style="display: none;">
                             <div class="mb-3">
                                 <label>GCash Name</label>
-                                <input type="text" name="gcash_name" class="form-control"
+                                <input type="text" name="gcash_name" class="form-control form-control-sm"
                                     value="{{ old('gcash_name', $collection->gcash_name ?? '') }}"
                                     placeholder="Enter GCash account name">
                             </div>
                             <div class="mb-3">
                                 <label>GCash Mobile Number</label>
-                                <input type="text" name="gcash_number" class="form-control"
+                                <input type="text" name="gcash_number" class="form-control form-control-sm"
                                     value="{{ old('gcash_number', $collection->gcash_number ?? '') }}"
                                     placeholder="Enter GCash mobile number">
                             </div>
@@ -173,13 +173,13 @@
                         <div class="mb-3">
                             <label>Balance</label>
                             <input type="number" step="0.01" name="balance" 
-                                   class="form-control" 
+                                   class="form-control form-control-sm" 
                                    value="{{ $collection->invoice->outstanding_balance }}" readonly>
                         </div>
 
                         <div class="mb-3">
                             <label>Payment Status</label>
-                            <select name="payment_status" class="form-control" required>
+                            <select name="payment_status" class="form-control form-control-sm" required>
                                 <option value="pending" {{ $collection->invoice->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="partial" {{ $collection->invoice->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
                                 <option value="paid" {{ $collection->invoice->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
@@ -190,10 +190,10 @@
 
                         <div class="mb-3">
                             <label>Remarks</label>
-                            <textarea name="remarks" class="form-control" rows="2">{{ $collection->remarks }}</textarea>
+                            <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ $collection->remarks }}</textarea>
                         </div>
 
-                        <button class="btn btn-success"><i class="fa fa-save"></i> Update Collection</button>
+                        <button class="btn btn-sm btn-success"><i class="fa fa-save"></i> Update Collection</button>
                     </form>
                 </div>
             </div>

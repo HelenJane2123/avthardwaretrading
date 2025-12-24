@@ -39,7 +39,7 @@
 
         <!-- Manage Supplier Button -->
         <div class="mb-3">
-            <a class="btn btn-outline-primary shadow-sm" href="{{ route('supplier.index') }}">
+            <a class="btn btn-outline-primary btn-sm shadow-sm" href="{{ route('supplier.index') }}">
                 <i class="fa fa-list"></i> Manage Supplier
             </a>
         </div>
@@ -74,14 +74,14 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Supplier Code</label>
                                     <input name="supplier_code" id="supplier_code" 
-                                           class="form-control" type="text" readonly>
+                                           class="form-control form-control-sm" type="text" readonly>
                                 </div>
 
                                 <!-- Supplier Name -->
                                 <div class="form-group col-md-6">
                                     <label class="control-label">Supplier Name</label>
                                     <input name="name" id="supplier_name" 
-                                           class="form-control @error('name') is-invalid @enderror" 
+                                           class="form-control form-control-sm @error('name') is-invalid @enderror" 
                                            type="text" placeholder="Enter Supplier Name">
                                     @error('name')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -92,7 +92,7 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Contact</label>
                                     <input name="mobile" 
-                                           class="form-control @error('mobile') is-invalid @enderror" 
+                                           class="form-control form-control-sm @error('mobile') is-invalid @enderror" 
                                            type="text" placeholder="Enter Contact Number">
                                     @error('mobile')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -103,7 +103,7 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Email</label>
                                     <input name="email" 
-                                           class="form-control @error('email') is-invalid @enderror" 
+                                           class="form-control form-control-sm @error('email') is-invalid @enderror" 
                                            type="email" placeholder="johndoe@gmail.com">
                                     @error('email')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -114,7 +114,7 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Tax</label>
                                     <input name="tax" 
-                                           class="form-control @error('tax') is-invalid @enderror" 
+                                           class="form-control form-control-sm @error('tax') is-invalid @enderror" 
                                            type="text" placeholder="123-456-789-000">
                                     @error('tax')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -125,7 +125,7 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Address</label>
                                     <textarea name="address" 
-                                              class="form-control @error('address') is-invalid @enderror" 
+                                              class="form-control form-control-sm @error('address') is-invalid @enderror" 
                                               placeholder="Street, Barangay, City, Province"></textarea>
                                     @error('address')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -136,7 +136,7 @@
                                 <div class="form-group col-md-4">
                                     <label class="control-label">Details</label>
                                     <textarea name="details" 
-                                              class="form-control @error('details') is-invalid @enderror" 
+                                              class="form-control form-control-sm @error('details') is-invalid @enderror" 
                                               placeholder="Additional Information"></textarea>
                                     @error('details')
                                         <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
@@ -144,7 +144,7 @@
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label for="status">Status</label>
-                                    <select name="status" id="status" class="form-control col-md-20">
+                                    <select name="status" id="status" class="form-control form-control-sm col-md-20">
                                         <option value="1">Active</option>
                                         <option value="2">Inactive</option>
                                     </select>
@@ -176,9 +176,9 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td><input type="text" name="item_code[]" class="form-control" readonly></td>
+                                            <td><input type="text" name="item_code[]" class="form-control form-control-sm" readonly></td>
                                             <td>
-                                                <select name="item_category[]" class="form-control item-category">
+                                                <select name="item_category[]" class="form-control form-control-sm item-category">
                                                     <option value="">Select Category</option>
                                                     @foreach($categories as $category)
                                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -187,21 +187,21 @@
                                                 <small class="text-danger category-desc d-block mt-1"></small>
                                             </td>
                                             <td>
-                                                <input type="text" name="item_description[]" class="form-control item-name">
+                                                <input type="text" name="item_description[]" class="form-control form-control-sm item-name">
                                                 <small class="text-danger item-desc d-block mt-1"></small>
                                             </td>
                                             <!-- <td><input type="number" name="item_qty[]" class="form-control item-qty"></td> -->
                                             <td>
-                                                <select name="unit_id[]" class="form-control">
+                                                <select name="unit_id[]" class="form-control form-control-sm">
                                                     <option value="">Select Unit</option>
                                                     @foreach($units as $unit)
                                                         <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                                                     @endforeach
                                                 </select>
                                             </td>
-                                            <td><input type="number" name="item_price[]" class="form-control item-price" step="0.01"></td>
+                                            <td><input type="number" name="item_price[]" class="form-control form-control-sm item-price" step="0.01"></td>
                                             <td>
-                                                <select name="discount[]" class="form-control">
+                                                <select name="discount[]" class="form-control form-control-sm">
                                                     <option value="">Select Discount</option>
                                                     @foreach($discounts as $discount)
                                                         <option value="{{ $discount->id }}">{{ $discount->name }}</option>
@@ -210,13 +210,13 @@
                                             </td>
                                             <td>
                                                 <textarea name="volume_less[]" 
-                                                    class="form-control"></textarea>
+                                                    class="form-control form-control-sm"></textarea>
                                             </td>
                                             <td>
                                                 <textarea name="regular_less[]" 
-                                                    class="form-control" ></textarea>
+                                                    class="form-control form-control-sm" ></textarea>
                                             </td>
-                                            <td><input type="file" name="item_image[]" class="form-control" accept="image/*"></td>
+                                            <td><input type="file" name="item_image[]" class="form-control form-control-sm" accept="image/*"></td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger remove-row">
                                                     <i class="fa fa-trash"></i>
@@ -235,10 +235,10 @@
 
                             <!-- Submit Button -->
                             <div class="form-group text-end">
-                                <button class="btn btn-success shadow-sm" type="submit">
+                                <button class="btn btn-sm btn-success shadow-sm" type="submit">
                                     <i class="fa fa-check-circle"></i> Save Supplier
                                 </button>
-                                <a href="{{ route('supplier.index') }}" class="btn btn-secondary px-4">
+                                <a href="{{ route('supplier.index') }}" class="btn btn-sm btn-secondary px-4">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                             </div>

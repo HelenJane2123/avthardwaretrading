@@ -26,7 +26,7 @@
     @endif
 
     <div class="mb-3">
-        <a class="btn btn-outline-primary shadow-sm" href="{{ route('adjustment_collection.index') }}">
+        <a class="btn btn-outline-primary btn-sm shadow-sm" href="{{ route('adjustment_collection.index') }}">
             <i class="fa fa-list"></i> Manage Collection Adjustment
         </a>
     </div>
@@ -45,14 +45,14 @@
                         <div class="form-group mb-3">
                             <label for="adjustment_no">Adjustment Number</label>
                             <input type="text" name="adjustment_no" id="adjustment_no" 
-                                class="form-control" value="{{ $adjustment->adjustment_no }}" readonly>
+                                class="form-control form-control-sm" value="{{ $adjustment->adjustment_no }}" readonly>
                         </div>
 
                         <!-- Search Invoice -->
                         <div class="form-group mb-3">
                             <label for="invoice_no">Invoice Number</label>
                             <input type="text" name="invoice_no" id="invoice_no" 
-                                class="form-control" value="{{ $adjustment->invoice_no }}" placeholder="Search or enter Invoice Number" readonly>
+                                class="form-control form-control-sm" value="{{ $adjustment->invoice_no }}" placeholder="Search or enter Invoice Number" readonly>
                             <small class="form-text text-muted">Start typing to search existing invoices.</small>
                         </div>
 
@@ -75,14 +75,14 @@
                         <div class="form-group mb-3">
                             <label for="collection_date">Collection Date Adjustment</label>
                             <input type="date" name="collection_date" id="collection_date" 
-                                class="form-control" value="{{ $adjustment->collection_date }}" required>
+                                class="form-control form-control-sm" value="{{ $adjustment->collection_date }}" required>
                         </div>
 
                         <!-- Account Name -->
                         <div class="form-group mb-3">
                             <label for="account_name">Account Name</label>
                             <input type="text" name="account_name" id="account_name" 
-                                class="form-control" value="{{ $adjustment->account_name }}" readonly>
+                                class="form-control form-control-sm" value="{{ $adjustment->account_name }}" readonly>
                             <small class="text-muted" id="accountHint">Account will auto-fill based on invoice and entry type.</small>
                         </div>
 
@@ -90,13 +90,13 @@
                         <div class="form-group mb-3">
                             <label for="amount">Amount</label>
                             <input type="text" name="amount" id="amount" 
-                                class="form-control" value="{{ $adjustment->amount }}">
+                                class="form-control form-control-sm" value="{{ $adjustment->amount }}">
                         </div>
 
                         <!-- Remarks -->
                         <div class="form-group mb-4">
                             <label for="remarks">Remarks</label>
-                            <textarea name="remarks" id="remarks" class="form-control" rows="2" placeholder="Enter reason for adjustment (optional)">{{ $adjustment->remarks }}</textarea>
+                            <textarea name="remarks" id="remarks" class="form-control form-control-sm" rows="2" placeholder="Enter reason for adjustment (optional)">{{ $adjustment->remarks }}</textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary">

@@ -20,7 +20,7 @@
             </ul>
         </div>
         <div class="">
-            <a class="btn btn-primary" href="{{route('category.create')}}"><i class="fa fa-plus"></i> Add New Category</a>
+            <a class="btn btn-sm btn-primary" href="{{route('category.create')}}"><i class="fa fa-plus"></i> Add New Category</a>
         </div>
          @if(session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -45,30 +45,30 @@
                     <div class="tile-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach( $categories as $category)
-                                    <tr id="row-{{ $category->id }}">
-                                        <td>{{ $category->name }}</td>
-                                        @if($category->status)
-                                        <td>Active</td>
-                                            @else
-                                            <td>Inactive</td>
-                                        @endif
-                                        <td>
-                                            <a class="btn btn-primary btn-sm" href="{{route('category.edit', $category->id)}}"><i class="fa fa-edit" ></i></a>
-                                            <button class="btn btn-danger btn-sm" type="button" 
-                                                    onclick="deleteTag('{{ $category->id }}', '{{ $category->name }}')">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </td>
+                                <thead class="thead-dark medium">
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
+                                </thead>
+                                <tbody class="medium">
+                                    @foreach( $categories as $category)
+                                        <tr id="row-{{ $category->id }}">
+                                            <td>{{ $category->name }}</td>
+                                            @if($category->status)
+                                            <td>Active</td>
+                                                @else
+                                                <td>Inactive</td>
+                                            @endif
+                                            <td>
+                                                <a class="btn btn-primary btn-sm" href="{{route('category.edit', $category->id)}}"><i class="fa fa-edit" ></i></a>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $category->id }}', '{{ $category->name }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>

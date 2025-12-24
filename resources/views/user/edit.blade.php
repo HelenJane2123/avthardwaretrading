@@ -60,7 +60,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">User First Name</label>
-                                <input value="{{ old('f_name', $user->f_name) }}" name="f_name" class="form-control @error('f_name') is-invalid @enderror" type="text" placeholder="Enter First Name">
+                                <input value="{{ old('f_name', $user->f_name) }}" name="f_name" class="form-control form-control-sm @error('f_name') is-invalid @enderror" type="text" placeholder="Enter First Name">
                                 @error('f_name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -68,7 +68,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">User Last Name</label>
-                                <input value="{{ old('l_name', $user->l_name) }}" name="l_name" class="form-control @error('l_name') is-invalid @enderror" type="text" placeholder="Enter Last Name">
+                                <input value="{{ old('l_name', $user->l_name) }}" name="l_name" class="form-control form-control-sm @error('l_name') is-invalid @enderror" type="text" placeholder="Enter Last Name">
                                 @error('l_name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -76,7 +76,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">Email</label>
-                                <input value="{{ old('email', $user->email) }}" name="email" class="form-control @error('email') is-invalid @enderror" type="email" placeholder="Enter Email">
+                                <input value="{{ old('email', $user->email) }}" name="email" class="form-control form-control-sm @error('email') is-invalid @enderror" type="email" placeholder="Enter Email">
                                 @error('email')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -84,7 +84,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">Contact</label>
-                                <input value="{{ old('contact', $user->contact) }}" name="contact" class="form-control @error('contact') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
+                                <input value="{{ old('contact', $user->contact) }}" name="contact" class="form-control form-control-sm @error('contact') is-invalid @enderror" type="text" placeholder="Enter Contact Number">
                                 @error('contact')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -92,7 +92,7 @@
 
                             <div class="form-group col-md-3">
                                 <label class="control-label" for="role">Role</label>
-                                <select name="user_role" id="role" class="form-control @error('user_role') is-invalid @enderror">
+                                <select name="user_role" id="role" class="form-control form-control-sm @error('user_role') is-invalid @enderror">
                                     <option value="">Select Role</option>
                                     <option value="super_admin" {{ old('user_role', $user->user_role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                     <option value="admin" {{ old('user_role', $user->user_role) == 'admin' ? 'selected' : '' }}>Admin</option>
@@ -105,7 +105,7 @@
 
                             <div class="form-group col-md-3">
                                 <label class="control-label" for="status">Status</label>
-                                <select name="user_status" id="status" class="form-control @error('user_status') is-invalid @enderror">
+                                <select name="user_status" id="status" class="form-control form-control-sm @error('user_status') is-invalid @enderror">
                                     <option value="">Select Status</option>
                                     <option value="active" {{ old('user_status', $user->user_status) == 'active' ? 'selected' : '' }}>Active</option>
                                     <option value="inactive" {{ old('user_status', $user->user_status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -116,7 +116,7 @@
                             </div>
 
                             <div class="form-group col-md-12 mt-3">
-                                <button class="btn btn-success" type="submit">
+                                <button class="btn btn-sm btn-success" type="submit">
                                     <i class="fa fa-fw fa-lg fa-check-circle"></i>Update
                                 </button>
                             </div>

@@ -19,7 +19,7 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <a class="btn btn-primary" href="{{ route('adjustment_collection.create') }}">
+            <a class="btn btn-sm btn-primary" href="{{ route('adjustment_collection.create') }}">
                 <i class="fa fa-plus"></i> New Adjustment Entry
             </a>
         </div>
@@ -40,7 +40,7 @@
                     <div class="tile-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="adjustmentTable">
-                                <thead class="thead-dark">
+                                <thead class="thead-dark medium">
                                     <tr>
                                         <th>Adjustment #</th>
                                         <th>Invoice #</th>
@@ -52,7 +52,7 @@
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="medium">
                                     @foreach($adjustments as $adjustment)
                                         <tr id="row-{{ $adjustment->id }}">
                                             <td><span class="badge badge-info">{{ $adjustment->adjustment_no }}</span></td>

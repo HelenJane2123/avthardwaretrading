@@ -46,7 +46,10 @@ class CustomerController extends Controller
 
         $request->validate([
             'customer_code' => 'required|unique:customers,customer_code',
-            'name' => 'required|min:3|regex:/^[a-zA-Z0-9 .\'\-\\\\&\/]+$/|unique:customers,name',
+            'name' => 'required',
+                    'min:3',
+                    'regex:/^[a-zA-Z0-9 .\'\-&\/\\\\]+$/',
+                    'unique:customers,name',
             'address' => 'required|min:3',
             'mobile' => 'nullable|digits:11|unique:customers,mobile',
             'email' => 'nullable|email|unique:customers,email',
@@ -63,6 +66,7 @@ class CustomerController extends Controller
         $customer->mobile = $request->mobile;
         $customer->email = $request->email;
         $customer->tax = $request->tax;
+        $customer->location = $request->location;
         $customer->details = $request->details;
         $customer->previous_balance = $request->previous_balance ?? 0;
         $customer->status = $request->status;
@@ -122,6 +126,7 @@ class CustomerController extends Controller
         $customer->address = $request->address;
         $customer->mobile = $request->mobile;
         $customer->tax = $request->tax;
+        $customer->location = $request->location;
         $customer->details = $request->details;
         $customer->previous_balance = $request->previous_balance ?? 0;
         $customer->status = $request->status ?? 0;

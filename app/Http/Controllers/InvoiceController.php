@@ -19,6 +19,7 @@ use App\Tax;
 use App\InvoiceSalesDiscount;
 use App\Salesman;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class InvoiceController extends Controller
@@ -39,7 +40,13 @@ class InvoiceController extends Controller
     public function index()
     {
         $invoices = Invoice::all();
-        return view('invoice.index', compact('invoices'));
+        $user = User::where('user_status','active')->get();
+        $locations = Customer::select('location')
+                ->distinct()
+                ->where('status', 1)
+                ->whereNotNull('location')
+                ->get();
+        return view('invoice.index', compact('invoices', 'user', 'locations'));
     }
 
     /**
@@ -53,6 +60,23 @@ class InvoiceController extends Controller
             $q->select('id','product_name','product_code','sales_price','remaining_stock','category_id','supplier_product_code')
             ->with(['supplierItems:id,item_code,item_price']); 
         }])->get();
+
+        $today = date('Y-m-d');
+        // Get the last invoice number for today
+        $lastInvoice = Invoice::whereDate('invoice_date', $today)
+                        ->orderBy('id', 'desc')
+                        ->first();
+
+        if ($lastInvoice) {
+            // Extract series from last invoice number (e.g. DR-20251224-001)
+            $parts = explode('-', $lastInvoice->invoice_number);
+            $lastSeries = intval(end($parts));
+            $newSeries = str_pad($lastSeries + 1, 3, '0', STR_PAD_LEFT);
+        } else {
+            $newSeries = '001'; // first invoice today
+        }
+
+        $invoiceNumber = 'DR-' . date('Ymd') . '-' . $newSeries;
 
         // Load products with base price
         $products = Product::select('id',
@@ -74,14 +98,14 @@ class InvoiceController extends Controller
             ->get();
             
         $customers = Customer::where('status', 1)->get();
-        $units = Unit::all();
-        $taxes = Tax::all();
+        $units = Unit::where('status',1)->get();
+        $taxes = Tax::where('status',1)->get();
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
         $salesman = Salesman::where('status',1)->get();
-        $suppliers = Supplier::all();
+        $suppliers = Supplier::where('status',1)->get();
 
         return view('invoice.create', compact(
-            'customers','products','paymentModes','units','taxes','salesman','suppliers'
+            'customers','products','paymentModes','units','taxes','salesman','suppliers','invoiceNumber'
         ));
     }
 
@@ -104,70 +128,83 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
+        DB::beginTransaction();
+
         try {
             \Log::info('Invoice request data', $request->all());
 
-            // Validate required fields
             $request->validate([
-                'customer_id' => 'required',
+                'customer_id'  => 'required',
                 'invoice_date' => 'required|date',
-                'invoice_number' => 'required|unique:invoices,invoice_number',
-                'product_id' => 'required|array',
-                'salesman'  => 'required'
+                'product_id'   => 'required|array',
+                'salesman'     => 'required'
             ]);
 
-            // Create the main invoice record
+            $invoiceDate = Carbon::parse($request->invoice_date)->format('Ymd');
+
+            // LOCKED query (safe now)
+            $lastInvoice = Invoice::where('invoice_number', 'like', "DR-{$invoiceDate}-%")
+                ->orderBy('invoice_number', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            if ($lastInvoice) {
+                $lastSeries = (int) substr($lastInvoice->invoice_number, -4);
+                $nextSeries = str_pad($lastSeries + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $nextSeries = '0001';
+            }
+
+            $invoiceNumber = "DR-{$invoiceDate}-{$nextSeries}";
+
+            // Save invoice
             $invoice = new Invoice();
-            $invoice->customer_id = $request->customer_id;
-            $invoice->invoice_number = $request->invoice_number;
-            $invoice->invoice_date = $request->invoice_date;
-            $invoice->due_date = $request->due_date;
-            $invoice->payment_mode_id = $request->payment_mode_id;
-            $invoice->discount_type = $request->discount_type;
-            $invoice->shipping_fee = $request->shipping_fee ?? 0;
-            $invoice->other_charges = $request->other_charges ?? 0;
-            $invoice->subtotal = $request->subtotal ?? 0;
-            $invoice->grand_total = $request->grand_total ?? 0;
+            $invoice->customer_id       = $request->customer_id;
+            $invoice->invoice_number    = $invoiceNumber;
+            $invoice->invoice_date      = $request->invoice_date;
+            $invoice->due_date          = $request->due_date;
+            $invoice->payment_mode_id   = $request->payment_mode_id;
+            $invoice->discount_type     = $request->discount_type;
+            $invoice->shipping_fee      = $request->shipping_fee ?? 0;
+            $invoice->other_charges     = $request->other_charges ?? 0;
+            $invoice->subtotal          = $request->subtotal ?? 0;
+            $invoice->grand_total       = $request->grand_total ?? 0;
             $invoice->discount_approved = $request->discount_approved ?? 0;
-            $invoice->salesman = $request->salesman;
-            $invoice->remarks = $request->remarks;
+            $invoice->salesman          = $request->salesman;
+            $invoice->remarks           = $request->remarks;
+            $invoice->created_by        = auth()->id();
             $invoice->save();
 
-            // Product-related fields
-            $productIds = $request->product_id;
-            $quantities = $request->qty;
-            $prices = $request->price;
-            $amounts = $request->amount;
-            $discountType = $request->discount_type;
-            $discount_less_add = $request->discount_less_add ?? [];
-            $discount_1 = $request->dis1 ?? [];
-            $discount_2 = $request->dis2 ?? [];
-            $discount_3 = $request->dis3 ?? [];
-
-            // Loop through each product in the invoice
-            foreach ($productIds as $index => $productId) {
-                $product = new InvoiceSales();
-                $product->invoice_id = $invoice->id;
-                $product->product_id = $productId;
-                $product->qty = $quantities[$index] ?? 0;
-                $product->price = $prices[$index] ?? 0;
-                $product->discount_less_add = $discount_less_add[$index] ?? 'less';
-                $product->discount_1 =  $discount_1[$index] ?? 0;
-                $product->discount_2 =  $discount_2[$index] ?? 0;
-                $product->discount_3 =  $discount_3[$index] ?? 0;
-                $product->amount = $amounts[$index] ?? 0;
-                $product->save();
+            // Save products
+            foreach ($request->product_id as $index => $productId) {
+                InvoiceSales::create([
+                    'invoice_id'         => $invoice->id,
+                    'product_id'         => $productId,
+                    'qty'                => $request->qty[$index] ?? 0,
+                    'price'              => $request->price[$index] ?? 0,
+                    'discount_less_add'  => $request->discount_less_add[$index] ?? 'less',
+                    'discount_1'         => $request->dis1[$index] ?? 0,
+                    'discount_2'         => $request->dis2[$index] ?? 0,
+                    'discount_3'         => $request->dis3[$index] ?? 0,
+                    'amount'             => $request->amount[$index] ?? 0,
+                ]);
             }
+
+            DB::commit();
 
             \Log::info('Invoice successfully created', ['invoice_id' => $invoice->id]);
 
-            return redirect()->route('invoice.index')->with('message', 'Invoice created successfully!');
+            return redirect()->route('invoice.index')
+                ->with('message', "Invoice {$invoiceNumber} created successfully!");
 
         } catch (\Throwable $e) {
+            DB::rollBack();
+
             \Log::error('Invoice creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
             return back()->with('error', 'An error occurred while creating the invoice.');
         }
     }
@@ -220,9 +257,9 @@ class InvoiceController extends Controller
         // Load all customers, products, units, payment modes, taxes, and active salesmen
         $customers = Customer::all();
         $products = Product::with(['supplierItems', 'unit'])->get();
-        $units = Unit::all();
+        $units = Unit::where('status', 1)->get();
         $paymentModes = ModeofPayment::all();
-        $taxes = Tax::all();
+        $taxes = Tax::where('status', 1)->get();
         $salesman = Salesman::where('status', 1)->get();
         $suppliers = Supplier::where('status', 1)->get();
 
@@ -321,6 +358,7 @@ class InvoiceController extends Controller
                 'grand_total'    => $request->grand_total ?? 0,
                 'salesman'       => $request->salesman,
                 'remarks'        => $request->remarks,
+                'updated_by'     => auth()->id()
             ]);
 
             // Insert new invoice items
@@ -543,6 +581,27 @@ class InvoiceController extends Controller
         }
     }
 
+    public function bulkApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'password' => 'required'
+        ]);
+
+        $user = auth()->user();
+
+        if(!Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Invalid password.'], 422);
+        }
+
+        Invoice::whereIn('id', $request->ids)
+            ->where('invoice_status', 'pending')
+            ->update(['invoice_status' => 'approved', 'approved_by' => $user->id, 'approved_at' => now()]);
+
+        return response()->json(['success' => 'Invoices approved successfully.']);
+    }
+
+
      /**
      * Helper function to update product stock status
      */
@@ -560,5 +619,4 @@ class InvoiceController extends Controller
 
         $product->save();
     }
-
 }

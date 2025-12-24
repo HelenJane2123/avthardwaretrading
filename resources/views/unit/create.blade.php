@@ -24,7 +24,7 @@
         @endif
 
         <div class="">
-            <a class="btn btn-primary" href="{{route('unit.index')}}"><i class="fa fa-edit"></i> Manage Unit</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{route('unit.index')}}"><i class="fa fa-cogs"></i> Manage Unit</a>
         </div>
         <div class="row mt-2">
 
@@ -37,7 +37,7 @@
                             @csrf
                             <div class="form-group col-md-12">
                                 <label class="control-label">Unit Name</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter Unit Name">
+                                <input name="name" class="form-control form-control-sm @error('name') is-invalid @enderror" type="text" placeholder="Enter Unit Name">
                                 @error('name')
                                 <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -46,7 +46,7 @@
                             </div>
 
                             <div class="form-group col-md-4 align-self-end">
-                                <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Create</button>
+                                <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Create</button>
                             </div>
                         </form>
                     </div>

@@ -26,7 +26,7 @@
     @endif
 
     <div class="mb-3">
-        <a class="btn btn-outline-primary shadow-sm" href="{{ route('adjustment_collection.index') }}">
+        <a class="btn btn-sm btn-outline-primary shadow-sm" href="{{ route('adjustment_collection.index') }}">
             <i class="fa fa-list"></i> Manage Collection Adjustment
         </a>
     </div>
@@ -40,13 +40,13 @@
                         @csrf
                         <div class="form-group mb-3">
                             <label for="adjustment_no">Adjustment Number</label>
-                            <input type="text" name="adjustment_no" id="adjustment_no" class="form-control" 
+                            <input type="text" name="adjustment_no" id="adjustment_no" class="form-control form-control-sm" 
                                 value="{{ $nextAdjustmentNumber }}" readonly>
                         </div>
                         <!-- Search Invoice -->
                         <div class="form-group mb-3">
                             <label for="invoice_no">Invoice Number</label>
-                            <input type="text" name="invoice_no" id="invoice_no" class="form-control" placeholder="Search or enter Invoice Number">
+                            <input type="text" name="invoice_no" id="invoice_no" class="form-control form-control-sm" placeholder="Search or enter Invoice Number">
                             <small class="form-text text-muted">Start typing to search existing invoices.</small>
                         </div>
 
@@ -66,30 +66,30 @@
                         <!-- Date Adjustment -->
                         <div class="form-group mb-3">
                             <label for="collection_date">Collection Date Adjustment</label>
-                            <input type="date" name="collection_date" id="collection_date" class="form-control" required>
+                            <input type="date" name="collection_date" id="collection_date" class="form-control form-control-sm" required>
                         </div>
 
                         <!-- Account Name -->
                         <div class="form-group mb-3">
                             <label for="account_name">Account Name</label>
-                            <input type="text" name="account_name" id="account_name" class="form-control" readonly>
+                            <input type="text" name="account_name" id="account_name" class="form-control form-control-sm" readonly>
                             <small class="text-muted" id="accountHint">Account will auto-fill based on invoice and entry type.</small>
                         </div>
 
                         <!-- Adjustment Amount -->
                         <div class="form-group mb-3">
                             <label for="amount">Adjustment Amount</label>
-                            <input type="number" name="amount" id="amount" class="form-control" 
+                            <input type="number" name="amount" id="amount" class="form-control form-control-sm" min="0"
                                 step="0.01" placeholder="Enter adjustment amount" required>
                         </div>
 
                         <!-- Remarks -->
                         <div class="form-group mb-4">
                             <label for="remarks">Remarks</label>
-                            <textarea name="remarks" id="remarks" class="form-control" rows="2" placeholder="Enter reason for adjustment (optional)"></textarea>
+                            <textarea name="remarks" id="remarks" class="form-control form-control-sm" rows="2" placeholder="Enter reason for adjustment (optional)"></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-sm btn-primary">
                             <i class="fa fa-save"></i> Save Adjustment
                         </button>
                     </form>

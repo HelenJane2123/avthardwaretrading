@@ -19,10 +19,10 @@
         </div>
 
         <div class="d-flex justify-content-between mb-3">
-            <a class="btn btn-primary shadow-sm" href="{{ route('customer.create') }}">
+            <a class="btn btn-primary btn-sm shadow-sm" href="{{ route('customer.create') }}">
                 <i class="fa fa-plus"></i> Add Customer
             </a>
-            <a class="btn btn-success shadow-sm" href="{{ route('export.customers') }}">
+            <a class="btn btn-sm btn-success shadow-sm" href="{{ route('export.customers') }}">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
@@ -48,12 +48,22 @@
             <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Customer Records</h3>
             <div class="tile-body">
                 <div class="table-responsive">
-                    <table class="table table-hover table-bordered text-center align-middle" id="sampleTable">
-                        <thead class="thead-dark">
+                    <div class="row mb-3">
+                        <div class="col-md-4 offset-md-8 text-right">
+                            <label for="filterLocation">Filter by Location:</label>
+                            <select id="filterLocation" class="form-control form-control-sm d-inline-block w-auto">
+                                <option value="">All Locations</option>
+                                <!-- Options will be populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+                    <table class="table table-hover table-bordered text-center align-middle" id="customerTable">
+                        <thead class="thead-dark medium">
                             <tr>
                                 <th>Customer Code</th>
                                 <th>Name</th>
                                 <th>Address</th>
+                                <th>Location</th>
                                 <th>Contact</th>
                                 <th>Email</th>
                                 <th>Tax No.</th>
@@ -64,12 +74,13 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="medium">
                             @foreach($customers as $customer)
                                 <tr id="row-{{ $customer->id }}">
                                     <td><span class="badge badge-info">{{ $customer->customer_code }}</span></td>
                                     <td>{{ $customer->name }}</td>
                                     <td>{{ $customer->address }}</td>
+                                    <td>{{ $customer->location }}</td>
                                     <td>{{ $customer->mobile }}</td>
                                     <td>{{ $customer->email }}</td>
                                     <td>{{ $customer->tax }}</td>
@@ -109,10 +120,23 @@
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
-        $('#sampleTable').DataTable({
-            "order": [[ 0, "desc" ]],
+        var customerTable = $('#customerTable').DataTable({
+            "order": [[0, "desc"]],
             "pageLength": 10,
             "responsive": true
+        });
+        // Populate Location dropdown from table data
+        var locationColumnIndex = 3; // Location column
+        var locations = customerTable.column(locationColumnIndex).data().unique().sort();
+
+        locations.each(function(d) {
+            $('#filterLocation').append('<option value="' + d + '">' + d + '</option>');
+        });
+
+        // Filter table based on selection
+        $('#filterLocation').on('change', function() {
+            var val = $(this).val();
+            customerTable.column(locationColumnIndex).search(val ? '^' + val + '$' : '', true, false).draw();
         });
         function deleteTag(customerId, customerName) {
             Swal.fire({

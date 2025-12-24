@@ -18,8 +18,8 @@
     </div>
 
     <div class="">
-        <a class="btn btn-primary" href="{{ route('modeofpayment.index') }}">
-            <i class="fa fa-edit"> </i> Manage Mode of Payment
+        <a class="btn btn-sm btn-outline-primary" href="{{ route('modeofpayment.index') }}">
+            <i class="fa fa-cogs"> </i> Manage Mode of Payment
         </a>
     </div>
     
@@ -38,16 +38,15 @@
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label class="control-label">Name</label>
-                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="{{ old('name') }}" class="form-control" required>
+                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="{{ old('name') }}" class="form-control form-control-sm" required>
                                 @error('name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
                             
-
                             <div id="term-container" style="display: none;">
                                 <label for="term">Payment Term</label>
-                                <select name="term" id="term" class="form-control col-md-20">
+                                <select name="term" id="term" class="form-control form-control-sm col-md-20">
                                     <option value="30">30 days</option>
                                     <option value="45">45 days</option>
                                     <option value="90">90 days</option>
@@ -58,14 +57,14 @@
 
                              <div class="form-group col-md-6">
                                 <label class="control-label">Description</label>
-                                <input type="text" name="description" class="form-control @error('description') is-invalid @enderror">
+                                <input type="text" name="description" class="form-control form-control-sm @error('description') is-invalid @enderror">
                                 @error('description')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
                            
                             <div class="form-group col-md-12 mt-3">
-                                <button class="btn btn-success float-right" type="submit">
+                                <button class="btn btn-sm btn-success float-right" type="submit">
                                     <i class="fa fa-fw fa-lg fa-check-circle"></i> Add Mode of Payment 
                                 </button>
                             </div>

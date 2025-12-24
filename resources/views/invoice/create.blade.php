@@ -50,15 +50,39 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
-                                <input type="date" name="invoice_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                                    <!-- Displayed to user -->
+                                    <input type="text"
+                                        id="invoice_date_display"
+                                        class="form-control form-control-sm"
+                                        value="{{ date('F d, Y') }}"
+                                        required>
+
+                                    <!-- Actual value submitted -->
+                                    <input type="hidden"
+                                        name="invoice_date"
+                                        id="invoice_date"
+                                        value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Invoice Due Date <span class="text-danger">*</span></label>
-                                <input type="date" name="due_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                                <input type="text"
+                                    id="due_date_display"
+                                    class="form-control form-control-sm"
+                                    value="{{ date('F d, Y') }}"
+                                    required>
+
+                                <input type="hidden"
+                                    name="due_date"
+                                    id="due_date"
+                                    value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Invoice Number</label>
-                                <input type="text" name="invoice_number" id="invoice_number" class="form-control form-control-sm" readonly>
+                                <input type="text"
+                                    id="invoice_number"
+                                    class="form-control form-control-sm"
+                                    value="{{ $invoiceNumber ?? 'Auto-generated' }}"
+                                    readonly>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
@@ -269,63 +293,64 @@
     <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Select Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-2">
-                    <label for="filterSupplier" class="form-label">Filter by Supplier</label>
-                    <select id="filterSupplier" class="form-control form-control-sm">
-                        <option value="">-- All Suppliers --</option>
-                        @foreach($suppliers as $supplier)
-                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                        @endforeach
-                    </select>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Select Product</h5>
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal">x</button>
                 </div>
-                <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
-                <div class="table-responsive">
-                    <table class="table table-bordered" id="productTable">
-                        <thead>
-                        <tr>
-                            <th>Product Code</th>
-                            <th>Supplier Product Code</th>
-                            <th>Name</th>
-                            <th>Unit Cost</th>
-                            <th>Price</th>
-                            <th>Quantity on Hand</th>
-                            <th>Unit</th>
-                            <th>Select</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($products as $product)
-                            <tr data-id="{{ $product->id }}"
-                                data-code="{{ $product->product_code }}"
-                                data-name="{{ $product->product_name }}"
-                                data-price="{{ $product->sales_price }}"
-                                data-stock="{{ $product->remaining_stock }}"
-                                data-unit="{{ $product->unit_id }}"
-                                data-supplier="{{ optional($product->supplierItems->first())->supplier_id }}"
-                                data-discounttype="{{ $product->discount_type }}"
-                                data-discount1="{{ $product->discount_1 }}"
-                                data-discount2="{{ $product->discount_2 }}"
-                                data-discount3="{{ $product->discount_3 }}"
-                                data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
-                                <td>{{ $product->product_code }}</td>
-                                <td>{{ $product->supplier_product_code }}</td>
-                                <td>{{ $product->product_name }}</td>
-                                <td>{{ optional($product->supplierItems->first())->item_price }}</td>
-                                <td>{{ $product->sales_price }}</td>
-                                <td>{{ $product->remaining_stock }}</td>
-                                <td>{{ $product->unit->name }}</td>
-                                <td>
-                                <button type="button" class="btn btn-success btn-sm select-this">Select</button>
-                                </td>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label for="filterSupplier" class="form-label">Filter by Supplier</label>
+                        <select id="filterSupplier" class="form-control form-control-sm">
+                            <option value="">-- All Suppliers --</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="productTable">
+                            <thead>
+                            <tr>
+                                <th>Product Code</th>
+                                <th>Supplier Product Code</th>
+                                <th>Name</th>
+                                <th>Unit Cost</th>
+                                <th>Price</th>
+                                <th>Quantity on Hand</th>
+                                <th>Unit</th>
+                                <th>Select</th>
                             </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                            @foreach($products as $product)
+                                <tr data-id="{{ $product->id }}"
+                                    data-code="{{ $product->product_code }}"
+                                    data-name="{{ $product->product_name }}"
+                                    data-price="{{ $product->sales_price }}"
+                                    data-stock="{{ $product->remaining_stock }}"
+                                    data-unit="{{ $product->unit_id }}"
+                                    data-supplier="{{ optional($product->supplierItems->first())->supplier_id }}"
+                                    data-discounttype="{{ $product->discount_type }}"
+                                    data-discount1="{{ $product->discount_1 }}"
+                                    data-discount2="{{ $product->discount_2 }}"
+                                    data-discount3="{{ $product->discount_3 }}"
+                                    data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                                    <td>{{ $product->product_code }}</td>
+                                    <td>{{ $product->supplier_product_code }}</td>
+                                    <td>{{ $product->product_name }}</td>
+                                    <td>{{ optional($product->supplierItems->first())->item_price }}</td>
+                                    <td>{{ $product->sales_price }}</td>
+                                    <td>{{ $product->remaining_stock }}</td>
+                                    <td>{{ $product->unit->name }}</td>
+                                    <td>
+                                    <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -339,19 +364,42 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            function formatToYMD(date) {
+                const d = new Date(date);
+                const month = ('0' + (d.getMonth() + 1)).slice(-2);
+                const day   = ('0' + d.getDate()).slice(-2);
+                const year  = d.getFullYear();
+                return `${year}-${month}-${day}`;
+            }
+
+            $('#invoice_date_display').datepicker({
+                dateFormat: 'MM dd, yy',
+                onSelect: function(dateText) {
+                    $('#invoice_date').val(formatToYMD(dateText));
+                }
+            });
+
+            $('#due_date_display').datepicker({
+                dateFormat: 'MM dd, yy',
+                onSelect: function(dateText) {
+                    $('#due_date').val(formatToYMD(dateText));
+                }
+            });
             let currentRow = null;
             let productTable = null;
 
              $('#productModal').on('shown.bs.modal', function () {
                 if (!productTable) {
                     productTable = $('#productTable').DataTable({
-                        pageLength: 10,       // Show 10 rows per page
-                        lengthChange: false,  // Disable changing rows per page
-                        searching: true,      // Enable search box
-                        ordering: true,       // Enable column sorting
-                        info: false,          // Hide "Showing x of y" info if you want
+                        pageLength: 10,      
+                        lengthChange: false, 
+                        searching: true,     
+                        ordering: true,      
+                        info: false,         
                         autoWidth: false
                     });
                 }
@@ -389,6 +437,10 @@
             // Filter products as you type
             $('#productSearch').on('input', function() {
                 productTable.search($(this).val()).draw();
+            });
+
+            $('#productModal .btn-close').on('click', function() {
+                $('#productModal').modal('hide'); // jQuery fallback
             });
             // When selecting a product
             $(document).on('click', '.select-this', function() {
@@ -568,7 +620,6 @@
                 }
             }
 
-
             $(document).on('click', '.remove', function () {
                 var l = $('tbody tr').length;
                 if (l == 1) {
@@ -590,34 +641,6 @@
                 }
                 calculateTotals();
             });
-
-            // $(document).on('click', '.add-discount', function () {
-            //     const wrapper = $(this).closest('.discounts-wrapper');
-            //     const row = $(this).closest('tr');
-            //     const rowIndex = row.index(); 
-
-            //     const newRow = `
-            //         <div class="discount-row d-flex align-items-center gap-2 mb-2">
-            //             <select name="dis[${rowIndex}][]" class="form-control dis">
-            //                 <option value="0">---Select Discount---</option>
-            //                 @foreach($taxes as $tax)
-            //                     <option value="{{$tax->name}}">{{$tax->name}} %</option>
-            //                 @endforeach
-            //             </select>
-            //             <button type="button" class="btn btn-danger btn-sm remove-discount">
-            //                 <i class="fa fa-trash"></i>
-            //             </button>
-            //         </div>`;
-            //     wrapper.append(newRow);
-
-            //     // Recalculate totals after adding
-            //     calculateTotals();
-            // });
-
-            // $(document).on('click', '.remove-discount', function() {
-            //     $(this).closest('.discount-row').remove();
-            //     calculateTotals();
-            // });
 
             // Populate Customer Information
             $('#customerSelect').on('change', function () {
@@ -684,15 +707,34 @@
             // Auto-compute due date based on mode of payment
             $('#payment_id').on('change', function () {
                 let selected = $(this).find(':selected');
-                let term = parseInt(selected.data('term')) || 0; // get days from option
-                let invoiceDate = $('input[name="invoice_date"]').val();
+                let term = parseInt(selected.data('term')) || 0;
 
-                if (invoiceDate) {
-                    let d = new Date(invoiceDate);
-                    d.setDate(d.getDate() + term); // add term days
-                    let dueDate = d.toISOString().split('T')[0]; // format yyyy-mm-dd
-                    $('input[name="due_date"]').val(dueDate);
-                }
+                let invoiceDate = $('#invoice_date').val(); // yyyy-mm-dd
+
+                if (!invoiceDate) return;
+
+                let d = new Date(invoiceDate);
+                d.setDate(d.getDate() + term);
+
+                // Format values
+                let yyyy = d.getFullYear();
+                let mm = String(d.getMonth() + 1).padStart(2, '0');
+                let dd = String(d.getDate()).padStart(2, '0');
+
+                let dueDateYMD = `${yyyy}-${mm}-${dd}`;
+                let dueDateDisplay = d.toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: '2-digit',
+                    year: 'numeric'
+                });
+
+                // Update both fields
+                $('#due_date').val(dueDateYMD);
+                $('#due_date_display').val(dueDateDisplay);
+            });
+
+            $('#invoice_date_display').on('change', function () {
+                $('#payment_id').trigger('change');
             });
             
             // Validate qty on input
@@ -733,10 +775,6 @@
 
                 calculateTotals();
             });
-            
-            // get the latest Invoice number in database
-            let randomInvoice = 'DR-' + Math.floor(100000 + Math.random() * 900000);
-            $('#invoice_number').val(randomInvoice);
         });
 
         let formPendingSubmit = null;
@@ -795,23 +833,6 @@
                 backdrop: 'static',
                 keyboard: false
             });
-
-            /*$(document).on("input", ".dis, #discount", function() {
-                var val = parseFloat($(this).val()) || 0;
-
-                if (val > 0) {
-                    if (discountApprovalCount < 3) {
-                        pendingDiscountInput = $(this); // remember which input triggered
-                        if ($('#discountApprovalModal').is(':hidden')) { // only show if hidden
-                            discountModal.show(); // <-- updated
-                        }
-                    } else {
-                        alert("Maximum of 3 discount approvals reached.");
-                        $(this).val(0);
-                        calculateTotals();
-                    }
-                }
-            });*/
 
             $('#approveDiscount').on('click', function () {
                 let password = $('#adminPassword').val().trim();

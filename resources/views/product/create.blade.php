@@ -35,7 +35,7 @@
 
        
         <div class="mb-3">
-            <a class="btn btn-outline-primary" href="{{route('product.index')}}">
+            <a class="btn btn-sm btn-outline-primary" href="{{route('product.index')}}">
                 <i class="fa fa-list"></i> Manage Products
             </a>
         </div>

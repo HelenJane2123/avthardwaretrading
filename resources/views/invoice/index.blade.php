@@ -17,12 +17,11 @@
             </ul>
         </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <a class="btn btn-primary" href="{{route('invoice.create')}}"><i class="fa fa-plus"></i> Create New Invoice</a>
-            <a class="btn btn-success shadow-sm" href="{{ route('export.invoices') }}">
+            <a class="btn btn-sm btn-primary" href="{{route('invoice.create')}}"><i class="fa fa-plus"></i> Create New Invoice</a>
+            <a class="btn btn-sm btn-success shadow-sm" href="{{ route('export.invoices') }}">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
-
         @if(session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
                 <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
@@ -44,44 +43,56 @@
                 <div class="tile">
                 <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Invoice Records</h3>
                     <div class="tile-body">
+                        <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
+                            <div class="mr-2">
+                                <label for="filterLocation" class="mr-1">Filter by Location:</label>
+                                <select id="filterLocation" class="form-control form-control-sm d-inline-block w-auto">
+                                    <option value="">All Locations</option>
+                                    <!-- Options will be populated by JS -->
+                                </select>
+
+                                <button id="bulkApprove" class="btn btn-success btn-sm">
+                                    <i class="fa fa-check"></i> Approve Selected
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
+                            <table class="table table-hover table-bordered" id="invoiceTable">
+                                <thead class="thead-dark medium">
                                     <tr>
+                                        <th><input type="checkbox" id="selectAll"></th>
                                         <th>Invoice #</th>
                                         <th>Customer</th>
+                                        <th>Location</th>
                                         <th>Invoice Date</th>
                                         <th>Due Date</th>
                                         <th>Subtotal</th>
-                                        <th>Discount Type</th>
                                         <th>Grand Total</th>
-                                        <th>Outstanding Balance</th>
+                                        <th>Outstanding</th>
                                         <th>Status</th>
-                                        <th>Payment Status</th>
+                                        <th>Payment</th>
+                                        <th>Created By</th>
+                                        <th>Date Created</th>
+                                        <th>Updated By</th>
+                                        <th>Date Updated</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="medium">
                                     @foreach($invoices as $invoice)
                                         <tr>
-                                            <td><span class="badge badge-info">{{ $invoice->invoice_number }}</span></td>
-                                            <td>{{ $invoice->customer->name }}</td>
+                                            <td>
+                                                @if($invoice->invoice_status != 'approved' && $invoice->invoice_status != 'canceled')
+                                                    <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
+                                                @endif
+                                            </td>
+                                            <td><span class="badge badge-info px-1 py-1">{{ $invoice->invoice_number }}</span></td>
+                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
+                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->location }}</td>
                                             <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
                                             <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
                                             <td>{{ number_format($invoice->subtotal, 2) }}</td>
-                                            <td>
-                                            @if($invoice->discount_type == 'per_item')
-                                                    <span class="badge badge-success">Per Item</span>
-                                                @elseif($invoice->discount_value > 0)
-                                                    <span class="badge badge-primary">
-                                                        Overall - {{ $invoice->discount_value }} {{ $invoice->discount_type == 'overall' ? '%' : '₱' }}
-                                                    </span>
-                                                @else
-                                                    <span class="badge badge-warning">
-                                                    No Discount
-                                                    </span>
-                                                @endif
-                                            </td>
                                             <td>{{ number_format($invoice->grand_total, 2) }}</td>
                                             <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
                                             <td>
@@ -89,7 +100,7 @@
                                                     @if($invoice->invoice_status == 'approved') bg-success
                                                     @elseif($invoice->invoice_status == 'pending') bg-warning
                                                     @elseif($invoice->invoice_status == 'canceled') bg-danger
-                                                    @endif">
+                                                    @endif px-1 py-1">
                                                     {{ ucfirst($invoice->invoice_status) }}
                                                 </span>
                                             </td>
@@ -99,47 +110,39 @@
                                                     @elseif($invoice->payment_status == 'pending') bg-warning
                                                     @elseif($invoice->payment_status == 'overdue') bg-danger
                                                     @elseif($invoice->payment_status == 'partial') bg-info
-                                                    @endif">
+                                                    @endif px-1 py-1">
                                                     {{ ucfirst($invoice->payment_status) }}
                                                 </span>
                                             </td>
-                                            <td>
-                                                <button class="btn btn-primary btn-sm view-invoice" data-id="{{ $invoice->id }}">
-                                                    <i class="fa fa-eye"></i>
+                                            <td>{{ $invoice->created_by && $invoice->user ? $invoice->user->f_name . ' ' . $invoice->user->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') }}</td>
+                                            <td>{{ $invoice->updated_by && $invoice->updater ? $invoice->updater->f_name . ' ' . $invoice->updater->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') }}</td>
+                                            <td class="text-nowrap">
+                                                <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
+                                                    <i class="fa fa-eye fa-xs"></i>
                                                 </button>
 
-                                            @if($invoice->invoice_status == 'approved')
-                                                    {{-- Show print button only when approved --}}
-                                                    <a class="btn btn-secondary btn-sm" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
-                                                        <i class="fa fa-print"></i>
+                                                @if($invoice->invoice_status == 'approved')
+                                                    <a class="btn btn-secondary btn-sm p-1" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
+                                                        <i class="fa fa-print fa-xs"></i>
                                                     </a>
-
                                                 @elseif($invoice->invoice_status == 'canceled')
-                                                    <span class="badge bg-danger text-light">
-                                                        This invoice is already canceled
-                                                    </span>
+                                                    <span class="badge bg-danger text-light px-1 py-1">Canceled</span>
                                                 @else
-                                                    {{-- Show edit and approve buttons only if not approved or canceled --}}
-                                                    <a class="btn btn-info btn-sm" href="{{ route('invoice.edit', $invoice->id) }}">
-                                                        <i class="fa fa-edit"></i>
+                                                    <a class="btn btn-info btn-sm p-1" href="{{ route('invoice.edit', $invoice->id) }}">
+                                                        <i class="fa fa-edit fa-xs"></i>
                                                     </a>
                                                     @if(auth()->user()->user_role === 'super_admin')
-                                                        <button class="btn btn-success btn-sm" onclick="approveInvoice({{ $invoice->id }})">
-                                                            <i class="fa fa-check"></i> Approve
+                                                        <button class="btn btn-success btn-sm p-1" onclick="approveInvoice({{ $invoice->id }})">
+                                                            <i class="fa fa-check fa-xs"></i>
                                                         </button>
                                                     @endif
                                                 @endif
 
-                                                <button class="btn btn-danger btn-sm" onclick="deleteTag({{ $invoice->id }})">
-                                                    <i class="fa fa-trash"></i>
+                                                <button class="btn btn-danger btn-sm p-1" onclick="deleteTag({{ $invoice->id }})">
+                                                    <i class="fa fa-trash fa-xs"></i>
                                                 </button>
-
-                                                <form id="delete-form-{{ $invoice->id }}" 
-                                                    action="{{ route('invoice.destroy',$invoice->id) }}" 
-                                                    method="POST" style="display:none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -173,9 +176,75 @@
 @push('js')
     <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
-    <script type="text/javascript">$('#sampleTable').DataTable();</script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
+        var invoiceTable = $('#invoiceTable').DataTable({
+            "order": [[0, "desc"]],
+            "pageLength": 10,
+            "responsive": true
+        });
+        // Populate Location dropdown from table data
+        var locationColumnIndex = 3; // Location column
+        var locations = invoiceTable.column(locationColumnIndex).data().unique().sort();
+
+        locations.each(function(d) {
+            $('#filterLocation').append('<option value="' + d + '">' + d + '</option>');
+        });
+
+        // Filter table based on selection
+        $('#filterLocation').on('change', function() {
+            var val = $(this).val();
+            invoiceTable.column(locationColumnIndex).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+        $('#filterLocation').on('change', function() {
+            var locationId = $(this).val();
+            table.column(0).search(locationId).draw();
+        });
+        $('#selectAll').on('click', function() {
+            $('.invoice-checkbox').prop('checked', this.checked);
+        });
+        //bulk approval
+        $('#bulkApprove').on('click', function() {
+            var selectedIds = $('.invoice-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
+
+            if(selectedIds.length === 0) {
+                Swal.fire('No invoices selected', 'Please select invoices to approve.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirm Bulk Approval',
+                text: 'Only Admin can approve invoices.',
+                input: 'password',
+                inputPlaceholder: 'Enter Admin password',
+                showCancelButton: true,
+                confirmButtonText: 'Approve',
+                preConfirm: (password) => {
+                    return $.ajax({
+                        url: '{{ route("invoice.bulkApprove") }}',
+                        method: 'PUT',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            ids: selectedIds,
+                            password: password
+                        }
+                    }).then(response => {
+                        if(response.error) {
+                            Swal.showValidationMessage(response.error);
+                        } else {
+                            return response;
+                        }
+                    }).catch(() => Swal.showValidationMessage('Request failed'));
+                }
+            }).then((result) => {
+                if(result.isConfirmed) {
+                    Swal.fire('Approved!', 'Selected invoices have been approved.', 'success')
+                        .then(() => location.reload());
+                }
+            });
+        });
         function deleteTag(id) {
             swal({
                 title: 'Are you sure?',

@@ -19,10 +19,10 @@
         </div>
 
         <div class="d-flex justify-content-between mb-3">
-            <a class="btn btn-primary shadow-sm" href="{{ route('salesmen.create') }}">
+            <a class="btn btn-primary btn-sm shadow-sm" href="{{ route('salesmen.create') }}">
                 <i class="fa fa-plus"></i> Add Salesman
             </a>
-            <a class="btn btn-success shadow-sm" href="{{ route('export.salesman') }}">
+            <a class="btn btn-success btn-sm shadow-sm" href="{{ route('export.salesman') }}">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
@@ -49,7 +49,7 @@
             <div class="tile-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-bordered text-center align-middle" id="sampleTable">
-                        <thead class="thead-dark">
+                        <thead class="thead-dark medium">
                             <tr>
                                 <th>Salesman Code</th>
                                 <th>Name</th>
@@ -62,36 +62,36 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                        @foreach($salesmen as $salesman)
-                            <tr id="row-{{ $salesman->id }}">
-                                <td><span class="badge badge-info">{{ $salesman->salesman_code }}</span></td>
-                                <td>{{ $salesman->salesman_name }}</td>
-                                <td>{{ $salesman->address }}</td>
-                                <td>{{ $salesman->phone }}</td>
-                                <td>{{ $salesman->email }}</td>
-                                <td>
-                                    <span class="badge {{ $salesman->status == 1 ? 'bg-success' : 'bg-secondary' }}">
-                                        {{ $salesman->status == 1 ? 'Active' : 'Inactive' }}
-                                    </span>
-                                </td>
-                                <td>{{ \Carbon\Carbon::parse($salesman->created_at)->format('M d, Y') }}</td>
-                                <td>{{ \Carbon\Carbon::parse($salesman->updated_at)->format('M d, Y') }}</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a class="btn btn-sm btn-primary" 
-                                           href="{{ route('salesmen.edit', $salesman->id) }}" 
-                                           title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-danger btn-sm" type="button" 
-                                                    onclick="deleteTag('{{ $salesman->id }}','{{ $salesman->salesman_name }}')">
-                                                <i class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                        <tbody class="medium">
+                            @foreach($salesmen as $salesman)
+                                <tr id="row-{{ $salesman->id }}">
+                                    <td><span class="badge badge-info">{{ $salesman->salesman_code }}</span></td>
+                                    <td>{{ $salesman->salesman_name }}</td>
+                                    <td>{{ $salesman->address }}</td>
+                                    <td>{{ $salesman->phone }}</td>
+                                    <td>{{ $salesman->email }}</td>
+                                    <td>
+                                        <span class="badge {{ $salesman->status == 1 ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ $salesman->status == 1 ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($salesman->created_at)->format('M d, Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($salesman->updated_at)->format('M d, Y') }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a class="btn btn-sm btn-primary" 
+                                            href="{{ route('salesmen.edit', $salesman->id) }}" 
+                                            title="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $salesman->id }}','{{ $salesman->salesman_name }}')">
+                                                    <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

@@ -17,8 +17,8 @@
             </ul>
         </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <a class="btn btn-primary" href="{{route('collection.create')}}"><i class="fa fa-plus"></i> Create New Collection</a>
-            <a class="btn btn-success shadow-sm" href="{{ route('export.collections') }}">
+            <a class="btn btn-sm btn-primary" href="{{route('collection.create')}}"><i class="fa fa-plus"></i> Create New Collection</a>
+            <a class="btn btn-sm btn-success shadow-sm" href="{{ route('export.collections') }}">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
@@ -37,7 +37,7 @@
                     <div class="tile-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
+                                <thead class="thead-dark medium">
                                     <tr>
                                         <th>Collection #</th>
                                         <th>Invoice #</th>
@@ -51,7 +51,7 @@
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody clas="medium">
                                     @foreach($collections as $collection)
                                         @php
                                             $latestPayment = $collection->invoice->collections->sortByDesc('payment_date')->first();

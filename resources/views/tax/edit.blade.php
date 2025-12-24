@@ -34,7 +34,7 @@
                             @method('PUT')
                             <div class="form-group col-md-8">
                                 <label class="control-label">Tax Amount</label>
-                                <input name="name" value="{{ $tax->name }}" class="form-control @error('name') is-invalid @enderror" type="text" placeholder="Enter your name">
+                                <input name="name" value="{{ $tax->name }}" class="form-control form-control-sm @error('name') is-invalid @enderror" type="text" placeholder="Enter your name">
                                 @error('name')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
@@ -42,7 +42,7 @@
                                 @enderror
                             </div>
                             <div class="form-group col-md-4 align-self-end">
-                                <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Update</button>
+                                <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Update</button>
                             </div>
                         </form>
                     </div>

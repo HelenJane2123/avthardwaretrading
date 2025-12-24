@@ -36,7 +36,7 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">Name</label>
-                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="<?php echo  e(old('name', $modeofpayment->name)); ?>" class="form-control" required>
+                                <input type="text" id="name" name="name" placeholder="Enter Name" oninput="toggleTermDropdown()" value="<?php echo  e(old('name', $modeofpayment->name)); ?>" class="form-control form-control-sm" required>
                                 @error('name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -44,7 +44,7 @@
 
                             <div id="term-container" style="display: none;">
                                 <label for="term">Payment Term</label>
-                                <select name="term" id="term" class="form-control col-md-20">
+                                <select name="term" id="term" class="form-control form-control-sm col-md-20">
                                     <option value="30" {{ old('term', $modeofpayment->term) == '30' ? 'selected' : '' }}>30 days</option>
                                     <option value="45" {{ old('term', $modeofpayment->term) == '45' ? 'selected' : '' }}>45 days</option>
                                     <option value="60" {{ old('term', $modeofpayment->term) == '60' ? 'selected' : '' }}>60 days</option>
@@ -55,14 +55,14 @@
 
                             <div class="form-group col-md-6">
                                 <label class="control-label">Description</label>
-                                <input value="<?php echo e(old('description', $modeofpayment->description)); ?>" name="description" class="form-control <?php $__errorArgs = ['description']; ?>">
+                                <input value="<?php echo e(old('description', $modeofpayment->description)); ?>" name="description" class="form-control form-control-sm <?php $__errorArgs = ['description']; ?>">
                                 @error('email')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
 
                             <div class="form-group col-md-12 mt-3">
-                                <button class="btn btn-success" type="submit">
+                                <button class="btn btn-sm btn-success" type="submit">
                                     <i class="fa fa-fw fa-lg fa-check-circle"></i>Update
                                 </button>
                             </div>

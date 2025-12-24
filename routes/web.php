@@ -106,6 +106,7 @@ Route::patch('/invoice/{id}/status', [InvoiceController::class, 'updateStatus'])
 Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('invoice.print');
 Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
 Route::put('/invoice/{id}/approve', [InvoiceController::class, 'approve'])->name('invoice.approve');
+Route::put('/invoice/bulk-approve', [InvoiceController::class, 'bulkApprove'])->name('invoice.bulkApprove');
 
 //collection details
 Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])

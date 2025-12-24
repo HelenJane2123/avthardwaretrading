@@ -20,7 +20,7 @@
     </div>
 
     <div class="mb-3">
-        <a class="btn btn-secondary" href="{{ route('user.index') }}">
+        <a class="btn btn-sm btn-outline-primary" href="{{ route('user.index') }}">
             <i class="fa fa-list"></i> Manage Users
         </a>
     </div>
@@ -46,7 +46,7 @@
                             {{-- First Name --}}
                             <div class="form-group col-md-6">
                                 <label class="control-label">First Name <span class="text-danger">*</span></label>
-                                <input name="f_name" value="{{ old('f_name') }}" class="form-control @error('f_name') is-invalid @enderror" 
+                                <input name="f_name" value="{{ old('f_name') }}" class="form-control form-control-sm @error('f_name') is-invalid @enderror" 
                                        type="text" placeholder="Enter first name" required autofocus>
                                 @error('f_name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
@@ -56,7 +56,7 @@
                             {{-- Last Name --}}
                             <div class="form-group col-md-6">
                                 <label class="control-label">Last Name <span class="text-danger">*</span></label>
-                                <input name="l_name" value="{{ old('l_name') }}" class="form-control @error('l_name') is-invalid @enderror" 
+                                <input name="l_name" value="{{ old('l_name') }}" class="form-control form-control-sm @error('l_name') is-invalid @enderror" 
                                        type="text" placeholder="Enter last name" required>
                                 @error('l_name')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
@@ -67,7 +67,7 @@
                             <div class="form-group col-md-6">
                                 <label class="control-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" name="email" value="{{ old('email') }}" 
-                                       class="form-control @error('email') is-invalid @enderror" placeholder="Enter email address" required>
+                                       class="form-control form-control-sm @error('email') is-invalid @enderror" placeholder="Enter email address" required>
                                 @error('email')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -76,7 +76,7 @@
                             {{-- Contact --}}
                             <div class="form-group col-md-6">
                                 <label class="control-label">Contact Number</label>
-                                <input name="contact" value="{{ old('contact') }}" class="form-control @error('contact') is-invalid @enderror" 
+                                <input name="contact" value="{{ old('contact') }}" class="form-control form-control-sm @error('contact') is-invalid @enderror" 
                                        type="text" placeholder="Enter contact number">
                                 @error('contact')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
@@ -87,7 +87,7 @@
                             <div class="form-group col-md-6">
                                 <label class="control-label">Password <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input name="password" id="passwordField" class="form-control @error('password') is-invalid @enderror" 
+                                    <input name="password" id="passwordField" class="form-control form-control-sm @error('password') is-invalid @enderror" 
                                            type="password" placeholder="Enter or generate password" required>
 
                                     <div class="input-group-append">
@@ -107,7 +107,7 @@
                             {{-- Role --}}
                             <div class="form-group col-md-3">
                                 <label class="control-label">Role <span class="text-danger">*</span></label>
-                                <select name="user_role" id="role" class="form-control @error('user_role') is-invalid @enderror" required>
+                                <select name="user_role" id="role" class="form-control form-control-sm @error('user_role') is-invalid @enderror" required>
                                     <option value="">Select Role</option>
                                     <option value="super_admin" {{ old('user_role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                                     <option value="admin" {{ old('user_role') == 'admin' ? 'selected' : '' }}>Admin</option>
@@ -121,7 +121,7 @@
                             {{-- Status --}}
                             <div class="form-group col-md-3">
                                 <label class="control-label">Status <span class="text-danger">*</span></label>
-                                <select name="user_status" id="status" class="form-control @error('user_status') is-invalid @enderror" required>
+                                <select name="user_status" id="status" class="form-control form-control-sm @error('user_status') is-invalid @enderror" required>
                                     <option value="">Select Status</option>
                                     <option value="active" {{ old('user_status') == 'active' ? 'selected' : '' }}>Active</option>
                                     <option value="inactive" {{ old('user_status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -133,7 +133,7 @@
 
                             {{-- Submit --}}
                             <div class="form-group col-md-12 mt-4">
-                                <button class="btn btn-success float-right" type="submit">
+                                <button class="btn btn-sm btn-success float-right" type="submit">
                                     <i class="fa fa-fw fa-lg fa-check-circle"></i> Save User
                                 </button>
                             </div>

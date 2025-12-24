@@ -11,13 +11,10 @@
             <h1><i class="fa fa-th-list"></i> Purchases</h1>
             <p class="text-muted mb-0">View, update, or delete existing purchase orders.</p>
         </div>
-        <a class="btn btn-primary" href="{{ route('purchase.create') }}">
-            <i class="fa fa-plus"></i> Add New Purchase
-        </a>
     </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <a class="btn btn-primary" href="{{route('purchase.create')}}"><i class="fa fa-plus"></i> Create New Purchase</a>
-        <a class="btn btn-success shadow-sm" href="{{ route('export.purchase') }}">
+        <a class="btn btn-sm btn-primary" href="{{route('purchase.create')}}"><i class="fa fa-plus"></i> Create New Purchase</a>
+        <a class="btn btn-sm btn-success shadow-sm" href="{{ route('export.purchase') }}">
             <i class="fa fa-file-excel-o"></i> Export to Excel
         </a>
     </div>
@@ -44,7 +41,7 @@
                 <div class="tile-body">
                     <div class="table-responsive">
                         <table class="table table-striped table-hover table-bordered" id="sampleTable">
-                            <thead class="table-dark">
+                            <thead class="table-dark medium">
                                 <tr>
                                     <th>PO Number</th>
                                     <th>Supplier</th>
@@ -58,7 +55,7 @@
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="medium">
                                 @foreach($purchases as $purchase)
                                     <tr>
                                         @php
@@ -153,7 +150,7 @@
                                                     @if($status !== 'paid')
                                                         {{-- Not fully paid, show Make Payment button --}}
                                                         <button class="btn btn-warning btn-sm payment-btn ms-1" data-id="{{ $purchase->id }}">
-                                                            <i class="fa fa-credit-card"></i> Make Payment
+                                                            <i class="fa fa-credit-card"></i>
                                                         </button>
                                                     @endif
                                                 @endif

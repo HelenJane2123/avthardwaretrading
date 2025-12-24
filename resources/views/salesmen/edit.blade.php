@@ -46,7 +46,7 @@
                                 <label class="control-label">Salesman Code</label>
                                 <input type="text" name="salesman_code" 
                                        value="{{ $salesman->salesman_code }}" 
-                                       class="form-control @error('salesman_code') is-invalid @enderror" 
+                                       class="form-control form-control-sm @error('salesman_code') is-invalid @enderror" 
                                        readonly>
                                 @error('salesman_code')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -58,7 +58,7 @@
                                 <input type="text" name="salesman_name" 
                                        value="{{ $salesman->salesman_name }}" 
                                        placeholder="Enter salesman's full name" 
-                                       class="form-control @error('salesman_name') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('salesman_name') is-invalid @enderror">
                                 @error('salesman_name')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -70,7 +70,7 @@
                                 <input type="text" name="phone" 
                                        value="{{ $salesman->phone }}" 
                                        placeholder="Enter contact number" 
-                                       class="form-control @error('phone') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('phone') is-invalid @enderror">
                                 @error('phone')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -82,7 +82,7 @@
                                 <input type="email" name="email" 
                                        value="{{ $salesman->email }}" 
                                        placeholder="salesman@email.com"
-                                       class="form-control @error('email') is-invalid @enderror">
+                                       class="form-control form-control-sm @error('email') is-invalid @enderror">
                                 @error('email')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -92,7 +92,7 @@
                             <div class="form-group col-md-4">
                                 <label class="control-label">Address</label>
                                 <textarea name="address" rows="2" 
-                                          class="form-control @error('address') is-invalid @enderror"
+                                          class="form-control form-control-sm @error('address') is-invalid @enderror"
                                           placeholder="Street, Barangay, City, Province">{{ $salesman->address }}</textarea>
                                 @error('address')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -101,7 +101,7 @@
 
                             <div class="form-group col-md-4">
                                 <label for="status">Status</label>
-                                <select name="status" id="term" class="form-control col-md-20">
+                                <select name="status" id="status" class="form-control form-control-sm col-md-20">
                                     <option value="1" {{ old('status', $salesman->status) == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="2" {{ old('status', $salesman->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                 </select>
@@ -109,10 +109,10 @@
 
                             <!-- Submit -->
                             <div class="form-group col-md-12 mt-3 text-right">
-                                <button type="submit" class="btn btn-success">
+                                <button type="submit" class="btn btn-sm btn-success">
                                     <i class="fa fa-check-circle"></i> Update Salesman
                                 </button>
-                                <a href="{{ route('salesmen.index') }}" class="btn btn-secondary px-4">
+                                <a href="{{ route('salesmen.index') }}" class="btn btn-sm btn-secondary px-4">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                             </div>

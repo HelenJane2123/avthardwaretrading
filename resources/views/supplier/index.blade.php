@@ -21,7 +21,7 @@
 
         <!-- Add Button -->
         <div class="mb-3 text-right">
-            <a class="btn btn-primary shadow-sm" href="{{ route('supplier.create') }}">
+            <a class="btn btn-sm btn-primary shadow-sm" href="{{ route('supplier.create') }}">
                 <i class="fa fa-plus-circle"></i> Add Supplier
             </a>
         </div>
@@ -51,7 +51,7 @@
                     <div class="tile-body">
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-striped" id="sampleTable">
-                                <thead class="thead-dark">
+                                <thead class="thead-dark medium">
                                     <tr>
                                         <th>Supplier Code</th>
                                         <th>Supplier Name</th>
@@ -66,7 +66,7 @@
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="medium">
                                     @foreach($suppliers as $supplier)
                                         <tr id="row-{{ $supplier->id }}">
                                             <td><span class="badge badge-info">{{ $supplier->supplier_code }}</span></td>

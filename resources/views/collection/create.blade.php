@@ -19,7 +19,7 @@
     </div>
 
     <div class="mb-3">
-        <a class="btn btn-outline-primary" href="{{ route('collection.index') }}">
+        <a class="btn btn-sm btn-outline-primary" href="{{ route('collection.index') }}">
             <i class="fa fa-list"></i> Manage Collections
         </a>
     </div>
@@ -100,7 +100,7 @@
 
                                 <!-- Collapsible Payment History -->
                                 <div class="mt-4">
-                                    <button class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#paymentHistoryWrapper" aria-expanded="false" aria-controls="paymentHistoryWrapper">
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-toggle="collapse" data-target="#paymentHistoryWrapper" aria-expanded="false" aria-controls="paymentHistoryWrapper">
                                         Show Previous Payments
                                     </button>
 
@@ -124,12 +124,12 @@
 
                             <div class="mb-3">
                                 <label>Collection Number</label>
-                                <input type="text" name="collection_number" class="form-control" id="collectionNumber" readonly>
+                                <input type="text" name="collection_number" class="form-control form-control-sm" id="collectionNumber" readonly>
                             </div>
                             
                             <div class="mb-3">
                                 <label>Payment Date</label>
-                                <input type="date" name="payment_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="date" name="payment_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
                             </div>
                         
                             <!-- <div class="mb-3">
@@ -140,46 +140,46 @@
                             <!-- Extra Fields Based on Payment Method -->
                             <div id="pdcBankName" class="mb-3" style="display: none;">
                                 <label>Bank Name</label>
-                                <input type="text" name="bank_name" class="form-control" placeholder="Enter Bank Name">
+                                <input type="text" name="bank_name" class="form-control form-control-sm" placeholder="Enter Bank Name">
                             </div>
 
                             <div id="pdcCheck" class="mb-3" style="display: none;">
                                 <label>Check Date</label>
-                                <input type="date" name="check_date" class="form-control" value="{{ date('Y-m-d') }}">
+                                <input type="date" name="check_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
                             </div>
 
                             <div id="pdcFields" class="mb-3" style="display: none;">
                                 <label>Check Number</label>
-                                <input type="text" name="check_number" class="form-control" placeholder="Enter check number">
+                                <input type="text" name="check_number" class="form-control form-control-sm" placeholder="Enter check number">
                             </div>
 
                             <div id="pdcCheckAmount" class="mb-3" style="display: none;">
                                 <label>Check Amount</label>
-                                <input type="text" name="check_amount" class="form-control" placeholder="Enter check total Check Amount">
+                                <input type="text" name="check_amount" class="form-control form-control-sm" placeholder="Enter check total Check Amount">
                             </div>
 
                             <div class="mb-3">
                                 <label>Amount to Pay</label>
-                                <input type="number" step="0.01" name="amount_paid" class="form-control" required>
+                                <input type="number" step="0.01" name="amount_paid" class="form-control form-control-sm" required>
                             </div>
                             
                             <div id="gcashFields" style="display: none;">
                                 <div class="mb-3">
                                     <label>GCash Name</label>
-                                    <input type="text" name="gcash_name" class="form-control" placeholder="Enter GCash account name">
+                                    <input type="text" name="gcash_name" class="form-control form-control-sm" placeholder="Enter GCash account name">
                                 </div>
                                 <div class="mb-3">
                                     <label>GCash Mobile Number</label>
-                                    <input type="text" name="gcash_number" class="form-control" placeholder="Enter mobile number">
+                                    <input type="text" name="gcash_number" class="form-control form-control-sm" placeholder="Enter mobile number">
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label>Remarks</label>
-                                <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
+                                <textarea name="remarks" class="form-control form-control-sm" rows="2" placeholder="Optional remarks"></textarea>
                             </div>
 
-                            <button class="btn btn-success"><i class="fa fa-save"></i> Save Collection</button>
+                            <button class="btn btn-sm btn-success"><i class="fa fa-save"></i> Save Collection</button>
                         </form>
                     @endif
                 </div>

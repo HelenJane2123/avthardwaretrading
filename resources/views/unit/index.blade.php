@@ -20,7 +20,7 @@
             </ul>
         </div>
         <div class="">
-            <a class="btn btn-primary" href="{{route('unit.create')}}"><i class="fa fa-plus"></i> Add Unit</a>
+            <a class="btn btn-sm btn-primary" href="{{route('unit.create')}}"><i class="fa fa-plus"></i> Add Unit</a>
         </div>
         @if(session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
@@ -45,30 +45,30 @@
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Unit Records</h3>
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
+                                <thead class="thead-dark medium">
                                 <tr>
                                     <th>Unit </th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="medium">
                                     @foreach( $units as $unit)
-                                    <tr id="row-{{ $unit->id }}">
-                                        <td>{{ $unit->name }} </td>
-                                        @if($unit->status)
-                                        <td>Active</td>
-                                            @else
-                                            <td>Inactive</td>
-                                        @endif
-                                        <td>
-                                            <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
-                                            <button class="btn btn-danger btn-sm" type="button" 
-                                                    onclick="deleteTag('{{ $unit->id }}', '{{ $unit->name }}')">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                        <tr id="row-{{ $unit->id }}">
+                                            <td>{{ $unit->name }} </td>
+                                            @if($unit->status)
+                                            <td>Active</td>
+                                                @else
+                                                <td>Inactive</td>
+                                            @endif
+                                            <td>
+                                                <a class="btn btn-primary btn-sm" href="{{route('unit.edit', $unit->id)}}"><i class="fa fa-edit" ></i></a>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $unit->id }}', '{{ $unit->name }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                             </table>

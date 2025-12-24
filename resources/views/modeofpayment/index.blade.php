@@ -18,7 +18,7 @@
             </ul>
         </div>
         <div class="">
-            <a class="btn btn-primary" href="{{route('modeofpayment.create')}}"><i class="fa fa-plus"></i> Mode of Payment</a>
+            <a class="btn btn-sm btn-primary" href="{{route('modeofpayment.create')}}"><i class="fa fa-plus"></i> Mode of Payment</a>
         </div>
         @if(session()->has('message'))
             <div class="alert alert-success mt-2">
@@ -36,7 +36,7 @@
                         <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Mode of Payment Records</h3>
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered" id="modeofpaymentTable">
-                                <thead class="thead-dard">
+                                <thead class="thead-dark medium">
                                     <tr>
                                         <th> ID </th>
                                         <th> Name </th>
@@ -47,24 +47,24 @@
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                @foreach( $modeofpayments as $modeofpayment)
-                                    <tr id="row-{{ $modeofpayment->id }}">
-                                        <td>{{ $modeofpayment->id }} </td>
-                                        <td>{{ $modeofpayment->name }} </td>
-                                        <td>{{ $modeofpayment->description }} </td>
-                                        <td>{{ $modeofpayment->term }} </td>
-                                        <td>{{ $modeofpayment->created_at }} </td>
-                                        <td>{{ $modeofpayment->updated_at }} </td>
-                                        <td>
-                                            <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
-                                            <button class="btn btn-danger btn-sm" type="button" 
-                                                    onclick="deleteTag('{{ $modeofpayment->id }}', '{{ $modeofpayment->name }}','{{ $modeofpayment->term }}')">
-                                                <i class="fa fa-trash"></i>
-                                            </button>   
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                <tbody class="medium">
+                                    @foreach( $modeofpayments as $modeofpayment)
+                                        <tr id="row-{{ $modeofpayment->id }}">
+                                            <td>{{ $modeofpayment->id }} </td>
+                                            <td>{{ $modeofpayment->name }} </td>
+                                            <td>{{ $modeofpayment->description }} </td>
+                                            <td>{{ $modeofpayment->term }} </td>
+                                            <td>{{ $modeofpayment->created_at }} </td>
+                                            <td>{{ $modeofpayment->updated_at }} </td>
+                                            <td>
+                                                <a class="btn btn-primary btn-sm" href="{{route('modeofpayment.edit', $modeofpayment->id)}}"><i class="fa fa-edit" ></i></a>
+                                                <button class="btn btn-danger btn-sm" type="button" 
+                                                        onclick="deleteTag('{{ $modeofpayment->id }}', '{{ $modeofpayment->name }}','{{ $modeofpayment->term }}')">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>   
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
