@@ -21,10 +21,10 @@
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <a class="btn btn-primary" href="{{route('product.create')}}">
+            <a class="btn btn-sm btn-primary" href="{{route('product.create')}}">
                 <i class="fa fa-plus"></i> Add Product
             </a>
-            <a href="{{ route('export.products') }}" class="btn btn-success">
+            <a href="{{ route('export.products') }}" class="btn btn-sm btn-success">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
@@ -51,9 +51,18 @@
                     @endif -->
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
+                        <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
+                            <div class="mr-2">
+                                <label for="filterSupplier" class="mr-1">Filter by Supplier:</label>
+                                <select id="filterSupplier" class="form-control form-control-sm d-inline-block w-auto">
+                                    <option value="">All Suppliers</option>
+                                    <!-- Options will be populated by JS -->
+                                </select>
+                            </div>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table table-hover table-bordered" id="sampleTable">
-                                <thead class="thead-dark">
+                            <table class="table table-hover table-bordered" id="productTable">
+                                <thead class="thead-dark medium">
                                     <tr>
                                         <th>Product Code</th>
                                         <th>Product</th>
@@ -67,7 +76,7 @@
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="medium">
                                     @foreach($additional as $add)
                                         <tr id="row-{{ $add->product->id }}">
                                             <td><span class="badge badge-info">{{ $add->product->product_code }}</span></td>
@@ -144,7 +153,29 @@
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
-        $('#sampleTable').DataTable();
+        var invoiceTable = $('#productTable').DataTable({
+            "order": [[0, "desc"]],
+            "pageLength": 10,
+            "responsive": true
+        });
+
+        // Populate Supplier dropdown from table data
+        var supplierColumnIndex = 6; // Supplier column
+        var suppliers = invoiceTable.column(supplierColumnIndex).data().unique().sort();
+
+        suppliers.each(function(d) {
+            $('#filterSupplier').append('<option value="' + d + '">' + d + '</option>');
+        });
+
+        // Filter table based on selection
+        $('#filterSupplier').on('change', function() {
+            var val = $(this).val();
+            invoiceTable.column(supplierColumnIndex).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+        $('#filterSupplier').on('change', function() {
+            var supplierId = $(this).val();
+            table.column(0).search(supplierId).draw();
+        });
 
         function deleteTag(productId, productName) {
             Swal.fire({

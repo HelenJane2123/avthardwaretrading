@@ -140,9 +140,9 @@
                                                     @endif
                                                 @endif
 
-                                                <button class="btn btn-danger btn-sm p-1" onclick="deleteTag({{ $invoice->id }})">
+                                                <!-- <button class="btn btn-danger btn-sm p-1" onclick="deleteTag({{ $invoice->id }})">
                                                     <i class="fa fa-trash fa-xs"></i>
-                                                </button>
+                                                </button> -->
                                             </td>
                                         </tr>
                                     @endforeach
@@ -204,45 +204,70 @@
             $('.invoice-checkbox').prop('checked', this.checked);
         });
         //bulk approval
-        $('#bulkApprove').on('click', function() {
-            var selectedIds = $('.invoice-checkbox:checked').map(function() {
+        $('#bulkApprove').on('click', function () {
+            var selectedIds = $('.invoice-checkbox:checked').map(function () {
                 return $(this).val();
             }).get();
 
-            if(selectedIds.length === 0) {
-                Swal.fire('No invoices selected', 'Please select invoices to approve.', 'warning');
+            if (selectedIds.length === 0) {
+                swal('No invoices selected', 'Please select invoices to approve.', 'warning');
                 return;
             }
 
-            Swal.fire({
+            swal({
                 title: 'Confirm Bulk Approval',
                 text: 'Only Admin can approve invoices.',
                 input: 'password',
                 inputPlaceholder: 'Enter Admin password',
                 showCancelButton: true,
                 confirmButtonText: 'Approve',
-                preConfirm: (password) => {
-                    return $.ajax({
-                        url: '{{ route("invoice.bulkApprove") }}',
-                        method: 'PUT',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            ids: selectedIds,
-                            password: password
+                confirmButtonColor: '#28a745',
+                cancelButtonText: 'Cancel',
+                preConfirm: function (password) {
+                    return new Promise(function (resolve, reject) {
+                        if (!password || password.trim() === '') {
+                            reject('Please enter your password');
+                            return;
                         }
-                    }).then(response => {
-                        if(response.error) {
-                            Swal.showValidationMessage(response.error);
-                        } else {
-                            return response;
-                        }
-                    }).catch(() => Swal.showValidationMessage('Request failed'));
+
+                        const token = $('meta[name="csrf-token"]').attr('content');
+
+                        $.ajax({
+                            url: "{{ route('invoice.bulkApprove') }}",
+                            type: 'POST', // POST + _method: PUT
+                            data: {
+                                _method: 'PUT',
+                                _token: token,
+                                ids: selectedIds,
+                                password: password.trim()
+                            },
+                            success: function (response) {
+                                if (response.error) {
+                                    reject(response.error);
+                                } else {
+                                    resolve(response);
+                                }
+                            },
+                            error: function (xhr) {
+                                console.log(xhr);
+                                reject('An error occurred during approval.');
+                            }
+                        });
+                    });
                 }
-            }).then((result) => {
-                if(result.isConfirmed) {
-                    Swal.fire('Approved!', 'Selected invoices have been approved.', 'success')
-                        .then(() => location.reload());
+            }).then(function (result) {
+                if (result && result.value && result.value.success) {
+                    swal({
+                        type: 'success',
+                        title: 'Invoices have been approved!',
+                        text: result.value.success,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
                 }
+            }).catch(function (error) {
+                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
             });
         });
         function deleteTag(id) {
@@ -265,25 +290,17 @@
             })
         }
 
-       // Show modal with invoice details safely
+        // Show modal with invoice details safely
         $(document).on('click', '.view-invoice', function () {
             const id = $(this).data('id');
             const $modal = $('#invoiceModal');
             const $details = $('#invoiceDetails');
 
-            // First, clear old data
             $details.html('<p class="text-muted">Loading details...</p>');
-
-             // Force remove if Bootstrap left it behind
-            $modal.removeAttr('aria-hidden');
-
-            // Show modal first (Bootstrap handles aria attributes properly)
             $modal.modal('show');
 
-            // Then load the content dynamically
-            $.get(`{{ url('invoice') }}/${id}`, function (data) {
-                // Insert the new HTML *after* the modal is visible
-                $details.html(data);
+            $.get(`/invoice/${id}`, function (data) {
+                $details.html(data); // inject the modal HTML
             });
         });
 

@@ -51,14 +51,16 @@ Route::post('/user/{id}/reset-password', [HomeController::class, 'resetPassword'
 Route::post('/signout', [LoginController::class, 'logout'])
     ->middleware('web')
     ->name('signout');
-    
+
 Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
 Route::resource('unit', UnitController::class);
 Route::resource('supplier', SupplierController::class);
 Route::resource('customer', CustomerController::class);
 Route::resource('product', ProductController::class);
-Route::resource('invoice', InvoiceController::class);
+Route::resource('invoice', InvoiceController::class)->except([
+    'update', 'show', 'destroy'
+]);
 Route::resource('purchase', PurchaseController::class);
 Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
@@ -100,13 +102,17 @@ Route::put('/purchase/{id}/approve', [PurchaseController::class, 'approve'])->na
 Route::put('/purchase/{id}/complete', [PurchaseController::class, 'completePurchaseOrder'])
     ->name('purchase.complete');
 
-//get invoice details
+//get invoice details and perform actions
+Route::put('/invoice/bulkapprove', [InvoiceController::class, 'bulkApprove'])->name('invoice.bulkApprove');
+Route::put('/invoice/{id}/approve', [InvoiceController::class, 'approve'])->name('invoice.approve');
 Route::get('/invoices/{id}/details', [InvoiceController::class, 'details'])->name('invoice.details');
 Route::patch('/invoice/{id}/status', [InvoiceController::class, 'updateStatus'])->name('invoice.updateStatus');
 Route::get('/invoice/{id}/print', [InvoiceController::class, 'print'])->name('invoice.print');
-Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
-Route::put('/invoice/{id}/approve', [InvoiceController::class, 'approve'])->name('invoice.approve');
-Route::put('/invoice/bulk-approve', [InvoiceController::class, 'bulkApprove'])->name('invoice.bulkApprove');
+Route::get('/invoice/{id}/collections', [CollectionController::class, 'getInvoiceCollections']);
+Route::get('/invoice/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
+Route::put('/invoice/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
+Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
+
 
 //collection details
 Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])
@@ -129,7 +135,6 @@ Route::get('/export/collection', [ExportController::class, 'exportCollections'])
 Route::get('/purchase/{id}/print', [PurchaseController::class, 'print'])->name('purchase.print');
 Route::get('purchase/{purchase}/payment-info', [PurchasePaymentController::class, 'paymentInfo'])->name('purchase.payment.info');
 Route::post('purchase/{purchase}/payment-store', [PurchasePaymentController::class, 'store'])->name('purchase.payment.store');
-Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
 
 Route::get('/search-pdc', [PDCCollectionController::class, 'searchPdc'])->name('pdc.search');
 

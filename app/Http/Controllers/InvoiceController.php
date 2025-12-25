@@ -20,7 +20,7 @@ use App\InvoiceSalesDiscount;
 use App\Salesman;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Hash;
 
 class InvoiceController extends Controller
 {
@@ -35,7 +35,6 @@ class InvoiceController extends Controller
     {
         $this->middleware('auth');
     }
-
 
     public function index()
     {
@@ -358,7 +357,8 @@ class InvoiceController extends Controller
                 'grand_total'    => $request->grand_total ?? 0,
                 'salesman'       => $request->salesman,
                 'remarks'        => $request->remarks,
-                'updated_by'     => auth()->id()
+                'updated_by'     => auth()->id(),
+                'updated_at'     => now()
             ]);
 
             // Insert new invoice items
@@ -453,15 +453,49 @@ class InvoiceController extends Controller
             'invoice_status' => 'required|in:pending,approved,canceled',
         ]);
 
-        $invoice = Invoice::findOrFail($id);
-        $invoice->invoice_status = $request->invoice_status; 
-        $invoice->save();
+        $invoice = Invoice::with('items.product')->findOrFail($id);
+
+        $oldStatus = $invoice->invoice_status;
+        $newStatus = $request->invoice_status;
+
+        DB::transaction(function () use ($invoice, $oldStatus, $newStatus) {
+            // If moving from approved → pending or canceled, restore stock
+            if ($oldStatus === 'approved' && in_array($newStatus, ['pending', 'canceled'])) {
+                foreach ($invoice->items as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $product->remaining_stock += $item->qty;
+                        $product->save();
+                    }
+                }
+            }
+
+            // If moving from pending → approved, deduct stock
+            if ($oldStatus !== 'approved' && $newStatus === 'approved') {
+                foreach ($invoice->items as $item) {
+                    $product = $item->product;
+                    if ($product) {
+                        $newStock = $product->remaining_stock - $item->qty;
+                        if ($newStock < 0) {
+                            throw new \Exception("Insufficient stock for {$product->product_name}");
+                        }
+                        $product->remaining_stock = $newStock;
+                        $product->save();
+                    }
+                }
+            }
+
+            // Update invoice status
+            $invoice->invoice_status = $newStatus;
+            $invoice->save();
+        });
 
         return response()->json([
             'success' => true,
             'invoice' => $invoice
         ]);
     }
+
 
     public function print($id)
     {
@@ -568,6 +602,8 @@ class InvoiceController extends Controller
             // Approve invoice
             $invoice->invoice_status = 'approved';
             $invoice->discount_approved = 1;
+            $invoice->approved_by = $user->id;
+            $invoice->approved_at = now();
             $invoice->save();
 
             DB::commit();
@@ -585,22 +621,71 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'ids' => 'required|array',
-            'password' => 'required'
+            'ids.*' => 'exists:invoices,id',
+            'password' => 'required|string',
         ]);
 
-        $user = auth()->user();
-
-        if(!Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'Invalid password.'], 422);
+        $user = User::where('user_role', 'super_admin')->first();
+        if (!$user) {
+            return response()->json(['error' => 'Super Admin account not found.'], 404);
         }
 
-        Invoice::whereIn('id', $request->ids)
-            ->where('invoice_status', 'pending')
-            ->update(['invoice_status' => 'approved', 'approved_by' => $user->id, 'approved_at' => now()]);
+        if (!\Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Incorrect password.'], 403);
+        }
 
-        return response()->json(['success' => 'Invoices approved successfully.']);
+        $approvedInvoices = 0;
+
+        DB::beginTransaction();
+        try {
+            $invoices = Invoice::with('items.product')
+                ->whereIn('id', $request->ids)
+                ->where('invoice_status', 'pending')
+                ->get();
+
+            foreach ($invoices as $invoice) {
+                foreach ($invoice->items as $item) {
+                    $product = $item->product;
+                    if (!$product) continue;
+
+                    $newStock = $product->remaining_stock - $item->qty;
+
+                    if ($newStock < 0) {
+                        DB::rollBack();
+                        return response()->json([
+                            'error' => "Insufficient stock for {$product->product_name} in invoice #{$invoice->id}."
+                        ], 400);
+                    }
+
+                    $product->remaining_stock = $newStock;
+                    $product->save();
+
+                    // Update product status based on threshold
+                    $this->updateProductStatus($product);
+                }
+
+                // Approve invoice
+                $invoice->invoice_status = 'approved';
+                $invoice->discount_approved = 1;
+                $invoice->approved_by = $user->id;
+                $invoice->approved_at = now();
+                $invoice->save();
+
+                $approvedInvoices++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => "{$approvedInvoices} invoice(s) approved and stock updated successfully."
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Bulk approval failed: '.$e->getMessage());
+            return response()->json(['error' => 'Bulk approval failed.'], 500);
+        }
     }
-
 
      /**
      * Helper function to update product stock status

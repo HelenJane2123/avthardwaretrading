@@ -80,7 +80,7 @@
                                         <i class="fa fa-image fa-5x text-muted mb-2"></i>
                                         <div class="form-group mt-2">
                                             <label>Change Image</label>
-                                            <input type="file" name="image" class="form-control @error('image') is-invalid @enderror">
+                                            <input type="file" name="image" class="form-control form-control-sm @error('image') is-invalid @enderror">
                                         </div>
                                         <!-- <input name="image" class="form-control @error('image') is-invalid @enderror" type="file"> -->
                                         @error('image')
@@ -331,8 +331,8 @@
                                 </div>
                             </div> -->
                             <div class="form-group col-md-4 mt-4 align-self-end">
-                                <button class="btn btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
-                                <a href="{{ route('product.index') }}" class="btn btn-secondary px-4">
+                                <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
+                                <a href="{{ route('product.index') }}" class="btn btn-sm btn-secondary px-4">
                                     <i class="fa fa-times"></i> Cancel
                                 </a>
                             </div>

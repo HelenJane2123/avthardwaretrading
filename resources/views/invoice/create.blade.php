@@ -219,8 +219,8 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="number" name="price[]" class="form-control form-control-sm price">
-                                            <div class="text-muted small show-base-price mt-1"></div>
+                                            <input type="text" name="price[]" class="form-control form-control-sm price">
+                                            <!-- <div class="text-muted small show-base-price mt-1"></div> -->
                                         </td>
                                         <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
                                         <td class="text-center">
@@ -592,8 +592,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <input type="number" name="price[]" class="form-control form-control-sm price">
-                                        <div class="text-muted small show-base-price mt-1"></div>
+                                        <input type="text" name="price[]" class="form-control form-control-sm price">
                                     </td>
                                     <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
                                     <td class="text-center">
