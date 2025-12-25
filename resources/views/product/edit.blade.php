@@ -43,8 +43,8 @@
 
                         <!-- Basic Info -->
                         <div class="card mb-4 shadow-sm">
-                            <div class="card-header bg-dark text-white">
-                                <h5 class="mb-0">Basic Information</h5>
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">Basic Information</h6>
                             </div>
                             <div class="card-body row">
                                 <!-- LEFT SIDE IMAGE -->
@@ -136,8 +136,8 @@
 
                         <!-- Stock Section -->
                         <div class="card mb-4 shadow-sm">
-                            <div class="card-header bg-dark text-white">
-                                <h5 class="mb-0">Stock Information</h5>
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">Stock Information</h6>
                             </div>
                             <div class="card-body row g-3">
                                 <div class="col-md-2">
@@ -166,39 +166,63 @@
                         </div>
                          <!-- Supplier Section -->
                         <div class="card shadow-sm">
-                            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Supplier Details</h5>
-                                <button type="button" class="btn btn-sm btn-success add_button">
-                                    <i class="fa fa-plus"></i> Add Supplier
-                                </button>
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
+                                <small class="text-light">Selected supplier for the item will display the item's base price and net cost.</small>
                             </div>
+                            <!-- <button type="button" class="btn btn-sm btn-success add_button">
+                                <i class="fa fa-plus"></i> Add Supplier
+                            </button> -->
                             <div class="card-body">
                                 <div class="field_wrapper">
-                                    @if ($product->productSuppliers && count($product->productSuppliers) > 0)
-                                        @foreach ($product->productSuppliers as $supplierItem)
-                                            <div class="row mb-2">
-                                                <div class="col-md-5">
-                                                    <label class="control-label">Supplier</label>
-                                                    <input type="text" class="form-control form-control-sm" value="{{ $supplierItem->supplier->name ?? '' }}" readonly>
-                                                    <input type="hidden" name="supplier_id[]" value="{{ $supplierItem->supplier_id }}">
-                                                </div>
-                                                <div class="col-md-5">
-                                                    <label class="control-label">Base Price (Unit Cost)</label>
-                                                    <input type="number" name="supplier_price[]" class="form-control form-control-sm" 
-                                                        placeholder="Purchase Price" value="{{ $supplierItem->price }}" required>
-                                                </div>
-                                                <div class="col-md-2 d-flex align-items-center">
-                                                    <button type="button" class="btn btn-danger remove-supplier">Delete</button>
-                                                </div>
+                                    @foreach ($product->productSuppliers as $ps)
+                                        @php
+                                            $si = $ps->supplierItem;
+                                        @endphp
+
+                                        <div class="row g-3 align-items-start">
+
+                                            <div class="col-md-6">
+                                                <label>Supplier</label>
+                                                <input type="text" class="form-control form-control-sm"
+                                                    value="{{ $ps->supplier->name }}" readonly>
                                             </div>
-                                        @endforeach
-                                    @endif
+
+                                            <div class="col-md-3">
+                                                <label>Base Price</label>
+                                                <input type="number" class="form-control form-control-sm"
+                                                    value="{{ $si->item_price ?? '' }}" readonly>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <label>Net Cost</label>
+                                                <input type="number" class="form-control form-control-sm"
+                                                    value="{{ $si->net_price ?? '' }}" readonly>
+
+                                                @if($si && ($si->discount_less_add || $si->discount_1 || $si->discount_2 || $si->discount_3))
+                                                    <div class="mt-1 small fw-semibold">
+                                                        Discounts:
+                                                        <span class="text-danger fw-bold">
+                                                            {{ strtoupper($si->discount_less_add) }}
+                                                        </span>
+                                                        @foreach([$si->discount_1, $si->discount_2, $si->discount_3] as $d)
+                                                            @if($d)
+                                                                <span class="text-primary">{{ $d }}%</span>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
                         <div class="card mb-4 shadow-sm">
-                            <div class="card-header bg-dark text-white">
-                                <h5 class="mb-0">Discount/s</h5>
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Discounts</h6>
+                                <small class="text-light">These discounts will be applied to the invoice creation.</small>
                             </div>
                             <div class="card-body row g-3">
                                 <div class="form-group col-md-2">
@@ -619,6 +643,7 @@
                         $("#supplier_id").val(supplier.id);
                         $("#supplier_name").val(supplier.name);
                         $("#supplier_price").val(supplier.item_price);
+                        $("#net_cost").val(supplier.net_price);
 
                         console.log("supplier name",supplier.name);
                         // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
@@ -628,6 +653,14 @@
                             console.log("updated product name",updatedProductText)
                             $("#product_name").val(updatedProductText);
                         }
+
+                        const discounts = [];
+                        if (supplier.discount_less_add) discounts.push(supplier.discount_less_add);
+                        if (supplier.discount_1) discounts.push(supplier.discount_1 + '% ' );
+                        if (supplier.discount_2) discounts.push(supplier.discount_2 + '% ' );
+                        if (supplier.discount_3) discounts.push(supplier.discount_3 + '% ' );
+
+                        updateDiscountDescription(discounts);
                     } else {
                         alert("No suppliers found for this product");
                     }
@@ -641,6 +674,25 @@
             $('body').removeClass('modal-open');
         });
 
+        function updateDiscountDescription(discounts) {
+            const desc = document.getElementById('discountDescription');
+            if (discounts && discounts.length > 0) {
+                // Highlight "LESS" or "ADD" in uppercase and discount percentages
+                const formatted = discounts.map(d => {
+                    if (d.toLowerCase().startsWith('less')) {
+                        return '<span style="text-transform:uppercase; color:#d9534f;">' + d + '</span>';
+                    } else if (d.toLowerCase().startsWith('add')) {
+                        return '<span style="text-transform:uppercase; color:#5cb85c;">' + d + '</span>';
+                    } else {
+                        return '<span style="color:#0275d8;">' + d + '</span>';
+                    }
+                }).join(', ');
+                desc.innerHTML = 'Discounts: ' + formatted;
+                desc.style.display = 'block';
+            } else {
+                desc.style.display = 'none';
+            }
+        }
         const adjustmentTable = $('#adjustmentTable').DataTable();
 
         // Reset form when modal opens

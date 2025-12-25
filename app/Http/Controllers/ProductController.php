@@ -187,12 +187,24 @@ class ProductController extends Controller
             'adjustments'
         ])->findOrFail($id);
 
+        foreach ($product->productSuppliers as $ps) {
+            $ps->supplierItem = SupplierItem::where('supplier_id', $ps->supplier_id)
+                ->where('item_code', $product->supplier_product_code)
+                ->first();
+        }
+
         $categories = Category::all();
         $units = Unit::all();
         $suppliers = Supplier::all();
         $taxes = Tax::all();
 
-        return view('product.edit', compact('product', 'categories', 'units', 'suppliers', 'taxes'));
+        return view('product.edit', compact(
+            'product',
+            'categories',
+            'units',
+            'suppliers',
+            'taxes'
+        ));
     }
 
     public function getProductDetails(Request $request)
@@ -398,7 +410,12 @@ class ProductController extends Controller
             ->get([
                 'suppliers.id',
                 'suppliers.name',
-                'supplier_items.item_price'
+                'supplier_items.item_price',
+                'supplier_items.net_price',
+                'supplier_items.discount_less_add',
+                'supplier_items.discount_1',
+                'supplier_items.discount_2',
+                'supplier_items.discount_3'
             ]);
 
         return response()->json($suppliers);

@@ -214,23 +214,40 @@
                             <div class="card mt-4">
                                 <div class="card-header bg-secondary text-white">
                                     <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
+                                    <small class="text-light">Selected supplier for the item will display the item's base price and net cost.</small>
                                 </div>
                                 <div class="card-body">
-                                    <div id="example-2" class="content">
-                                        <div class="group row g-3 align-items-end">
-                                            <div class="col-md-6">
-                                                <label for="supplier_name" class="form-label">Supplier</label>
-                                                <input type="text" id="supplier_name" name="supplier_name" 
-                                                    class="form-control form-control-sm" autocomplete="off">
-                                                <div id="supplierSuggestions" class="list-group shadow-sm"></div>
-                                                <input type="hidden" id="supplier_id" name="supplier_id[]">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="supplier_price" class="form-label">Base Price (Unit Cost)</label>
-                                                <input type="number" id="supplier_price" name="supplier_price[]" 
-                                                    class="form-control form-control-sm" placeholder="Base Price">
+                                    <div class="row g-3 align-items-start">
+                                        <!-- Supplier -->
+                                        <div class="col-md-6">
+                                            <label for="supplier_name" class="form-label">Supplier</label>
+                                            <input type="text" id="supplier_name" name="supplier_name"
+                                                class="form-control form-control-sm" autocomplete="off">
+                                            <div id="supplierSuggestions" class="list-group shadow-sm"></div>
+                                            <input type="hidden" id="supplier_id" name="supplier_id[]">
+                                        </div>
+
+                                        <!-- Base Price -->
+                                        <div class="col-md-3">
+                                            <label for="supplier_price" class="form-label">Base Price (Unit Cost)</label>
+                                            <input type="number" id="supplier_price" name="supplier_price[]"
+                                                class="form-control form-control-sm" readonly>
+                                        </div>
+
+                                        <!-- Net Cost + Discount -->
+                                        <div class="col-md-3">
+                                            <label for="net_cost" class="form-label">Net Cost</label>
+                                            <input type="number" id="net_cost" name="net_price[]"
+                                                class="form-control form-control-sm" readonly>
+
+                                            <!-- Discount description -->
+                                            <div id="discountDescription"
+                                                class="mt-1 small fw-semibold"
+                                                style="display:none;">
+                                                <!-- Injected dynamically -->
                                             </div>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -238,6 +255,7 @@
                             <div class="card mt-4">
                                 <div class="card-header bg-secondary text-white">
                                     <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Discounts</h6>
+                                    <small class="text-light">These discounts will be applied to the invoice creation.</small>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -354,16 +372,16 @@
                 </div>
                 <div class="modal-body">
                     <table class="table table-bordered table-hover" id="productTable">
-                    <thead>
-                        <tr>
-                        <th>Item Code</th>
-                        <th>Description</th>
-                        <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Product rows will be loaded here via AJAX -->
-                    </tbody>
+                        <thead>
+                            <tr>
+                            <th>Item Code</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Product rows will be loaded here via AJAX -->
+                        </tbody>
                     </table>
                 </div>
                 </div>
@@ -496,6 +514,7 @@
                             $("#supplier_name").val(supplier.name);
                             $("#supplier_price").val(supplier.item_price);
                             $("#sales_price").val(supplier.item_price);
+                            $("#net_cost").val(supplier.net_price);
 
                             console.log("supplier name",supplier.name);
                             // Change PL → AV in product name only if supplier is 1st Tool Trading Inc
@@ -505,6 +524,14 @@
                                 console.log("updated product name",updatedProductText)
                                 $("#product_name").val(updatedProductText);
                             }
+
+                            const discounts = [];
+                            if (supplier.discount_less_add) discounts.push(supplier.discount_less_add);
+                            if (supplier.discount_1) discounts.push(supplier.discount_1 + '% ' );
+                            if (supplier.discount_2) discounts.push(supplier.discount_2 + '% ' );
+                            if (supplier.discount_3) discounts.push(supplier.discount_3 + '% ' );
+
+                            updateDiscountDescription(discounts);
                         } else {
                             alert("No suppliers found for this product");
                         }
@@ -562,6 +589,26 @@
                     $("#productSuggestions").fadeOut(150);
                 }
             });
+
+            function updateDiscountDescription(discounts) {
+                const desc = document.getElementById('discountDescription');
+                if (discounts && discounts.length > 0) {
+                    // Highlight "LESS" or "ADD" in uppercase and discount percentages
+                    const formatted = discounts.map(d => {
+                        if (d.toLowerCase().startsWith('less')) {
+                            return '<span style="text-transform:uppercase; color:#d9534f;">' + d + '</span>';
+                        } else if (d.toLowerCase().startsWith('add')) {
+                            return '<span style="text-transform:uppercase; color:#5cb85c;">' + d + '</span>';
+                        } else {
+                            return '<span style="color:#0275d8;">' + d + '</span>';
+                        }
+                    }).join(', ');
+                    desc.innerHTML = 'Discounts: ' + formatted;
+                    desc.style.display = 'block';
+                } else {
+                    desc.style.display = 'none';
+                }
+            }
 
             //--- start this should be in invoice
             // Function to calculate selling price after discounts 

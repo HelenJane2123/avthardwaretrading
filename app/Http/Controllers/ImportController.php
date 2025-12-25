@@ -70,16 +70,17 @@ class ImportController extends Controller
                     'category_id'      => trim($row['C']),
                     'item_description' => trim($row['D']),
                     'item_price'       => trim($row['E']),
-                    'item_amount'      => trim($row['F']),
-                    'unit_id'          => trim($row['G']),
-                    'item_qty'         => trim($row['H']),
-                    'discount_less_add'=> trim($row['I']),
-                    'discount_1'       => trim($row['J']),
-                    'discount_2'       => trim($row['K']),
-                    'discount_3'       => trim($row['L']),
-                    'item_image'       => trim($row['M']),
-                    'volume_less'      => trim($row['N']),
-                    'regular_less'     => trim($row['O']),
+                    'net_price'        => trim($row['F']),
+                    'item_amount'      => trim($row['G']),
+                    'unit_id'          => trim($row['H']),
+                    'item_qty'         => trim($row['I']),
+                    'discount_less_add'=> trim($row['J']),
+                    'discount_1'       => trim($row['K']),
+                    'discount_2'       => trim($row['L']),
+                    'discount_3'       => trim($row['M']),
+                    'item_image'       => trim($row['N']),
+                    'volume_less'      => trim($row['O']),
+                    'regular_less'     => trim($row['P']),
                 ]);
             }
             return back()->with('message', 'Suppliers and Supplier Items imported successfully!');
@@ -98,32 +99,30 @@ class ImportController extends Controller
                 'file' => 'required|mimes:xlsx,xls'
             ]);
 
-            $file = $request->file('file');
-            $spreadsheet = IOFactory::load($file->getRealPath());
+            $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
 
-            // =============================
-            // SHEET 1: PRODUCTS
-            // =============================
             $productSheet = $spreadsheet->getSheetByName('Products');
-            $productData = $productSheet->toArray(null, true, true, true);
+            if (!$productSheet) {
+                return back()->with('error', 'Products sheet not found.');
+            }
 
-            foreach ($productData as $index => $row) {
-                if ($index == 1) continue; // skip header row
+            $rows = $productSheet->toArray(null, true, true, true);
 
-                $productCode = trim($row['B']); // column B = product_code
-                $supplierProductCode = trim($row['C']); // column C = supplier_product_code
+            foreach ($rows as $index => $row) {
+                if ($index === 1) continue;
 
-                if (empty($productCode) || empty($supplierProductCode)) continue;
+                $productCode = trim($row['B']);
+                $supplierProductCode = trim($row['C']);
 
-                // Skip existing product_code
-                $existing = Product::where('product_code', $productCode)->first();
-                if ($existing) continue;
+                if (!$productCode || !$supplierProductCode) continue;
 
-                // Get supplier price from supplier item table
+                if (Product::where('product_code', $productCode)->exists()) continue;
+
                 $supplierItem = SupplierItem::where('item_code', $supplierProductCode)->first();
-                $supplierPrice = $supplierItem ? $supplierItem->item_price : 0;
+                if (!$supplierItem) continue;
 
-                // Create product
+                $discountType = strtolower(trim($row['M']));
+
                 $product = Product::create([
                     'product_code'          => $productCode,
                     'supplier_product_code' => $supplierProductCode,
@@ -136,7 +135,7 @@ class ImportController extends Controller
                     'unit_id'               => $row['J'],
                     'quantity'              => $row['K'],
                     'remaining_stock'       => $row['L'],
-                    'discount_type'         => $row['M'],
+                    'discount_type'         => in_array($discountType, ['less', 'add']) ? $discountType : null,
                     'discount_1'            => $row['N'],
                     'discount_2'            => $row['O'],
                     'discount_3'            => $row['P'],
@@ -145,30 +144,26 @@ class ImportController extends Controller
                     'status'                => $row['S'] ?? 'In Stock',
                     'volume_less'           => $row['T'],
                     'regular_less'          => $row['U'],
-                    'created_at'            => Carbon::now(),
-                    'updated_at'            => Carbon::now(),
                 ]);
 
-                // Save supplier price automatically
-                if ($supplierItem) {
-                    ProductSupplier::create([
+                ProductSupplier::updateOrCreate(
+                    [
                         'product_id'  => $product->id,
                         'supplier_id' => $supplierItem->supplier_id,
-                        'price'       => $supplierPrice,
-                        'created_at'  => Carbon::now(),
-                        'updated_at'  => Carbon::now(),
-                    ]);
-                }
+                    ],
+                    [
+                        'price'     => $supplierItem->item_price,
+                        'net_price' => $supplierItem->net_price,
+                    ]
+                );
             }
 
-            return back()->with('message', 'Products imported successfully with supplier prices!');
-        }
-        catch (\Exception $e) {
-            \Log::error('Import failed: '.$e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-           return redirect()->back()->with('error', 'An error has occurred.');
+            return back()->with('message', 'Products imported successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Import failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'An error has occurred.');
         }
     }
+
 
 }

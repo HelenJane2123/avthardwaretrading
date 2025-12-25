@@ -15,6 +15,7 @@ class SupplierItem extends Model
         'category_id',
         'item_description',
         'item_price',
+        'net_price',
         'item_amount',
         'unit_id',
         'item_qty',
