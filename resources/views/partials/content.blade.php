@@ -164,8 +164,6 @@
 
   {{-- Tables and Lists --}}
   <div class="row">
-    
-    
       <div class="col-lg-6 fade-in">
           <div class="section-container">
             <div class="section-header"><i class="fa fa-th"></i> Highest Selling Products</div>
@@ -286,7 +284,6 @@
       </div>
     </div>
   </div>
-
   <div class="row">
     <div class="col-md-6">
       <div class="tile">
@@ -298,6 +295,14 @@
       <div class="tile">
         <h3 class="tile-title">Weekly Sales Comparison</h3>
         <div id="weekSalesChart" style="width: 100%; height: 360px;"></div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="tile">
+        <h3 class="tile-title">Monthly Estimated Income</h3>
+        <div id="estimatedIncomeChart" style="width: 100%; height: 400px;"></div>
       </div>
     </div>
   </div>
@@ -355,4 +360,47 @@ google.charts.setOnLoadCallback(function() {
   new google.visualization.BarChart(document.getElementById('weekSalesChart'))
     .draw(data, { chartArea:{width:'50%'}, hAxis:{minValue:0} });
 });
+
+google.charts.load('current', {'packages':['corechart']});
+
+google.charts.setOnLoadCallback(drawEstimatedIncomeChart);
+
+function drawEstimatedIncomeChart() {
+
+    var incomeData = @json($monthlyEstimatedIncome);
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Month');
+    data.addColumn('number', 'Estimated Income');
+
+    incomeData.forEach(function(row) {
+        data.addRow([
+            row.month,
+            parseFloat(row.estimated_income)
+        ]);
+    });
+
+    var options = {
+        legend: { position: 'bottom' },
+        curveType: 'function',
+        vAxis: {
+            title: 'Estimated Income (₱)',
+            format: '₱#,##0.00'
+        },
+        chartArea: {
+            left: 60,
+            right: 30,
+            top: 30,
+            bottom: 50
+        },
+        series: {
+            0: { color: '#17a2b8' } // teal
+        }
+    };
+
+    var chart = new google.visualization.LineChart(
+        document.getElementById('estimatedIncomeChart')
+    );
+    chart.draw(data, options);
+}
 </script>

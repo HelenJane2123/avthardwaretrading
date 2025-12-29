@@ -127,6 +127,20 @@ class HomeController extends Controller
             ->take(5)
             ->get();
 
+        // =============================
+        // DATE RANGE (CURRENT YEAR)
+        // =============================
+        $startDate = Carbon::now()->startOfYear()->toDateString();
+        $endDate   = Carbon::now()->endOfYear()->toDateString();
+
+        // =============================
+        // CALL STORED PROCEDURE
+        // =============================
+        $monthlyEstimatedIncome = DB::select(
+            'CALL sp_monthly_estimated_income(?, ?)',
+            [$startDate, $endDate]
+        );
+
         return view('home', [
             'monthlySales'     => $formattedMonthlySales,
             'formattedTopSales'=> $formattedTopSales,
@@ -144,7 +158,8 @@ class HomeController extends Controller
             'highestSelling'   => $highestSelling,
             'latestSales'      => $latestSales,
             'recentProducts'   => $recentProducts,
-            'recentCollections' => $recentCollections
+            'recentCollections' => $recentCollections,
+            'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
         ]);
     }
 

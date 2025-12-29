@@ -55,8 +55,15 @@
                                     <!-- As of Date -->
                                     <div class="col-md-3">
                                         <label for="as_of_date" class="form-label">As of Date</label>
-                                        <input type="date" name="as_of_date" class="form-control"
-                                            value="{{ request('as_of_date', now()->toDateString()) }}">
+                                        <input
+                                            type="text"
+                                            name="as_of_date"
+                                            id="as_of_date"
+                                            class="form-control"
+                                            value="{{ request('as_of_date')
+                                                ? \Carbon\Carbon::parse(request('as_of_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
                                     </div>
 
                                     <!-- Buttons -->
@@ -107,12 +114,12 @@
                                                     </span>
                                                 </td>
                                                 <td>{{ $row->invoice_number }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($row->invoice_date)->format('Y-m-d') }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($row->due_date)->format('Y-m-d') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($row->invoice_date)->format('F d, Y') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($row->due_date)->format('F d, Y') }}</td>
                                                 <td class="text-end">{{ number_format($row->invoice_amount, 2) }}</td>
                                                 <td class="text-end">{{ number_format($row->outstanding_balance, 2) }}</td>
                                                 <td class="text-end">{{ number_format($row->amount_paid ?? 0, 2) }}</td>
-                                                <td>{{ $row->collection_date ? \Carbon\Carbon::parse($row->collection_date)->format('Y-m-d') : '' }}</td>
+                                                <td>{{ $row->collection_date ? \Carbon\Carbon::parse($row->collection_date)->format('F d, Y') : '' }}</td>
                                                 <td>{{ $row->collection_remarks ?? '-' }}</td>
                                                 <td>{{ $row->payment_method ?? '-' }}</td>
                                                 <td>{{ $row->payment_term ?? '-' }}</td>
@@ -148,6 +155,8 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
 <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
      $('#ArAgingTable').DataTable({
         "order": [[0, 'asc']], // Sort by Supplier Code
@@ -165,6 +174,12 @@
         "paging": true,
         "searching": true,
         "info": true
+    });
+    flatpickr("#as_of_date", {
+        dateFormat: "F d, Y",
+        altInput: true,
+        altFormat: "F d, Y",
+        allowInput: true
     });
 </script>
 @endpush

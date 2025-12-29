@@ -39,15 +39,30 @@
                                     <!-- Start Date -->
                                     <div class="col-md-2">
                                         <label class="form-label">Start Date</label>
-                                        <input type="date" name="start_date" class="form-control"
-                                            value="{{ request('start_date', now()->startOfMonth()->toDateString()) }}">
+                                        <input
+                                            type="text"
+                                            name="start_date"
+                                            id="start_date"
+                                            class="form-control"
+                                            value="{{ request('start_date')
+                                                ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                                : now()->startOfMonth()->format('F d, Y') }}"
+                                        >
+
                                     </div>
 
                                     <!-- End Date -->
                                     <div class="col-md-2">
                                         <label class="form-label">End Date</label>
-                                        <input type="date" name="end_date" class="form-control"
-                                            value="{{ request('end_date', now()->toDateString()) }}">
+                                        <input
+                                            type="text"
+                                            name="end_date"
+                                            id="end_date"
+                                            class="form-control"
+                                            value="{{ request('end_date')
+                                                ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
                                     </div>
 
                                     <!-- Customer -->
@@ -78,6 +93,20 @@
                                         </select>
                                     </div>
 
+                                    <!-- Location -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">Location</label>
+                                        <select name="location" class="form-control">
+                                            <option value="">-- All Locations --</option>
+                                            @foreach($locations as $loc)
+                                                <option value="{{ $loc->location }}"
+                                                    {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                                    {{ $loc->location }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
                                     <!-- Buttons -->
                                     <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
                                         <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filter</button>
@@ -100,10 +129,11 @@
                                             <th>Product</th>
                                             <th>Supplier</th> 
                                             <th>Qty Sold</th>
-                                            <th>Qty Purchased</th>
-                                            <th>Sales Price</th>
+                                            <!-- <th>Qty Purchased</th> -->
+                                            <th>Sale Price</th>
+                                            <th>Sales Net Price</th>
                                             <th>Purchase Price</th>
-                                            <th>Total Sales</th>
+                                            <th>Purchase Net Price</th>
                                             <th>Estimated Income</th>
                                             <th>Profit %</th> 
                                         </tr>
@@ -118,11 +148,12 @@
                                                 <td>{{ $row->product_name }}</td>
                                                 <td>{{ $row->supplier_name ?? 'N/A' }}</td> 
                                                 <td class="text-end">{{ number_format($row->quantity_sold, 0) }}</td>
-                                                <td class="text-end">{{ number_format($row->quantity_purchased, 0) }}</td>
-                                                <td class="text-end">{{ number_format($row->sales_price, 2) }}</td>
-                                                <td class="text-end">{{ number_format($row->purchase_price, 2) }}</td>
-                                                <td class="text-end">{{ number_format($row->total_sales, 2) }}</td>
-                                                <td class="text-end fw-bold text-success">{{ number_format($row->estimated_income, 2) }}</td>
+                                                <!-- <td class="text-end">{{ number_format($row->quantity_purchased ?? 0, 0) }}</td> -->
+                                                <td class="text-end">{{ number_format($row->sales_net_price ?? 0, 2) }}</td>
+                                                <td class="text-end">{{ number_format($row->sales_net_of_net ?? 0, 2) }}</td>
+                                                <td class="text-end">{{ number_format($row->net_price ?? 0, 2) }}</td>
+                                                <td class="text-end">{{ number_format($row->purchase_net_of_net ?? 0, 2) }}</td>
+                                                <td class="text-end fw-bold text-success">{{ number_format($row->estimated_income ?? 0, 2) }}</td>
                                                 <td class="text-end">{{ number_format($row->profit_percentage ?? 0, 2) }}%</td> 
                                             </tr>
                                         @empty
@@ -154,11 +185,25 @@
 @push('js')
 <script src="{{ asset('/js/plugins/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('/js/plugins/dataTables.bootstrap.min.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     $('#EstimatedIncomeTable').DataTable({
         "pageLength": 25,
         "order": [[2, 'desc']],
         "responsive": true
+    });
+    flatpickr("#start_date", {
+        dateFormat: "F d, Y",
+        altInput: true,
+        altFormat: "F d, Y",
+        allowInput: true
+    });
+    flatpickr("#end_date", {
+        dateFormat: "F d, Y",
+        altInput: true,
+        altFormat: "F d, Y",
+        allowInput: true
     });
 </script>
 @endpush

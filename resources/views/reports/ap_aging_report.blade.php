@@ -56,8 +56,15 @@
                                     <!-- As of Date Filter -->
                                     <div class="col-md-3">
                                         <label for="as_of_date" class="form-label">As of Date</label>
-                                        <input type="date" name="as_of_date" class="form-control"
-                                            value="{{ request('as_of_date', now()->toDateString()) }}">
+                                        <input
+                                            type="text"
+                                            name="as_of_date"
+                                            id="as_of_date"
+                                            class="form-control"
+                                            value="{{ request('as_of_date')
+                                                ? \Carbon\Carbon::parse(request('as_of_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
                                     </div>
 
                                     <!-- Buttons -->
@@ -123,6 +130,8 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
 <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     $('#ApAgingTable').DataTable({
         "order": [[0, 'asc']], // Sort by Supplier Code
@@ -140,6 +149,12 @@
         "paging": true,
         "searching": true,
         "info": true
+    });
+    flatpickr("#as_of_date", {
+        dateFormat: "F d, Y",
+        altInput: true,
+        altFormat: "F d, Y",
+        allowInput: true
     });
 </script>
 @endpush

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Product;
 use App\Customer;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
@@ -23,9 +24,13 @@ class ReportController extends Controller
     public function ar_aging(Request $request)
     {
         // Filters
+        $startDateInput = $request->input('as_of_date') ?: null;
         $customerId    = $request->input('customer_id') ?: null;
         $paymentModeId = $request->input('payment_mode_id') ?: null;
-        $asOfDate      = $request->input('as_of_date');
+        $asOfDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+
 
         // Normalize date to YYYY-MM-DD (fallback to today)
         try {
@@ -233,9 +238,13 @@ class ReportController extends Controller
      */
     public function ap_aging(Request $request)
     {
+        // Filters
+        $startDateInput = $request->input('as_of_date') ?: null;
         $supplierId    = $request->input('supplier_id') ?: null;
         $paymentModeId = $request->input('payment_id') ?: null;
-        $asOfDate      = $request->input('as_of_date') ?: now()->toDateString();
+        $asOfDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
 
         try {
             $asOfDate = \Carbon\Carbon::parse($asOfDate)->toDateString();
@@ -525,38 +534,48 @@ class ReportController extends Controller
 
     public function sales_report(Request $request)
     {
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+
         $customerName = $request->customer_id ? Customer::find($request->customer_id)->name : null;
         $productName  = $request->product_id ? Product::find($request->product_id)->product_name : null;
         $salesmanName = $request->salesman_name ?? null;
-        $startDate    = $request->start_date ?? null;
-        $endDate      = $request->end_date ?? null;
-
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+        $location    = $request->input('location') ?: null;
+    
         // Call stored procedure (customer, product, salesman, start, end)
-        $sales = DB::select('CALL get_sales_report(?, ?, ?, ?, ?)', [
+        $sales = DB::select('CALL get_sales_report(?, ?, ?, ?, ?, ?)', [
             $customerName,
             $productName,
             $salesmanName,
             $startDate,
-            $endDate
+            $endDate,
+            $location
         ]);
 
         // For filter dropdowns
         $products  = Product::orderBy('product_name')->get();
         $customers = Customer::orderBy('name')->get();
 
-        // ✅ Dynamically get unique salesman names from invoices
+        // Dynamically get unique salesman names from invoices
         $salesmen = DB::table('invoices')
             ->select('salesman')
             ->whereNotNull('salesman')
             ->distinct()
             ->orderBy('salesman')
             ->get();
-
+        $locations = Customer::select('location')->distinct()->orderBy('location')->get();
         return view('reports.sales_report', compact(
             'sales',
             'products',
             'customers',
-            'salesmen'
+            'salesmen',
+            'locations',
         ));
     }
 
@@ -805,7 +824,6 @@ class ReportController extends Controller
         exit;
     }
 
-
     public function supplier_report(Request $request)
     {
         $status = $request->status ?? null;
@@ -928,27 +946,37 @@ class ReportController extends Controller
     public function estimated_income_report(Request $request)
     {
         // Filters
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+
         $filterType  = $request->input('filter_type', 'monthly'); // weekly, monthly, quarterly, or custom
-        $startDate   = $request->input('start_date') ?: now()->startOfMonth()->toDateString();
-        $endDate     = $request->input('end_date') ?: now()->endOfMonth()->toDateString();
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
         $customerId  = $request->input('customer_id') ?: null;
         $productId   = $request->input('product_id') ?: null;
+        $location    = $request->input('location') ?: null;
 
         // Call stored procedure (the one you created)
         $reportData = DB::select(
-            'CALL sp_generate_estimated_income_report(:filterType, :startDate, :endDate, :customerId, :productId)',
+            'CALL sp_generate_estimated_income_report(:filterType, :startDate, :endDate, :customerId, :productId, :location)',
             [
                 'filterType' => $filterType,
                 'startDate'  => $startDate,
                 'endDate'    => $endDate,
                 'customerId' => $customerId,
                 'productId'  => $productId,
+                'location'   => $location,
             ]
         );
 
         // Dropdown data
         $customers = DB::table('customers')->orderBy('name')->get();
         $products  = DB::table('products')->orderBy('product_name')->get();
+        $locations = Customer::select('location')->distinct()->orderBy('location')->get();
 
         // Pass to view
         return view('reports.estimated_income_report', compact(
@@ -959,59 +987,68 @@ class ReportController extends Controller
             'startDate',
             'endDate',
             'customerId',
-            'productId'
+            'productId',
+            'locations'
         ));
     }
 
     public function exportEstimatedIncome(Request $request)
     {
-        $filterType  = $request->input('filter_type', 'monthly'); // weekly, monthly, quarterly, or custom
-        $startDate   = $request->input('start_date') ?: now()->startOfMonth()->toDateString();
-        $endDate     = $request->input('end_date') ?: now()->endOfMonth()->toDateString();
-        $customerId = $request->input('customer_id') ?: null;
-        $productId  = $request->input('product_id') ?: null;
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+
+        $filterType  = $request->input('filter_type', 'monthly');
+         $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+        $customerId  = $request->input('customer_id');
+        $productId   = $request->input('product_id');
+        $location    = $request->input('location');
 
         try {
-            // Call stored procedure
             $reportData = DB::select(
-                'CALL sp_generate_estimated_income_report(:filterType, :startDate, :endDate, :customerId, :productId)',
-                [
-                    'filterType' => $filterType,
-                    'startDate'  => $startDate,
-                    'endDate'    => $endDate,
-                    'customerId' => $customerId,
-                    'productId'  => $productId,
-                ]
+                'CALL sp_generate_estimated_income_report(?, ?, ?, ?, ?, ?)',
+                [$filterType, $startDate, $endDate, $customerId, $productId, $location]
             );
         } catch (\Exception $e) {
             return back()->with('error', 'Error generating report: ' . $e->getMessage());
         }
 
-        // Initialize Excel
+        // ===============================
+        // INITIALIZE EXCEL
+        // ===============================
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Add header section
         $this->addHeader($sheet, 'Estimated Income Report');
 
-        // Column headers start at row 6
         $headerRow = 6;
         $headers = [
-            'Invoice Number',
-            'Purchase Number',
-            'Date',
-            'Customer',
-            'Product',
-            'Supplier',         
-            'Qty Sold',
-            'Qty Purchased',
-            'Sales Price',
-            'Purchase Price',
-            'Total Sales',
-            'Estimated Income (₱)',
-            'Profit %',        
+            'Invoice Number', 
+            'Invoice Date', 
+            'Customer Name', 
+            'Customer Location',
+            'Supplier Name', 
+            'Product Name',
+            'Quantity Sold', 
+            'Sales Price', 
+            'Sales Net Price', 
+            'Sales Discounts',
+            'Sales Gross Amount', 
+            'Sales Net Amount',
+            'Purchase Number', 
+            'Quantity Purchased', 
+            'Unit Cost', 
+            'Purchase Net Price',
+            'Purchase Discounts', 
+            'Purchase Gross Amount', 
+            'Purchase Net Amount',
+            'Estimated Income', 
+            'Profit Percentage'
         ];
-
 
         $col = 'A';
         foreach ($headers as $header) {
@@ -1021,53 +1058,100 @@ class ReportController extends Controller
             $col++;
         }
 
-        // Populate data
+        // POPULATE DATA
         $row = $headerRow + 1;
         $totalSales = 0;
         $totalIncome = 0;
+        $profitSum = 0;
 
         foreach ($reportData as $record) {
-            $sheet->setCellValue("A{$row}", $record->invoice_number ?? '');
-            $sheet->setCellValue("B{$row}", $record->purchase_number ?? '');
-            $sheet->setCellValue("C{$row}", $record->invoice_date ?? '');
-            $sheet->setCellValue("D{$row}", $record->customer_name ?? '');
-            $sheet->setCellValue("E{$row}", $record->product_name ?? '');
-            $sheet->setCellValue("F{$row}", $record->supplier_name ?? '');
-            $sheet->setCellValue("G{$row}", $record->quantity_sold ?? 0);
-            $sheet->setCellValue("H{$row}", $record->quantity_purchased ?? 0);
-            $sheet->setCellValue("I{$row}", $record->sales_price ?? 0);
-            $sheet->setCellValue("J{$row}", $record->purchase_price ?? 0);
-            $sheet->setCellValue("K{$row}", $record->total_sales ?? 0);
-            $sheet->setCellValue("L{$row}", $record->estimated_income ?? 0);
-            $sheet->setCellValue("M{$row}", $record->profit_percentage ?? 0);
 
-            $totalSales += $record->total_sales ?? 0;
-            $totalIncome += $record->estimated_income ?? 0;
+            // Invoice discounts
+            $invoiceDiscountText = implode(', ', array_filter([
+                $record->discount_less_add ? 'Type: '.$record->discount_less_add : null,
+                $record->discount_1 ? 'D1: '.$record->discount_1.'%' : null,
+                $record->discount_2 ? 'D2: '.$record->discount_2.'%' : null,
+                $record->discount_3 ? 'D3: '.$record->discount_3.'%' : null,
+            ]));
+
+            // Purchase discounts
+            $purchaseDiscountText = implode(', ', array_filter([
+                $record->purchase_discount_1 ? 'D1: '.$record->purchase_discount_1.'%' : null,
+                $record->purchase_discount_2 ? 'D2: '.$record->purchase_discount_2.'%' : null,
+                $record->purchase_discount_3 ? 'D3: '.$record->purchase_discount_3.'%' : null,
+            ]));
+
+            $sheet->setCellValue("A{$row}", $record->invoice_number);
+            $sheet->setCellValue("B{$row}", $record->invoice_date);
+            $sheet->setCellValue("C{$row}", $record->customer_name);
+            $sheet->setCellValue("D{$row}", $record->customer_location);
+            $sheet->setCellValue("E{$row}", $record->supplier_name);
+            $sheet->setCellValue("F{$row}", $record->product_name);
+
+            $sheet->setCellValue("G{$row}", $record->quantity_sold);
+            $sheet->setCellValue("H{$row}", $record->sales_price);
+            $sheet->setCellValue("I{$row}", $record->sales_net_price);
+            $sheet->setCellValue("J{$row}", $invoiceDiscountText);
+            $sheet->setCellValue("K{$row}", $record->sales_gross);
+            $sheet->setCellValue("L{$row}", $record->sales_net_of_net);
+
+            $sheet->setCellValue("M{$row}", $record->po_number);
+            $sheet->setCellValue("N{$row}", $record->quantity_purchased);
+            $sheet->setCellValue("O{$row}", $record->unit_cost);
+            $sheet->setCellValue("P{$row}", $record->net_price);
+            $sheet->setCellValue("Q{$row}", $purchaseDiscountText);
+            $sheet->setCellValue("R{$row}", $record->purchase_gross);
+            $sheet->setCellValue("S{$row}", $record->purchase_net_of_net);
+
+            $sheet->setCellValue("T{$row}", $record->estimated_income);
+            $sheet->setCellValue("U{$row}", ($record->profit_percentage ?? 0) / 100);
+
+            $totalSales += $record->sales_net_of_net;
+            $totalIncome += $record->estimated_income;
+            $profitSum += $record->profit_percentage;
 
             $row++;
         }
 
-        // Add summary section
-        $sheet->setCellValue("J{$row}", "Total Sales:");
-        $sheet->setCellValue("K{$row}", $totalSales);
-        $sheet->getStyle("J{$row}:K{$row}")->getFont()->setBold(true);
+        // ===============================
+        // SUMMARY
+        // ===============================
+        $avgProfit = count($reportData) ? $profitSum / count($reportData) : 0;
+
+        $sheet->setCellValue("S{$row}", 'Total Sales:');
+        $sheet->setCellValue("T{$row}", $totalSales);
         $row++;
 
-        $sheet->setCellValue("J{$row}", "Total Estimated Income:");
-        $sheet->setCellValue("K{$row}", $totalIncome);
-        $sheet->getStyle("J{$row}:K{$row}")->getFont()->setBold(true);
+        $sheet->setCellValue("S{$row}", 'Total Estimated Income:');
+        $sheet->setCellValue("T{$row}", $totalIncome);
+        $row++;
 
-        // Apply borders
-        $sheet->getStyle("A{$headerRow}:M{$row}")->applyFromArray([
+        $sheet->setCellValue("S{$row}", 'Average Profit %:');
+        $sheet->setCellValue("T{$row}", $avgProfit / 100);
+        $sheet->getStyle("T{$row}")->getNumberFormat()->setFormatCode('0.00%');
+
+        // ===============================
+        // FORMATTING
+        // ===============================
+        $sheet->getStyle("H".($headerRow+1).":T{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('₱#,##0.00');
+
+        $sheet->getStyle("U".($headerRow+1).":U{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('0.00%');
+
+        $sheet->getStyle("A{$headerRow}:U{$row}")->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'],
                 ],
             ],
         ]);
 
-        // Output Excel file
+        // ===============================
+        // OUTPUT
+        // ===============================
         $fileName = 'estimated_income_report_' . now()->format('Ymd_His') . '.xlsx';
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 
@@ -1076,6 +1160,8 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
+
+
 
     public function purchase_report(Request $request)
     {
@@ -1199,8 +1285,8 @@ class ReportController extends Controller
         $salesman   = $request->salesman ?? null;
         $customerId = $request->customer_id ?? null;
         $productId  = $request->product_id ?? null;
-        $startDate  = $request->start_date ?? null;
-        $endDate    = $request->end_date ?? null;
+        $startDate  = Carbon::createFromFormat('F d, Y', $request->start_date)->toDateString() ?? null;
+        $endDate    = Carbon::createFromFormat('F d, Y', $request->end_date)->toDateString() ?? null;
 
         // Call stored procedure (we'll define next)
         $reportData = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
@@ -1403,7 +1489,8 @@ class ReportController extends Controller
                                             ->setVertical(Alignment::VERTICAL_CENTER);
 
         // Company Address (ensure this value is present)
-        $sheet->setCellValue('C2', '123 Main St., Test City'); // ← change to your real address
+        $sheet->setCellValue('C2', ' Wholesale of hardware, electricals, & plumbing supply etc.<br>
+            Contact: 0936-8834-275 / 0999-3669-539'); // ← change to your real address
         $sheet->getStyle('C2')->getFont()->setSize(12);
         $sheet->getStyle('C2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
                                             ->setVertical(Alignment::VERTICAL_CENTER)

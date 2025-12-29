@@ -12,7 +12,7 @@ class InvoiceSales extends Model
         'product_id',
         'qty',
         'price',
-        'disdiscount_less_add',
+        'discount_less_add',
         'discount_1',
         'discount_2',
         'discount_3',

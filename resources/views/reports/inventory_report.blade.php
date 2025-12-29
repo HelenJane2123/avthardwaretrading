@@ -133,7 +133,7 @@
     $('#inventoryProductTable').DataTable({
         "order": [[0, 'asc']], // Sort by Supplier Code
         "rowGroup": {
-            dataSrc: 2, // Group by first column (Supplier Code)
+            dataSrc: 4, // Group by first column (Supplier Code)
             startRender: function (rows, group) {
                 var productCat = rows.data()[0][1];
                 return group;

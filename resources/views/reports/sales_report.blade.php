@@ -25,15 +25,31 @@
                 <div class="tile-body">
                     <div class="container">
 
-                        {{-- 🔍 Filters --}}
+                        {{-- Filters --}}
                         <form method="GET" action="{{ route('reports.sales_report') }}" class="row g-4 mb-4">
                             <div class="col-md-2">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
+                                <input
+                                    type="text"
+                                    name="start_date"
+                                    id="start_date"
+                                    class="form-control"
+                                    value="{{ request('start_date')
+                                        ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                        : now()->format('F d, Y') }}"
+                                >
                             </div>
                             <div class="col-md-2">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
+                                <input
+                                    type="text"
+                                    name="end_date"
+                                    id="end_date"
+                                    class="form-control"
+                                    value="{{ request('end_date')
+                                        ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                        : now()->format('F d, Y') }}"
+                                >
                             </div>
                             <div class="col-md-2">
                                 <label for="product_id" class="form-label">Product</label>
@@ -69,6 +85,18 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Location</label>
+                                <select name="location" class="form-control">
+                                    <option value="">-- All Locations --</option>
+                                    @foreach($locations as $loc)
+                                        <option value="{{ $loc->location }}"
+                                            {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                            {{ $loc->location }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="col-md-2 d-flex align-items-end">
                                 <button type="submit" class="btn btn-primary me-2">Filter</button>
                                 <a href="{{ route('reports.sales_report_export', request()->all()) }}" class="btn btn-success">
@@ -77,7 +105,7 @@
                             </div>
                         </form>
 
-                        {{-- 📋 Report Table --}}
+                        {{-- Report Table --}}
                         <div class="table-responsive mt-3">
                             <table class="table table-bordered table-striped" id="salesProductTable">
                                 <thead class="table-dark">
@@ -85,10 +113,11 @@
                                         <th>Invoice #</th>
                                         <th>Date</th>
                                         <th>Customer</th>
+                                        <th>Location</th>
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th>Price</th>
-                                        <th>Discounts</th> {{-- 🆕 Updated column --}}
+                                        <th>Discounts</th>
                                         <th>Total</th>
                                         <th>Payment Method</th>
                                     </tr>
@@ -99,11 +128,11 @@
                                             <td>{{ $sale->invoice_number }}</td>
                                             <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
                                             <td>{{ $sale->customer_name }}</td>
+                                            <td>{{ $sale->location }}</td>
                                             <td>{{ $sale->product_name }}</td>
                                             <td>{{ $sale->quantity }}</td>
                                             <td>{{ number_format($sale->price, 2) }}</td>
                                             <td>
-                                                {{-- Show comma-separated discounts --}}
                                                 {{ $sale->discount_display }}
                                             </td>
                                             <td>{{ number_format($sale->total_amount, 2) }}</td>
