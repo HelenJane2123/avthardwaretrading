@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use App\Supplier;
-use App\SupplierItem;
-use App\Product;
-use App\ProductSupplier;
+use App\Models\Supplier;
+use App\Models\SupplierItem;
+use App\Models\Product;
+use App\Models\ProductSupplier;
 use Carbon\Carbon;
 
 class ImportController extends Controller

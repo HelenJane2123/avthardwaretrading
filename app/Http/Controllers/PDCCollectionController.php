@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\PdcCollection;
-use App\Pdc;
-use App\Customer;
-use App\Collection;
+use App\Models\PdcCollection;
+use App\Models\Pdc;
+use App\Models\Customer;
+use App\Models\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

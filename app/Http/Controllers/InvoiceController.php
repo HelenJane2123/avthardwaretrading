@@ -4,20 +4,20 @@ namespace App\Http\Controllers;
 
 
 use Illuminate\Http\Request;
-use App\Product;
-use App\Sale;
-use App\Supplier;
-use App\Invoice;
-use App\InvoiceSales;
-use App\Unit;
-use App\ModeOfPayment;
-use App\Customer;
-use App\Category;
-use App\User;
-use App\Collection;
-use App\Tax;
-use App\InvoiceSalesDiscount;
-use App\Salesman;
+use App\Models\Product;
+use App\Models\Sale;
+use App\Models\Supplier;
+use App\Models\Invoice;
+use App\Models\InvoiceSales;
+use App\Models\Unit;
+use App\Models\ModeofPayment;
+use App\Models\Customer;
+use App\Models\Category;
+use App\Models\User;
+use App\Models\Collection;
+use App\Models\Tax;
+use App\Models\InvoiceSalesDiscount;
+use App\Models\Salesman;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -158,6 +158,7 @@ class InvoiceController extends Controller
 
             // Save invoice
             $invoice = new Invoice();
+            $invoice->fill($request->all());
             $invoice->customer_id       = $request->customer_id;
             $invoice->invoice_number    = $invoiceNumber;
             $invoice->invoice_date      = $request->invoice_date;
@@ -168,9 +169,9 @@ class InvoiceController extends Controller
             $invoice->other_charges     = $request->other_charges ?? 0;
             $invoice->subtotal          = $request->subtotal ?? 0;
             $invoice->grand_total       = $request->grand_total ?? 0;
-            $invoice->discount_approved = $request->discount_approved ?? 0;
             $invoice->salesman          = $request->salesman;
             $invoice->remarks           = $request->remarks;
+            $invoice->discount_approved = $request->discount_approved ?? 0;
             $invoice->created_by        = auth()->id();
             $invoice->save();
 

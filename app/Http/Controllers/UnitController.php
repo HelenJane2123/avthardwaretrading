@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Tax;
-use App\Unit;
+use App\Models\Tax;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 

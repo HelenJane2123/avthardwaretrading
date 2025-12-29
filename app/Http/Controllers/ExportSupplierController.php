@@ -10,8 +10,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use App\Supplier;
-use App\SupplierItem;
+use App\Models\Supplier;
+use App\Models\SupplierItem;
 
 class ExportSupplierController extends Controller
 {

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Collection;
-use App\Invoice;
-use App\ModeofPayment;
-use App\User;
+use App\Models\Collection;
+use App\Models\Invoice;
+use App\Models\ModeofPayment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

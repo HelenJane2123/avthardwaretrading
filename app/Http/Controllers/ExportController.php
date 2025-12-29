@@ -1,15 +1,15 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Customer;
-use App\Product;
-use App\ProductSupplier;
-use App\Invoice;
-use App\Collection;
-use App\Purchase;
-use App\PurchaseItem;
-use App\ModeofPayment;
-use App\Salesman;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\ProductSupplier;
+use App\Models\Invoice;
+use App\Models\Collection;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
+use App\Models\ModeofPayment;
+use App\Models\Salesman;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;

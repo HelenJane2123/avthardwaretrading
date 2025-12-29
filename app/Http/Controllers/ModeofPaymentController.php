@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\ModeofPayment;
+use App\Models\ModeofPayment;
 use Illuminate\Http\Request;
 
 class ModeofPaymentController extends Controller

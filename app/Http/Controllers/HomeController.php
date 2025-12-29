@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
-use App\Sale;
-use App\Product;
-use App\Supplier;
-use App\Invoice;
-use App\Collection;
-use App\Customer;
+use App\Models\User;
+use App\Models\Sale;
+use App\Models\Product;
+use App\Models\Supplier;
+use App\Models\Invoice;
+use App\Models\Collection;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

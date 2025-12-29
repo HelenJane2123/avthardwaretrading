@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Salesman;
+use App\Models\Salesman;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 

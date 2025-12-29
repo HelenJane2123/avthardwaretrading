@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Invoice;
-use App\AdjustmentCollection;
+use App\Models\Invoice;
+use App\Models\AdjustmentCollection;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;

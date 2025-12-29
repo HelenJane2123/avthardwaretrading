@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -26,7 +26,10 @@ class Invoice extends Model
         'payment_status',
         'salesman',
         'remarks',
-        'discount_approved'
+        'discount_approved',
+        'created_by',
+        'updated_by',
+        'approved_by'
     ];
 
     // Relationships

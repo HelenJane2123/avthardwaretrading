@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Customer;
-use App\Product;
-use App\Purchase;
-use App\Sale;
-use App\Supplier;
-use App\SupplierItem;
-use App\Invoice;
-use App\PurchaseDetail;
-use App\ModeofPayment;
-use App\Unit;
-use App\Salesman;
-use App\Tax;
-use App\User;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\Sale;
+use App\Models\Supplier;
+use App\Models\SupplierItem;
+use App\Models\Invoice;
+use App\Models\PurchaseDetail;
+use App\Models\ModeofPayment;
+use App\Models\Unit;
+use App\Models\Salesman;
+use App\Models\Tax;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;

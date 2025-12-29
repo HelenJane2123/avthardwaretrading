@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Supplier;
-use App\SupplierItem;
-use App\Unit;
-use App\Category;
-use App\Tax;
+use App\Models\Supplier;
+use App\Models\SupplierItem;
+use App\Models\Unit;
+use App\Models\Category;
+use App\Models\Tax;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 

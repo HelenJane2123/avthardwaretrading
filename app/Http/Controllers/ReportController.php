@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Product;
-use App\Customer;
+use App\Models\Product;
+use App\Models\Customer;
 use Carbon\Carbon;
 
 class ReportController extends Controller

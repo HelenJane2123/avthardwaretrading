@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Category;
-use App\Product;
-use App\ProductSupplier;
-use App\Supplier;
-use App\SupplierItem;
-use App\Tax;
-use App\Unit;
-use App\ProductAdjustments;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductSupplier;
+use App\Models\Supplier;
+use App\Models\SupplierItem;
+use App\Models\Tax;
+use App\Models\Unit;
+use App\Models\ProductAdjustments;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
