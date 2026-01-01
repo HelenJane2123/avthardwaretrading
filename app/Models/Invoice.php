@@ -32,7 +32,11 @@ class Invoice extends Model
         'approved_by'
     ];
 
-    // Relationships
+    public function salesman_relation()
+    {
+        return $this->belongsTo(Salesman::class, 'salesman', 'id');
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
@@ -66,5 +70,10 @@ class Invoice extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

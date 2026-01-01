@@ -142,7 +142,7 @@
                             <div class="card-body row g-3">
                                 <div class="col-md-2">
                                     <label>Initial Quantity</label>
-                                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ $product->quantity }}" readonly>
+                                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ $product->quantity }}">
                                 </div>
                                 <div class="col-md-2">
                                     <label>Remaining Stock</label>

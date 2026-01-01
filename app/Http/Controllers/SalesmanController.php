@@ -6,7 +6,7 @@ use App\Models\Salesman;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class SalesmenController extends Controller
+class SalesmanController extends Controller
 {
     public function __construct()
     {
@@ -30,11 +30,11 @@ class SalesmenController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'salesman_code' => 'required|unique:salesmen,salesman_code',
-            'salesman_name' => 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:salesmen,salesman_name',
-            'phone'         => 'required|digits:11|unique:salesmen,phone',
-            'address'       => 'required|min:3',
-            'email'         => 'required|email|unique:salesmen,email',
+            'salesman_code' => 'required|unique:salesman,salesman_code',
+            'salesman_name' => 'nullable|min:3|regex:/^[a-zA-Z ]+$/|unique:salesman,salesman_name',
+            'phone'         => 'nullable|digits:11|unique:salesman,phone',
+            'address'       => 'nullable|min:3',
+            'email'         => 'nullable|email|unique:salesman,email',
             'status'        => 'required|boolean',
         ]);
 
@@ -63,10 +63,10 @@ class SalesmenController extends Controller
         $salesman = Salesman::findOrFail($id);
 
         $request->validate([
-            'salesman_name'=> 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:salesmen,salesman_name,' . $salesman->id,
-            'address' => 'required|min:3',
-            'phone'   => 'required|digits:11|unique:salesmen,phone,' . $salesman->id,
-            'email'   => 'required|email|unique:salesmen,email,' . $salesman->id,
+            'salesman_name'=> 'required|min:3|regex:/^[a-zA-Z ]+$/|unique:salesman,salesman_name,' . $salesman->id,
+            'address' => 'nullable|min:3',
+            'phone'   => 'nullable|digits:11|unique:salesman,phone,' . $salesman->id,
+            'email'   => 'nullable|email|unique:salesman,email,' . $salesman->id,
             'status'  => 'required',
         ]);
 

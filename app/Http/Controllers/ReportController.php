@@ -564,11 +564,13 @@ class ReportController extends Controller
 
         // Dynamically get unique salesman names from invoices
         $salesmen = DB::table('invoices')
-            ->select('salesman')
-            ->whereNotNull('salesman')
+            ->leftJoin('salesman', 'invoices.salesman', '=', 'salesman.id')
+            ->select('invoices.salesman', 'salesman.salesman_name') 
+            ->whereNotNull('invoices.salesman')
             ->distinct()
-            ->orderBy('salesman')
+            ->orderBy('salesman.salesman_name')
             ->get();
+
         $locations = Customer::select('location')->distinct()->orderBy('location')->get();
         return view('reports.sales_report', compact(
             'sales',
@@ -592,14 +594,16 @@ class ReportController extends Controller
         $salesmanName = $request->input('salesman_name') ?? null;
         $startDate = $request->input('start_date') ?: null;
         $endDate = $request->input('end_date') ?: null;
+        $location    = $request->input('location') ?: null;
 
         // Call stored procedure
-        $results = DB::select('CALL get_sales_report(?, ?, ?, ?, ?)', [
+        $results = DB::select('CALL get_sales_report(?, ?, ?, ?, ?, ?)', [
             $customerName,
             $productName,
             $salesmanName,
             $startDate,
-            $endDate
+            $endDate,
+            $location
         ]);
 
         $spreadsheet = new Spreadsheet();
@@ -998,12 +1002,14 @@ class ReportController extends Controller
         $endDateInput   = $request->end_date;
 
         $filterType  = $request->input('filter_type', 'monthly');
-         $startDate = $startDateInput
+
+        $startDate = $startDateInput
             ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
             : now()->startOfMonth()->toDateString();
         $endDate = $endDateInput
             ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
             : now()->endOfMonth()->toDateString();
+
         $customerId  = $request->input('customer_id');
         $productId   = $request->input('product_id');
         $location    = $request->input('location');
@@ -1023,92 +1029,140 @@ class ReportController extends Controller
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
+        $headerRow = 6;
+
         $this->addHeader($sheet, 'Estimated Income Report');
 
-        $headerRow = 6;
+        // Selling Price merged header
+        $sheet->setCellValue("F{$headerRow}", 'Selling Price');
+        $sheet->mergeCells("F{$headerRow}:J{$headerRow}");
+        $sheet->getStyle("F{$headerRow}:J{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFCCFFCC']], // light green
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ]);
+
+        // Cost of Goods merged header
+        $sheet->setCellValue("K{$headerRow}", 'Cost of Goods');
+        $sheet->mergeCells("K{$headerRow}:P{$headerRow}");
+        $sheet->getStyle("K{$headerRow}:P{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFFFCC99']], // light orange
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ]);
+
+        // Estimated Income merged header
+        $sheet->setCellValue("Q{$headerRow}", 'Estimated Income');
+        $sheet->mergeCells("Q{$headerRow}:R{$headerRow}");
+        $sheet->getStyle("Q{$headerRow}:R{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FF99CCFF']], // light blue
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+        ]);
+
+        // Move to next row for column headers
+        $headerRow++;
+
+        // ===============================
+        // COLUMN HEADERS
+        // ===============================
         $headers = [
             'Invoice Number', 
             'Invoice Date', 
             'Customer Name', 
             'Customer Location',
-            'Supplier Name', 
             'Product Name',
-            'Quantity Sold', 
-            'Sales Price', 
+            'Qty Sold', 
+            'Sale Price', 
+            'Sales Discount', 
             'Sales Net Price', 
-            'Sales Discounts',
-            'Sales Gross Amount', 
             'Sales Net Amount',
             'Purchase Number', 
-            'Quantity Purchased', 
+            'Qty Purchased', 
             'Unit Cost', 
+            'Purchase Discount', 
             'Purchase Net Price',
-            'Purchase Discounts', 
-            'Purchase Gross Amount', 
             'Purchase Net Amount',
             'Estimated Income', 
-            'Profit Percentage'
+            'Profit %'
         ];
 
         $col = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($col.$headerRow, $header);
             $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
+            $sheet->getStyle($col.$headerRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getColumnDimension($col)->setAutoSize(true);
             $col++;
         }
 
+        // ===============================
+        // HELPER FUNCTION FOR DISCOUNTS
+        // ===============================
+        $getDiscountText = function(array $discounts, ?string $firstType = null) {
+            $discountText = [];
+
+            foreach ($discounts as $index => $discount) {
+                // Skip null, 0, or empty string
+                if (!empty($discount) && $discount != 0) {
+                    $typePart = ($index === 0 && $firstType) ? $firstType . ' ' : '';
+                    $discountText[] = $typePart . rtrim((float)$discount, '.0') . '%';
+                }
+            }
+
+            return implode(', ', $discountText);
+        };
+
+        // ===============================
         // POPULATE DATA
+        // ===============================
         $row = $headerRow + 1;
         $totalSales = 0;
         $totalIncome = 0;
         $profitSum = 0;
 
         foreach ($reportData as $record) {
+            // Discounts
+            $invoiceDiscountText = $getDiscountText(
+                [$record->discount_1, $record->discount_2, $record->discount_3],
+                $record->discount_less_add 
+            );
 
-            // Invoice discounts
-            $invoiceDiscountText = implode(', ', array_filter([
-                $record->discount_less_add ? 'Type: '.$record->discount_less_add : null,
-                $record->discount_1 ? 'D1: '.$record->discount_1.'%' : null,
-                $record->discount_2 ? 'D2: '.$record->discount_2.'%' : null,
-                $record->discount_3 ? 'D3: '.$record->discount_3.'%' : null,
-            ]));
+            $purchaseDiscountText = $getDiscountText(
+                [$record->purchase_discount_1, $record->purchase_discount_2, $record->purchase_discount_3],
+                $record->purchase_discount_less_add
+            );
 
-            // Purchase discounts
-            $purchaseDiscountText = implode(', ', array_filter([
-                $record->purchase_discount_1 ? 'D1: '.$record->purchase_discount_1.'%' : null,
-                $record->purchase_discount_2 ? 'D2: '.$record->purchase_discount_2.'%' : null,
-                $record->purchase_discount_3 ? 'D3: '.$record->purchase_discount_3.'%' : null,
-            ]));
-
+            // Fill cells
             $sheet->setCellValue("A{$row}", $record->invoice_number);
             $sheet->setCellValue("B{$row}", $record->invoice_date);
             $sheet->setCellValue("C{$row}", $record->customer_name);
             $sheet->setCellValue("D{$row}", $record->customer_location);
-            $sheet->setCellValue("E{$row}", $record->supplier_name);
-            $sheet->setCellValue("F{$row}", $record->product_name);
+            $sheet->setCellValue("E{$row}", $record->product_name);
 
-            $sheet->setCellValue("G{$row}", $record->quantity_sold);
-            $sheet->setCellValue("H{$row}", $record->sales_price);
+            $sheet->setCellValue("F{$row}", $record->quantity_sold);
+            $sheet->setCellValue("G{$row}", $record->sales_price);
+            $sheet->setCellValue("H{$row}", $invoiceDiscountText);
             $sheet->setCellValue("I{$row}", $record->sales_net_price);
-            $sheet->setCellValue("J{$row}", $invoiceDiscountText);
-            $sheet->setCellValue("K{$row}", $record->sales_gross);
-            $sheet->setCellValue("L{$row}", $record->sales_net_of_net);
+            $sheet->setCellValue("J{$row}", $record->sales_gross);
 
-            $sheet->setCellValue("M{$row}", $record->po_number);
-            $sheet->setCellValue("N{$row}", $record->quantity_purchased);
-            $sheet->setCellValue("O{$row}", $record->unit_cost);
-            $sheet->setCellValue("P{$row}", $record->net_price);
-            $sheet->setCellValue("Q{$row}", $purchaseDiscountText);
-            $sheet->setCellValue("R{$row}", $record->purchase_gross);
-            $sheet->setCellValue("S{$row}", $record->purchase_net_of_net);
+            $sheet->setCellValue("K{$row}", $record->po_number);
+            $sheet->setCellValue("L{$row}", $record->quantity_purchased);
+            $sheet->setCellValue("M{$row}", $record->unit_cost);
+            $sheet->setCellValue("N{$row}", $purchaseDiscountText);
+            $sheet->setCellValue("O{$row}", $record->net_price);
+            $sheet->setCellValue("P{$row}", $record->purchase_net_of_net);
 
-            $sheet->setCellValue("T{$row}", $record->estimated_income);
-            $sheet->setCellValue("U{$row}", ($record->profit_percentage ?? 0) / 100);
+            $sheet->setCellValue("Q{$row}", $record->estimated_income);
+            $sheet->setCellValue("R{$row}", ($record->profit_percentage ?? 0) / 100);
 
+            // Totals
             $totalSales += $record->sales_net_of_net;
             $totalIncome += $record->estimated_income;
-            $profitSum += $record->profit_percentage;
+            $profitSum += ($record->profit_percentage ?? 0);
 
             $row++;
         }
@@ -1118,35 +1172,34 @@ class ReportController extends Controller
         // ===============================
         $avgProfit = count($reportData) ? $profitSum / count($reportData) : 0;
 
-        $sheet->setCellValue("S{$row}", 'Total Sales:');
-        $sheet->setCellValue("T{$row}", $totalSales);
+        $sheet->setCellValue("P{$row}", 'Total Sales:');
+        $sheet->getStyle("P{$row}")->getFont()->setBold(true);
+        $sheet->setCellValue("Q{$row}", $totalSales);
+        $sheet->getStyle("Q{$row}")->getNumberFormat()->setFormatCode('₱#,##0.00');
         $row++;
 
-        $sheet->setCellValue("S{$row}", 'Total Estimated Income:');
-        $sheet->setCellValue("T{$row}", $totalIncome);
+        $sheet->setCellValue("P{$row}", 'Total Estimated Income:');
+        $sheet->getStyle("P{$row}")->getFont()->setBold(true);
+        $sheet->setCellValue("Q{$row}", $totalIncome);
+        $sheet->getStyle("Q{$row}")->getNumberFormat()->setFormatCode('₱#,##0.00');
         $row++;
 
-        $sheet->setCellValue("S{$row}", 'Average Profit %:');
-        $sheet->setCellValue("T{$row}", $avgProfit / 100);
-        $sheet->getStyle("T{$row}")->getNumberFormat()->setFormatCode('0.00%');
+        $sheet->setCellValue("P{$row}", 'Average Profit %:');
+        $sheet->getStyle("P{$row}")->getFont()->setBold(true);
+        $sheet->setCellValue("Q{$row}", $avgProfit / 100);
+        $sheet->getStyle("Q{$row}")->getNumberFormat()->setFormatCode('0.00%');
 
         // ===============================
         // FORMATTING
         // ===============================
-        $sheet->getStyle("H".($headerRow+1).":T{$row}")
-            ->getNumberFormat()
-            ->setFormatCode('₱#,##0.00');
+        $sheet->getStyle("F".($headerRow+1).":Q{$row}")
+            ->getNumberFormat()->setFormatCode('#,##0.00');
 
-        $sheet->getStyle("U".($headerRow+1).":U{$row}")
-            ->getNumberFormat()
-            ->setFormatCode('0.00%');
+        $sheet->getStyle("R".($headerRow+1).":R{$row}")
+            ->getNumberFormat()->setFormatCode('0.00%');
 
-        $sheet->getStyle("A{$headerRow}:U{$row}")->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
+        $sheet->getStyle("A{$headerRow}:R{$row}")->applyFromArray([
+            'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
         ]);
 
         // ===============================
@@ -1160,8 +1213,6 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
-
 
     public function purchase_report(Request $request)
     {

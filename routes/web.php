@@ -18,7 +18,7 @@ use App\Http\Controllers\ModeofPaymentController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PurchasePaymentController;
-use App\Http\Controllers\SalesmenController;
+use App\Http\Controllers\SalesmanController;
 use App\Http\Controllers\AdjustmentCollectionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ImportController;
@@ -65,7 +65,7 @@ Route::resource('purchase', PurchaseController::class);
 Route::resource('user', UserController::class);
 Route::resource('modeofpayment', ModeofPaymentController::class);
 Route::resource('collection', CollectionController::class);
-Route::resource('salesmen', SalesmenController::class);
+Route::resource('salesmen', SalesmanController::class);
 Route::resource('adjustment_collection', AdjustmentCollectionController::class);
 Route::resource('pdc', PDCCollectionController::class);
 

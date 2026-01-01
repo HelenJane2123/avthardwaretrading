@@ -497,10 +497,9 @@ class InvoiceController extends Controller
         ]);
     }
 
-
     public function print($id)
     {
-        $invoice = Invoice::with(['sales.product', 'sales.unit', 'customer'])
+        $invoice = Invoice::with(['sales.product', 'sales.unit', 'customer', 'salesman_relation'])
             ->findOrFail($id);
 
         return view('invoice.print', compact('invoice'));
@@ -520,19 +519,6 @@ class InvoiceController extends Controller
 
                 // Add payment mode
                 $invoice->payment_mode_name = $invoice->paymentMode->name ?? 'N/A';
-
-                // // Compute dynamic payment status
-                // if ($invoice->balance <= 0) {
-                //     $invoice->payment_status = 'paid';
-                // } elseif ($paid > 0) {
-                //     $invoice->payment_status = 'partial';
-                // } else {
-                //     $invoice->payment_status = 'pending';
-                // }
-
-                // if ($invoice->due_date && now()->gt($invoice->due_date) && $invoice->balance > 0) {
-                //     $invoice->payment_status = 'overdue';
-                // }
 
                 return $invoice;
             })

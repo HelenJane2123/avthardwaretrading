@@ -154,14 +154,15 @@
                 CUSTOMER: {{ $invoice->customer->name ?? 'N/A' }} <br>
                 ADDRESS: {{ $invoice->customer->address ?? 'N/A' }} <br>
                 CONTACT NO: {{ $invoice->customer->phone ?? 'N/A' }}
-            </p>
+            </p> 
         </div>
         <div class="text-end" style="margin-right:20px;">
             <p>
                 DR #: {{ $invoice->invoice_number }} <br>
                 DR Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }} <br>
                 Due: {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }} <br>
-                Terms: {{ $invoice->paymentMode->name ?? 'N/A' }} ({{ $invoice->paymentMode->term ?? 'N/A' }} Days)
+                Terms: {{ $invoice->paymentMode->name ?? 'N/A' }} ({{ $invoice->paymentMode->term ?? 'N/A' }} Days) <br>
+                Salesman: {{ optional($invoice->salesman_relation)->salesman_name ?? 'N/A' }}
             </p>
         </div>
     </div>
@@ -191,12 +192,12 @@
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
                 <td>{{ $item->product->product_name ?? 'N/A' }}</td>
                 <td class="text-center">{{ number_format($item->price, 2) }}</td>
-                <td class="text-center" style="font-size:11px;"> 
+                <td class="text-center" style="font-size:14px;"> 
                     @php
                         $discounts = [];
-                        if ($item->discount_1 > 0) $discounts[] = $item->discount_1 . '%';
-                        if ($item->discount_2 > 0) $discounts[] = $item->discount_2 . '%';
-                        if ($item->discount_3 > 0) $discounts[] = $item->discount_3 . '%';
+                        if ($item->discount_1 > 0) $discounts[] = (int)$item->discount_1 . '%';
+                        if ($item->discount_2 > 0) $discounts[] = (int)$item->discount_2 . '%';
+                        if ($item->discount_3 > 0) $discounts[] = (int)$item->discount_3 . '%';
                     @endphp
 
                     @if(count($discounts) > 0)
@@ -258,6 +259,9 @@
                 <p class="signature-label">(Authorized Signature over Printed Name)</p>
             </div>
         </div>
+    </div>
+     <div class="warning-text" style="margin-bottom: 20px; font-weight: bold; color: black; font-size:14px; text-transform: uppercase;">
+        Strictly no cash advances, any cash or stock given to designated agent will not be deducted from your account.
     </div>
 
     <br>

@@ -20,13 +20,15 @@ class Salesman extends Model
         'status',
     ];
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'salesman');
+    }
+
     public function purchases()
     {
         return $this->hasMany(Purchase::class, 'salesman_id');
     }
 
-    public function invoices()
-    {
-        return $this->hasMany(Invoice::class, 'salesman');
-    }
+
 }

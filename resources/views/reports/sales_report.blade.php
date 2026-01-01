@@ -33,7 +33,7 @@
                                     type="text"
                                     name="start_date"
                                     id="start_date"
-                                    class="form-control"
+                                    class="form-control form-control-sm"
                                     value="{{ request('start_date')
                                         ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
                                         : now()->format('F d, Y') }}"
@@ -45,7 +45,7 @@
                                     type="text"
                                     name="end_date"
                                     id="end_date"
-                                    class="form-control"
+                                    class="form-control form-control-sm"
                                     value="{{ request('end_date')
                                         ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
                                         : now()->format('F d, Y') }}"
@@ -53,7 +53,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label for="product_id" class="form-label">Product</label>
-                                <select name="product_id" id="product_id" class="form-control">
+                                <select name="product_id" id="product_id" class="form-control form-control-sm">
                                     <option value="">All Products</option>
                                     @foreach($products as $product)
                                         <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
@@ -64,7 +64,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label for="customer_id" class="form-label">Customer</label>
-                                <select name="customer_id" id="customer_id" class="form-control">
+                                <select name="customer_id" id="customer_id" class="form-control form-control-sm">
                                     <option value="">All Customers</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
@@ -75,19 +75,19 @@
                             </div>
                             <div class="col-md-2">
                                 <label for="salesman_name" class="form-label">Salesman</label>
-                                <select name="salesman_name" id="salesman_name" class="form-control">
+                                <select name="salesman_name" id="salesman_name" class="form-control form-control-sm">
                                     <option value="">All Salesmen</option>
                                     @foreach($salesmen as $salesman)
                                         <option value="{{ $salesman->salesman }}" 
                                             {{ request('salesman_name') == $salesman->salesman ? 'selected' : '' }}>
-                                            {{ $salesman->salesman }}
+                                            {{ $salesman->salesman_name }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Location</label>
-                                <select name="location" class="form-control">
+                                <select name="location" id="locationSelect" class="form-control form-control-sm">
                                     <option value="">-- All Locations --</option>
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->location }}"
@@ -102,6 +102,9 @@
                                 <a href="{{ route('reports.sales_report_export', request()->all()) }}" class="btn btn-success">
                                     <i class="fa fa-file-excel-o"></i> Export
                                 </a>
+                                <button type="button" id="clearFilters" class="btn btn-secondary">
+                                    <i class="fa fa-eraser"></i> Clear Filters
+                                </button>
                             </div>
                         </form>
 
@@ -120,6 +123,7 @@
                                         <th>Discounts</th>
                                         <th>Total</th>
                                         <th>Payment Method</th>
+                                        <th>Salesman</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -137,10 +141,11 @@
                                             </td>
                                             <td>{{ number_format($sale->total_amount, 2) }}</td>
                                             <td>{{ $sale->payment_method }}</td>
+                                            <td>{{ $sale->salesman_name }}</td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center">No sales found.</td>
+                                            <td colspan="10" class="text-center">No sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -161,12 +166,72 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
 <script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $('#salesProductTable').DataTable({
-        "order": [[0, 'asc']],
-        "paging": true,
-        "searching": true,
-        "info": true
+    $(document).ready(function() {
+        let salesProductTable;
+        if (!$.fn.DataTable.isDataTable('#salesProductTable')) {
+            salesProductTable = $('#salesProductTable').DataTable({
+                pageLength: 25,
+                order: [[2, 'desc']],
+                responsive: true
+            });
+        }
+        flatpickr("#start_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+        flatpickr("#end_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+        $('#customer_id').select2({
+            placeholder: "Select Customer",
+            allowClear: true,
+            width: 'resolve'
+        });
+        $('#product_id').select2({
+            placeholder: "Select Product",
+            allowClear: true,
+            width: 'resolve'
+        });
+        $('#locationSelect').select2({
+            placeholder: "Select Location",
+            allowClear: true,
+            width: 'resolve'
+        });
+        $('#salesman_name').select2({
+            placeholder: "Select Salesman",
+            allowClear: true,
+            width: 'resolve'
+        });
+        // Clear Filters Button
+        $('#clearFilters').on('click', function(e) {
+            e.preventDefault(); // prevent form submission
+
+            const form = $(this).closest('form')[0];
+
+            // Reset standard inputs
+            form.reset();
+
+            // Reset Select2 dropdowns
+            $(form).find('select').val(null).trigger('change');
+
+            // Optional: reset DataTable to first page
+            if (salesProductTable) {
+                salesProductTable.search('').columns().search('').draw();
+            }
+
+            // Reload the page without query parameters
+            window.location.href = "{{ route('reports.sales_report') }}";
+        });
     });
 </script>
 @endpush

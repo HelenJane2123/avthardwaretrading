@@ -76,6 +76,8 @@
                                         <th>Date Created</th>
                                         <th>Updated By</th>
                                         <th>Date Updated</th>
+                                        <th>Approved By</th>
+                                        <th>Date Approved</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -87,7 +89,9 @@
                                                     <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
                                                 @endif
                                             </td>
-                                            <td><span class="badge badge-info px-1 py-1">{{ $invoice->invoice_number }}</span></td>
+                                            <td><span class="badge bg-info px-1 py-1 fs-4">
+                                                    {{ $invoice->invoice_number }}
+                                                </span></td>
                                             <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
                                             <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->location }}</td>
                                             <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
@@ -118,6 +122,8 @@
                                             <td>{{ \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') }}</td>
                                             <td>{{ $invoice->updated_by && $invoice->updater ? $invoice->updater->f_name . ' ' . $invoice->updater->l_name : 'N/A' }}</td>
                                             <td>{{ \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') }}</td>
+                                            <td>{{ $invoice->approved_by && $invoice->approver ? $invoice->approver->f_name . ' ' . $invoice->approver->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->approved_at)->format('M d, Y') }}</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
                                                     <i class="fa fa-eye fa-xs"></i>
@@ -179,7 +185,7 @@
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         var invoiceTable = $('#invoiceTable').DataTable({
-            "order": [[0, "desc"]],
+            "order": [[1, "desc"]],
             "pageLength": 10,
             "responsive": true
         });

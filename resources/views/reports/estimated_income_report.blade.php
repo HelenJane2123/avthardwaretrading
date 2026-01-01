@@ -28,7 +28,7 @@
                                     <!-- Filter Type -->
                                     <div class="col-md-2">
                                         <label class="form-label">Filter Type</label>
-                                        <select name="filter_type" class="form-control">
+                                        <select name="filter_type" class="form-control form-control-sm">
                                             <option value="weekly" {{ request('filter_type')=='weekly'?'selected':'' }}>Weekly</option>
                                             <option value="monthly" {{ request('filter_type')=='monthly'?'selected':'' }}>Monthly</option>
                                             <option value="quarterly" {{ request('filter_type')=='quarterly'?'selected':'' }}>Quarterly</option>
@@ -43,7 +43,7 @@
                                             type="text"
                                             name="start_date"
                                             id="start_date"
-                                            class="form-control"
+                                            class="form-control form-control-sm"
                                             value="{{ request('start_date')
                                                 ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
                                                 : now()->startOfMonth()->format('F d, Y') }}"
@@ -58,7 +58,7 @@
                                             type="text"
                                             name="end_date"
                                             id="end_date"
-                                            class="form-control"
+                                            class="form-control form-control-sm"
                                             value="{{ request('end_date')
                                                 ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
                                                 : now()->format('F d, Y') }}"
@@ -68,7 +68,7 @@
                                     <!-- Customer -->
                                     <div class="col-md-3">
                                         <label class="form-label">Customer</label>
-                                        <select name="customer_id" class="form-control">
+                                        <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
                                             <option value="">-- All Customers --</option>
                                             @foreach($customers as $customer)
                                                 <option value="{{ $customer->id }}"
@@ -82,7 +82,7 @@
                                     <!-- Product -->
                                     <div class="col-md-3">
                                         <label class="form-label">Product</label>
-                                        <select name="product_id" class="form-control">
+                                        <select name="product_id" id="productSelect" class="form-control form-control-sm">
                                             <option value="">-- All Products --</option>
                                             @foreach($products as $product)
                                                 <option value="{{ $product->id }}"
@@ -96,7 +96,7 @@
                                     <!-- Location -->
                                     <div class="col-md-3">
                                         <label class="form-label">Location</label>
-                                        <select name="location" class="form-control">
+                                        <select name="location" id="locationSelect" class="form-control form-control-sm">
                                             <option value="">-- All Locations --</option>
                                             @foreach($locations as $loc)
                                                 <option value="{{ $loc->location }}"
@@ -113,6 +113,9 @@
                                         <a href="{{ route('reports.estimated_income_export', request()->all()) }}" class="btn btn-success">
                                             <i class="fa fa-file-excel-o"></i> Export
                                         </a>
+                                        <button type="button" id="clearFilters" class="btn btn-secondary">
+                                            <i class="fa fa-eraser"></i> Clear Filters
+                                        </button>
                                     </div>
                                 </div>
                             </form>
@@ -126,6 +129,7 @@
                                             <th>Purchase #</th>
                                             <th>Date</th>
                                             <th>Customer</th>
+                                            <th>Location</th>
                                             <th>Product</th>
                                             <th>Supplier</th> 
                                             <th>Qty Sold</th>
@@ -145,6 +149,7 @@
                                                 <td>{{ $row->purchase_number ?? 'N/A' }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($row->invoice_date)->format('Y-m-d') }}</td>
                                                 <td>{{ $row->customer_name }}</td>
+                                                <td>{{ $row->customer_location }}</td>
                                                 <td>{{ $row->product_name }}</td>
                                                 <td>{{ $row->supplier_name ?? 'N/A' }}</td> 
                                                 <td class="text-end">{{ number_format($row->quantity_sold, 0) }}</td>
@@ -158,7 +163,7 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="13" class="text-center">No records found for selected filters.</td>
+                                                <td colspan="14" class="text-center">No records found for selected filters.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -187,23 +192,61 @@
 <script src="{{ asset('/js/plugins/dataTables.bootstrap.min.js') }}"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $('#EstimatedIncomeTable').DataTable({
-        "pageLength": 25,
-        "order": [[2, 'desc']],
-        "responsive": true
-    });
-    flatpickr("#start_date", {
-        dateFormat: "F d, Y",
-        altInput: true,
-        altFormat: "F d, Y",
-        allowInput: true
-    });
-    flatpickr("#end_date", {
-        dateFormat: "F d, Y",
-        altInput: true,
-        altFormat: "F d, Y",
-        allowInput: true
+    $(document).ready(function() {
+        // Initialize DataTable safely
+        let estimatedIncomeTable;
+        if (!$.fn.DataTable.isDataTable('#EstimatedIncomeTable')) {
+            estimatedIncomeTable = $('#EstimatedIncomeTable').DataTable({
+                pageLength: 25,
+                order: [[2, 'desc']],
+                responsive: true
+            });
+        }
+
+        // Initialize Flatpickr
+        flatpickr("#start_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+        flatpickr("#end_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+
+        // Initialize Select2
+        $('#customerSelect, #productSelect, #locationSelect').select2({
+            placeholder: "Select an option",
+            allowClear: true,
+            width: 'resolve'
+        });
+
+        // Clear Filters Button
+        $('#clearFilters').on('click', function(e) {
+            e.preventDefault(); // prevent form submission
+
+            const form = $(this).closest('form')[0];
+
+            // Reset standard inputs
+            form.reset();
+
+            // Reset Select2 dropdowns
+            $(form).find('select').val(null).trigger('change');
+
+            // Optional: reset DataTable to first page
+            if (estimatedIncomeTable) {
+                estimatedIncomeTable.search('').columns().search('').draw();
+            }
+
+            // Reload the page without query parameters
+            window.location.href = "{{ route('reports.estimated_income_report') }}";
+        });
     });
 </script>
 @endpush

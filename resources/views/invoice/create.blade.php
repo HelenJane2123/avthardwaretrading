@@ -96,14 +96,14 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <!-- <div class="col-md-4">
                                 <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                                 <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                     <option value="" selected>Select Type of Discount</option>
                                     <option value="per_item" >Per Item</option>
                                     <option value="overall">Overall</option>
                                 </select>
-                            </div>
+                            </div> -->
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
                                <select name="salesman" id="salesman_id" class="form-control form-control-sm" required>

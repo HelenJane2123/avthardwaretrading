@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
-use App\Purchase;
+use App\Models\Purchase;
 
 /*
 |--------------------------------------------------------------------------
