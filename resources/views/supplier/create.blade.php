@@ -2,8 +2,8 @@
 
 @section('title', 'Supplier | ')
 @section('content')
-    @include('partials.header')
-    @include('partials.sidebar')
+@include('partials.header')
+@include('partials.sidebar')
 
     <main class="app-content">
         <!-- Page Title -->
@@ -153,6 +153,9 @@
 
                             <!-- Item Details Table -->
                             <h5 class="mt-4">Item Details</h5>
+                            <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" id="addItemBtn" data-target="#itemModal">
+                                <i class="fa fa-plus"></i> Add Item
+                            </button>
                             <div class="table-responsive">
                                 <table class="table table-bordered table-hover" id="suppliercreateTable">
                                     <thead class="thead-dark text-center">
@@ -162,67 +165,17 @@
                                             <th>Description</th>
                                             <!-- <th>Qty</th> -->
                                             <th>Unit</th>
-                                            <th>Price</th>
-                                            <th>Discount</th>
+                                            <th>Unit Cost</th>
+                                            <th>Net Cost</th>
+                                            <th>Discounts</th>
                                             <th>Volume Less</th>
                                             <th>Regular Less</th>
                                             <th>Image</th>
-                                            <th>
-                                                <button type="button" class="btn btn-sm btn-primary" id="add-row">
-                                                    <i class="fa fa-plus"></i> Add Item
-                                                </button>
-                                            </th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><input type="text" name="item_code[]" class="form-control form-control-sm" readonly></td>
-                                            <td>
-                                                <select name="item_category[]" class="form-control form-control-sm item-category">
-                                                    <option value="">Select Category</option>
-                                                    @foreach($categories as $category)
-                                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <small class="text-danger category-desc d-block mt-1"></small>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="item_description[]" class="form-control form-control-sm item-name">
-                                                <small class="text-danger item-desc d-block mt-1"></small>
-                                            </td>
-                                            <!-- <td><input type="number" name="item_qty[]" class="form-control item-qty"></td> -->
-                                            <td>
-                                                <select name="unit_id[]" class="form-control form-control-sm">
-                                                    <option value="">Select Unit</option>
-                                                    @foreach($units as $unit)
-                                                        <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td><input type="number" name="item_price[]" class="form-control form-control-sm item-price" step="0.01"></td>
-                                            <td>
-                                                <select name="discount[]" class="form-control form-control-sm">
-                                                    <option value="">Select Discount</option>
-                                                    @foreach($discounts as $discount)
-                                                        <option value="{{ $discount->id }}">{{ $discount->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <textarea name="volume_less[]" 
-                                                    class="form-control form-control-sm"></textarea>
-                                            </td>
-                                            <td>
-                                                <textarea name="regular_less[]" 
-                                                    class="form-control form-control-sm" ></textarea>
-                                            </td>
-                                            <td><input type="file" name="item_image[]" class="form-control form-control-sm" accept="image/*"></td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-danger remove-row">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                    <tbody id="itemsTableBody">
+                                        <!-- dynamically added rows -->
                                     </tbody>
                                     <!-- <tfoot>
                                         <tr>
@@ -248,19 +201,138 @@
             </div>
         </div>
     </main>
+    <div class="modal fade" id="itemModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Supplier Item</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            <label>Category</label>
+                            <select id="modal_category" class="form-control form-control-sm">
+                                <option value="">Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Description</label>
+                            <input type="text" id="modal_description" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Unit</label>
+                            <select id="modal_unit" class="form-control form-control-sm">
+                                @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Unit Cost</label>
+                            <input type="number" id="modal_price" class="form-control form-control-sm" step="0.01">
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Net Cost</label>
+                            <input type="number" id="modal_net_cost" class="form-control form-control-sm" step="0.01">
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Discount</label>
+                            <div class="row g-1">
+                                <!-- Discount Type -->
+                                <div class="col-8">
+                                    <select name="discount_less_add" class="form-control form-control-sm discount_type">
+                                        <option value="less">Less (-)</option>
+                                        <option value="add">Add (+)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Discount 1 -->
+                                <div class="col-8">
+                                    <select name="dis1" class="form-control form-control-sm dis1">
+                                        <option value="0">Discount 1 (%)</option>
+                                        @foreach($discounts as $tax)
+                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Discount 2 -->
+                                <div class="col-8">
+                                    <select name="dis2" class="form-control form-control-sm dis2">
+                                        <option value="0">Discount 2 (%)</option>
+                                        @foreach($discounts as $tax)
+                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Discount 3 -->
+                                <div class="col-8">
+                                    <select name="dis3" class="form-control form-control-sm dis3">
+                                        <option value="0">Discount 3 (%)</option>
+                                        @foreach($discounts as $tax)
+                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Image</label>
+                            <input type="file" id="modal_image" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Volume Less</label>
+                            <input type="text" id="modal_volume_less" class="form-control form-control-sm">
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label>Regular Less</label>
+                            <input type="text" id="modal_regular_less" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="confirmAddItem">
+                        Add Item
+                    </button>
+                    <button type="button" class="btn btn-warning" data-dismiss="modal">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
     <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script>
         $(document).ready(function () {
             let table = $('#suppliercreateTable').DataTable({
-                paging: false,
-                searching: true,  // ✅ search enabled
-                ordering: false   // (optional: disable sorting if not needed for inputs)
+                paging: true,
+                searching: true,  
+                ordering: true,
+                language: {
+                    "emptyTable": "No data available in table"
+                }
             });
 
             let itemCount = 2;
@@ -275,87 +347,144 @@
                 const randomNumber = Math.floor(Math.random() * 900 + 100);
                 return `${prefix}-${randomNumber}`;
             }
+            //disable adding item if supplier name is empty
+            $('#addItemBtn').on('click', function (e) {
+                if ($('#supplier_name').val().trim() === '') {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Supplier Required',
+                        text: 'Please enter the supplier name before adding items.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return false; 
+                }
+                resetModal();
+                $('#itemModal').modal('show');
+            });
             $('#supplier_name').on('input', function () {
+                const supplierName = $(this).val().trim();
+
+                if (supplierName === '') {
+                    $('#addItemBtn').prop('disabled', true);
+                    $('#supplierWarning').removeClass('d-none');
+                    return;
+                }
+
+                // If supplier name exists
                 const supplierCode = generateSupplierCode();
+
                 $('#supplier_code').val(supplierCode);
-                $('#suppliercreateTable tbody tr:first input[name="item_code[]"]').val(`${supplierCode}-001`);
+                $('#addItemBtn').prop('disabled', false);
+                $('#supplierWarning').addClass('d-none');
+
+                // Auto-generate first item code
+                $('#suppliercreateTable tbody tr:first input[name="item_code[]"]')
+                    .val(`${supplierCode}-001`);
             });
 
             // Add Row
-            const categories = @json($categories);
-            const units = @json($units);
-            const discounts = @json($discounts);
-            $('#add-row').click(function () {
-                const supplierCode = $('#supplier_code').val() || 'SUP-000';
-                const paddedCount = String(itemCount).padStart(3, '0');
-                const itemCode = `${supplierCode}-${paddedCount}`;
-
-                const categoryOptions = categories.map(cat => `<option value="${cat.id}">${cat.name}</option>`).join('');
-                const unitOptions = units.map(unit => `<option value="${unit.id}">${unit.name}</option>`).join('');
-                const discountOptions = discounts.map(discount => `<option value="${discount.id}">${discount.name}</option>`).join('');
-
-                table.row.add([
-                    `<input type="text" name="item_code[]" class="form-control" value="${itemCode}" readonly>`,
-                    `<select name="item_category[]" class="form-control item-category"><option value="">Select Category</option>${categoryOptions}</select><small class="text-danger category-desc d-block mt-1"></small>`,
-                    `<input type="text" name="item_description[]" class="form-control item-name"><small class="text-danger item-desc d-block mt-1"></small>`,
-                    // `<input type="number" name="item_qty[]" class="form-control item-qty">`,
-                    `<select name="unit_id[]" class="form-control"><option value="">Select Unit</option>${unitOptions}</select>`,
-                    `<input type="number" name="item_price[]" class="form-control item-price" step="0.01">`,
-                    `<select name="discount[]" class="form-control"><option value="">Select Discount</option>${discountOptions}</select>`,
-                    `<textarea name="volume_less[]" class="form-control"></textarea>`,
-                    `<textarea name="regular_less[]" class="form-control"></textarea>`,
-                    `<input type="file" name="item_image[]" class="form-control" accept="image/*">`,
-                    `<button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>`
-                ]).draw(false); // ✅ keeps search working
-
-                itemCount++;
-            });
-            // Calculate Row & Total
-            function calculateAmount(row) {
-                const qty = parseFloat(row.find('.item-qty').val()) || 0;
-                const price = parseFloat(row.find('.item-price').val()) || 0;
-                const amount = qty * price;
-                row.find('.item-amount').val(amount.toFixed(2));
+            let tableItems = $('#itemsTableBody tbody');
+            function resetModal() {
+                $('#modal_category').val('');
+                $('#modal_description').val('');
+                $('#modal_unit').val('');
+                $('#modal_price').val('');
+                $('#modal_net_cost').val('');
+                $('.discount_type').val('less');
+                $('.dis1').val('0');
+                $('.dis2').val('0');
+                $('.dis3').val('0');
+                $('#modal_volume_less').val('');
+                $('#modal_regular_less').val('');
+                $('#modal_image').val('');
+                editingRow = null;
             }
-            function calculateTotalAmount() {
-                let total = 0;
-                $('.item-amount').each(function () {
-                    total += parseFloat($(this).val()) || 0;
-                });
-                $('#total_amount').val(total.toFixed(2));
-            }
-            $(document).on('input', '.item-qty, .item-price', function () {
-                const row = $(this).closest('tr');
-                calculateAmount(row);
-                calculateTotalAmount();
+
+            $('#addItemBtn').click(function () {
+                resetModal();
+                $('#itemModal').modal('show');
+                $('#itemModalTitle').text('Add Supplier Item');
             });
 
-            // Remove Row
+            let editingRow = null;
+            $('#confirmAddItem').click(function () {
+                $(this).blur();
+
+                let discountText = `${$('.discount_type').val()} (${ $('.dis1').val() }%, ${ $('.dis2').val() }%, ${ $('.dis3').val()}%)`;
+                let itemCode = generateItemCode();
+
+                // Prepare row as array of column data
+                let rowData = [
+                    itemCode + `<input type="hidden" name="item_code[]" value="${itemCode}">`,
+                    $('#modal_category option:selected').text() + `<input type="hidden" name="category_id[]" value="${$('#modal_category').val()}">`,
+                    $('#modal_description').val() + `<input type="hidden" name="item_description[]" value="${$('#modal_description').val()}">`,
+                    $('#modal_unit option:selected').text() + `<input type="hidden" name="unit_id[]" value="${$('#modal_unit').val()}">`,
+                    $('#modal_price').val() + `<input type="hidden" name="unit_cost[]" value="${$('#modal_price').val()}">`,
+                    $('#modal_net_cost').val() + `<input type="hidden" name="net_cost[]" value="${$('#modal_net_cost').val()}">`,
+                    discountText + 
+                    `<input type="hidden" name="discount_type[]" value="${$('.discount_type').val()}">` +
+                    `<input type="hidden" name="discount1[]" value="${$('.dis1').val()}">` +
+                    `<input type="hidden" name="discount2[]" value="${$('.dis2').val()}">` +
+                    `<input type="hidden" name="discount3[]" value="${$('.dis3').val()}">`,
+                    $('#modal_volume_less').val() + `<input type="hidden" name="volume_less[]" value="${$('#modal_volume_less').val()}">`,
+                    $('#modal_regular_less').val() + `<input type="hidden" name="regular_less[]" value="${$('#modal_regular_less').val()}">`,
+                    ($('#modal_image').val() || 'N/A') + `<input type="hidden" name="modal_image[]" value="${$('#modal_image').val() || 'N/A'}">`,
+                    `<div class="text-center">
+                        <button type="button" class="btn btn-sm btn-primary edit-item"><i class="fa fa-edit"></i></button>
+                        <button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>
+                    </div>`
+                ];
+
+                // If editing, update row; else add new
+                if (editingRow) {
+                    table.row(editingRow).data(rowData).draw();
+                    editingRow = null;
+                } else {
+                    table.row.add(rowData).draw();
+                }
+
+                $('#itemModal').modal('hide');
+            });
+
+            $('#itemModal').on('hidden.bs.modal', function () {
+                // Remove leftover backdrop
+                $('.modal-backdrop').remove();
+
+                // Restore body scrolling & interaction
+                $('body')
+                    .removeClass('modal-open')
+                    .css({
+                        overflow: '',
+                        paddingRight: ''
+                    });
+
+                // Restore focus safely
+                $('[data-target="#itemModal"]').focus();
+            });
+
+            // Edit row
+            $(document).on('click', '.edit-item', function () {
+                editingRow = $(this).closest('tr');
+
+                $('#modal_description').val(editingRow.find('input[name="item_description[]"]').val());
+                $('#modal_unit').val(editingRow.find('input[name="unit_id[]"]').val());
+                $('#modal_price').val(editingRow.find('input[name="unit_cost[]"]').val());
+                $('#discount_type').val(editingRow.find('input[name="discount_type[]"]').val());
+                $('#dis1').val(editingRow.find('input[name="discount1[]"]').val());
+                $('#dis2').val(editingRow.find('input[name="discount2[]"]').val());
+                $('#dis3').val(editingRow.find('input[name="discount3[]"]').val());
+                $('#modal_net_cost').val(editingRow.find('input[name="net_cost[]"]').val());
+
+                $('#itemModal').modal('show');
+            });
+
+            // Remove row
             $(document).on('click', '.remove-row', function () {
                 $(this).closest('tr').remove();
-                calculateTotalAmount();
-            });
-
-            $(document).on('input', '.item-name', function () {
-                const itemName = $(this).val().trim();
-                const descElement = $(this).closest('td').find('.item-desc');
-
-                if (itemName) {
-                    descElement.text(`Description: ${itemName}`);
-                } else {
-                    descElement.text('');
-                }
-            });
-
-            $(document).on('change', '.item-category', function () {
-                const selectedCategory = $(this).find('option:selected').text();
-                const descElement = $(this).closest('td').find('.category-desc');
-
-                if (selectedCategory && selectedCategory !== 'Select Category') {
-                    descElement.text(`${selectedCategory}`);
-                } else {
-                    descElement.text('');
-                }
             });
 
             //check if selected item is duplicate
@@ -381,6 +510,37 @@
                     $(this).focus();
                 }
             });      
+
+            function computeNetCost() {
+                let price = parseFloat($('#modal_price').val()) || 0;
+                let d1 = parseFloat($('.dis1').val()) || 0;
+                let d2 = parseFloat($('.dis2').val()) || 0;
+                let d3 = parseFloat($('.dis3').val()) || 0;
+                let type = $('.discount_type').val();
+
+                let totalDiscount = d1 + d2 + d3;
+                let discountAmount = price * (totalDiscount / 100);
+
+                let net = (type === 'less')
+                    ? price - discountAmount
+                    : price + discountAmount;
+
+                $('#modal_net_cost').val(net.toFixed(2));
+            }
+
+            function generateItemCode() {
+                const supplierCode = $('#supplier_code').val();
+                if (!supplierCode) return '';
+
+                // Count existing rows in DataTable
+                const itemCount = table.rows().count() + 1; // +1 for the new item
+
+                const itemNumber = String(itemCount).padStart(3, '0');
+
+                return `${supplierCode}-${itemNumber}`;
+            }
+
+            $('#modal_price, #dis1, #dis2, #dis3, #discount_type').on('change keyup', computeNetCost);
         });
     </script>
 @endpush

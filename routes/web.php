@@ -52,6 +52,10 @@ Route::post('/signout', [LoginController::class, 'logout'])
     ->middleware('web')
     ->name('signout');
 
+Route::get('/keep-alive', function () {
+    return response()->json(['status' => 'ok']);
+})->middleware('auth')->name('keep-alive');
+
 Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
 Route::resource('unit', UnitController::class);

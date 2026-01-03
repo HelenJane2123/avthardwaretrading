@@ -69,12 +69,19 @@
                     <td>
                         @php
                             $discounts = [];
-                            if ($item->discount_1 > 0) $discounts[] = (int)$item->discount_1 . '%';
-                            if ($item->discount_2 > 0) $discounts[] = (int)$item->discount_2 . '%';
-                            if ($item->discount_3 > 0) $discounts[] = (int)$item->discount_3 . '%';
+
+                            foreach ([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
+                                if ($discount > 0) {
+                                    $formatted = fmod($discount, 1) == 0
+                                        ? (int)$discount      
+                                        : rtrim(rtrim($discount, '0'), '.'); // decimal
+
+                                    $discounts[] = $formatted . '%';
+                                }
+                            }
                         @endphp
 
-                        @if(count($discounts) > 0)
+                        @if(count($discounts))
                             {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
                         @else
                             -

@@ -214,7 +214,7 @@
             </ul>
         </li>
 
-        {{-- 📈 Reports --}}
+        {{-- Reports --}}
         <li class="app-menu__label text-muted pl-3 mt-3" style="font-size: 12px;">— Reports —</li>
 
         <li class="treeview">
