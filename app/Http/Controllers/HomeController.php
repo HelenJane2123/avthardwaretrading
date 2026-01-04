@@ -73,7 +73,7 @@ class HomeController extends Controller
             ->select('product_id', DB::raw('SUM(qty) as total_qty'))
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
-            ->take(5)
+            ->take(20)
             ->get();
 
         $formattedTopSales = [];

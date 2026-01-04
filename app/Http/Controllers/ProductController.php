@@ -11,6 +11,7 @@ use App\Models\Tax;
 use App\Models\Unit;
 use App\Models\ProductAdjustments;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -223,102 +224,124 @@ class ProductController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'product_name' => 'required',
-            'supplier_product_code' => 'required',
-            'category_id' => 'required',
-            'sales_price' => 'required|numeric',
-            'supplier_id' => 'required|array',
-            'supplier_id.*' => 'required|integer|exists:suppliers,id',
-            'supplier_price' => 'required|array',
-            'supplier_price.*' => 'required|numeric|min:0',
-            'adjustment' => 'nullable|array',
-            'adjustment.*' => 'nullable|integer|min:0',
-            'adjustment_status' => 'nullable|array',
-            'adjustment_status.*' => 'nullable|in:Return,Others',
-            'adjustment_remarks' => 'nullable|array',
-            'adjustment_remarks.*' => 'nullable|string|max:500',
-        ]);
+        //dd('Update function hit!', $id, $request->all());
+        // $request->validate([
+        //     'product_name' => 'required',
+        //     'supplier_product_code' => 'required',
+        //     'category_id' => 'required',
+        //     'sales_price' => 'required|numeric',
+        //     'supplier_id' => 'required|array',
+        //     'supplier_id.*' => 'required|integer|exists:suppliers,id',
+        //     'supplier_price' => 'required|array',
+        //     'supplier_price.*' => 'required|numeric|min:0',
+        //     'net_price' => 'nullable|array',
+        //     'net_price.*' => 'nullable|numeric|min:0',
+        //     'adjustment' => 'nullable|array',
+        //     'adjustment.*' => 'nullable|integer|min:0',
+        //     'adjustment_status' => 'nullable|array',
+        //     'adjustment_status.*' => 'nullable|in:Return,Others',
+        //     'adjustment_remarks' => 'nullable|array',
+        //     'adjustment_remarks.*' => 'nullable|string|max:500',
+        //     'add_quantity' => 'nullable|integer|min:0',
+        // ]);
+        try {
+            $product = Product::findOrFail($id);
 
-        $product = Product::findOrFail($id);
+            // compute new values
+            $addedQty = (int) $request->add_quantity;
+            $newTotalQuantity  = $product->quantity;
+            $newRemainingStock = $product->remaining_stock + $addedQty;
 
-        // Update basic product fields
-        $threshold = $request->quantity <= 10 ? 1 : floor($request->quantity * 0.2);
-        $status = $request->quantity == 0 
-                    ? 'Out of Stock' 
-                    : ($request->quantity <= $threshold ? 'Low Stock' : 'In Stock');
+            $threshold = $newTotalQuantity <= 10 ? 1 : floor($newTotalQuantity * 0.2);
 
-        $product->update([
-            'serial_number' => $request->serial_number,
-            'supplier_product_code' => $request->supplier_product_code,
-            'product_name' => $request->product_name,
-            'description' => $request->description,
-            'category_id' => $request->category_id,
-            'model' => $request->model,
-            'quantity' => $request->quantity,
-            'remaining_stock' => $request->quantity, 
-            'sales_price' => $request->sales_price,
-            'unit_id' => $request->unit_id,
-            'discount_type' => $request->discount_type,
-            'discount_1' => $request->discount_1,
-            'discount_2' => $request->discount_2,
-            'discount_3' => $request->discount_3,
-            'threshold' => $threshold,
-            'status' => $status,
-            'volume_less' => $request->volume_less,
-            'regular_less' => $request->regular_less
-        ]);
-
-        // Handle image update if uploaded
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $filename = time() . '_' . $image->getClientOriginalName();
-            $image->move(public_path('images/product'), $filename);
-            $product->image = $filename;
-            $product->save();
-        }
-
-        // Delete old supplier records and recreate
-        ProductSupplier::where('product_id', $product->id)->delete();
-        foreach ($request->supplier_id as $index => $supplierId) {
-            if (!empty($supplierId) && !empty($request->supplier_price[$index])) {
-                ProductSupplier::create([
-                    'product_id' => $product->id,
-                    'supplier_id' => $supplierId,
-                    'price' => $request->supplier_price[$index],
-                ]);
+            $status = 'In Stock';
+            if ($newRemainingStock <= 0) {
+                $status = 'Out of Stock';
+            } elseif ($newRemainingStock <= $threshold) {
+                $status = 'Low Stock';
             }
+
+            // update product
+            $product->update([
+                'serial_number' => $request->serial_number,
+                'supplier_product_code' => $request->supplier_product_code,
+                'product_name' => $request->product_name,
+                'description' => $request->description,
+                'category_id' => $request->category_id,
+                'model' => $request->model,
+                'quantity' => $newTotalQuantity,
+                'remaining_stock' => max(0, $newRemainingStock),
+                'sales_price' => $request->sales_price,
+                'unit_id' => $request->unit_id,
+                'discount_type' => $request->discount_type,
+                'discount_1' => $request->discount_1,
+                'discount_2' => $request->discount_2,
+                'discount_3' => $request->discount_3,
+                'threshold' => $threshold,
+                'status' => $status,
+                'volume_less' => $request->volume_less,
+                'regular_less' => $request->regular_less,
+            ]);
+
+            // image upload
+            $imageFilename = null;
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageFilename = time() . '_' . $image->getClientOriginalName();
+                $image->move(public_path('images/product'), $imageFilename);
+                $product->update(['image' => $imageFilename]);
+            }
+
+            // update suppliers
+            // ProductSupplier::where('product_id', $product->id)->delete();
+            // $suppliersUpdated = [];
+            // foreach ($request->supplier_id as $index => $supplierId) {
+            //     if (!empty($supplierId) && isset($request->supplier_price[$index])) {
+            //         $supplier = ProductSupplier::create([
+            //             'product_id' => $product->id,
+            //             'supplier_id' => $supplierId,
+            //             'price' => $request->supplier_price[$index],
+            //             'net_price' => $request->net_price[$index] ?? 0,
+            //         ]);
+            //         $suppliersUpdated[] = [
+            //             'supplier_id' => $supplier->supplier_id,
+            //             'price' => $supplier->price,
+            //             'net_price' => $supplier->net_price,
+            //         ];
+            //     }
+            // }
+
+            // log success
+            \Log::info('Product updated successfully.', [
+                'product_id' => $product->id,
+                'product_name' => $product->product_name,
+                'updated_by_user_id' => auth()->id() ?? 'guest',
+                'quantity_added' => $addedQty,
+                'new_total_quantity' => $newTotalQuantity,
+                'remaining_stock' => $newRemainingStock,
+                'status' => $status,
+                'image_uploaded' => $imageFilename,
+                'timestamp' => now()->toDateTimeString(),
+            ]);
+
+            return redirect()->route('product.index')->with('message', 'Product has been successfully updated.');
+
+        } catch (\Exception $e) {
+            // log error
+            \Log::error('Product update failed.', [
+                'product_id' => $id,
+                'updated_by_user_id' => auth()->id() ?? 'guest',
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'timestamp' => now()->toDateTimeString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to update product. Please try again.');
         }
-
-        // // Delete old adjustments
-        // \DB::table('product_adjustments')->where('product_id', $product->id)->delete();
-
-        // // Insert new adjustments and update remaining stock
-        // $totalAdjustment = 0;
-        // if ($request->filled('adjustment')) {
-        //     foreach ($request->adjustment as $index => $adjValue) {
-        //         $adjValue = (int) $adjValue;
-        //         if ($adjValue !== 0) {
-        //             \DB::table('product_adjustments')->insert([
-        //                 'product_id' => $product->id,
-        //                 'adjustment' => $adjValue,
-        //                 'adjustment_status' => $request->adjustment_status[$index] ?? 'Others',
-        //                 'remarks' => $request->adjustment_remarks[$index] ?? null,
-        //                 'new_initial_qty' => $request->new_initial_qty[$index] ?? ($product->remaining_stock + $adjValue),
-        //                 'created_at' => now(),
-        //                 'updated_at' => now(),
-        //             ]);
-        //             $totalAdjustment += $adjValue;
-        //         }
-        //     }
-        // }
-
-        // // Update remaining stock with total adjustments
-        // $product->remaining_stock += $totalAdjustment;
-        $product->save();
-
-        return redirect()->route('product.index')->with('message', 'Product updated successfully!');
     }
+
 
     public function storeAdjustment(Request $request, $id)
     {

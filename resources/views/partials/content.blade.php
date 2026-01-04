@@ -279,7 +279,7 @@
     </div>
     <div class="col-md-6">
       <div class="tile">
-        <h3 class="tile-title">Top 5 Sales Product</h3>
+        <h3 class="tile-title">Top 20 Sales Product</h3>
         <div id="topSalesChart" style="width: 100%; height: 300px;"></div>
       </div>
     </div>
@@ -325,7 +325,7 @@ google.charts.setOnLoadCallback(function() {
   new google.visualization.LineChart(document.getElementById('monthlySalesChart')).draw(data, options);
 });
 
-// Top 5 Sales
+// Top 20 Sales
 google.charts.setOnLoadCallback(function() {
   var data = new google.visualization.DataTable();
   data.addColumn('string', 'Product');
@@ -336,7 +336,20 @@ google.charts.setOnLoadCallback(function() {
     @endforeach
   ]);
   new google.visualization.PieChart(document.getElementById('topSalesChart'))
-    .draw(data, { pieHole:0.4, colors:['#2196F3','#4CAF50','#FFC107','#9C27B0','#E91E63'] });
+    .draw(data, {
+        pieHole: 0.4,
+        colors: [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+            '#393b79', '#637939', '#8c6d31', '#843c39', '#7b4173',
+            '#3182bd', '#31a354', '#756bb1', '#e6550d', '#6baed6'
+        ],
+        pieSliceText: 'percentage',   
+        tooltip: {                  
+            text: 'both'
+        },
+        legend: { position: 'right' }
+    });
 });
 
 // Today vs Yesterday

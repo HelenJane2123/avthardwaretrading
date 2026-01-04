@@ -142,7 +142,14 @@
                             <div class="card-body row g-3">
                                 <div class="col-md-2">
                                     <label>Initial Quantity</label>
-                                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ $product->quantity }}">
+                                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ $product->quantity }}" readonly>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Add Quantity</label>
+                                    <input type="number"
+                                        name="add_quantity"
+                                        class="form-control form-control-sm"
+                                        placeholder="Add stock (e.g. 10)">
                                 </div>
                                 <div class="col-md-2">
                                     <label>Remaining Stock</label>
@@ -751,6 +758,19 @@
                     });
                 }
             });
+        });
+        const $addQtyInput = $('input[name="add_quantity"]');
+        const $remainingStockcheck = $('input[name="remaining_stock"]');
+
+        // store original remaining stock ON LOAD
+        const originalRemainingStock = parseFloat($remainingStockcheck.val()) || 0;
+
+        $addQtyInput.on('input', function () {
+            const addedQty = parseFloat($(this).val()) || 0;
+
+            const previewStock = originalRemainingStock + addedQty;
+
+            $remainingStockInput.val(previewStock);
         });
     });
 </script>

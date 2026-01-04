@@ -28,27 +28,26 @@
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
-
+        @if(session()->has('message'))
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+        @if(session()->has('error'))
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
         <!-- Product Table -->
         <div class="row">
             <div class="col-md-12">
                 <div class="tile">
-                    <!-- @if(session()->has('message'))
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                            <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
-                    @if(session()->has('error'))
-                        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                            <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif -->
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
                         <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
@@ -73,6 +72,8 @@
                                         <th>Supplier</th>
                                         <th>Threshold</th>
                                         <th>Status</th>
+                                        <th>Date Created</th>
+                                        <th>Date Updated</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -95,7 +96,9 @@
                                                 @else
                                                     <span class="badge badge-danger">{{ $add->product->status }}</span>
                                                 @endif
-                                            </td>
+                                            </td>                                            
+                                            <td>{{ $add->product->created_at->format('F d, Y') }}</td>
+                                            <td>{{ $add->product->updated_at->format('F d, Y') }}</td>
                                             <td class="text-center">
                                                 <div class="btn-group" role="group">
                                                     <!-- View Button to Open Modal -->
