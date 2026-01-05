@@ -153,7 +153,10 @@
 
                             <!-- Item Details Table -->
                             <h5 class="mt-4">Item Details</h5>
-                            <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" id="addItemBtn" data-target="#itemModal">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-primary"
+                                id="addItemBtn">
                                 <i class="fa fa-plus"></i> Add Item
                             </button>
                             <div class="table-responsive">
@@ -281,7 +284,7 @@
                                     <select name="dis3" class="form-control form-control-sm dis3">
                                         <option value="0">Discount 3 (%)</option>
                                         @foreach($discounts as $tax)
-                                            <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                            <option value="{{ $tax->name }}">{{ $tax->name  }}%</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -363,7 +366,10 @@
                     return false; 
                 }
                 resetModal();
-                $('#itemModal').modal('show');
+                $('#itemModal').modal({
+                    backdrop: 'static',
+                    keyboard: false
+                });
             });
             $('#supplier_name').on('input', function () {
                 const supplierName = $(this).val().trim();
@@ -473,11 +479,14 @@
                 $('#modal_description').val(editingRow.find('input[name="item_description[]"]').val());
                 $('#modal_unit').val(editingRow.find('input[name="unit_id[]"]').val());
                 $('#modal_price').val(editingRow.find('input[name="unit_cost[]"]').val());
-                $('#discount_type').val(editingRow.find('input[name="discount_type[]"]').val());
-                $('#dis1').val(editingRow.find('input[name="discount1[]"]').val());
-                $('#dis2').val(editingRow.find('input[name="discount2[]"]').val());
-                $('#dis3').val(editingRow.find('input[name="discount3[]"]').val());
+                $('.discount_type').val(editingRow.find('input[name="discount_type[]"]').val());
+                $('.dis1').val(editingRow.find('input[name="discount1[]"]').val());
+                $('.dis2').val(editingRow.find('input[name="discount2[]"]').val());
+                $('.dis3').val(editingRow.find('input[name="discount3[]"]').val());
                 $('#modal_net_cost').val(editingRow.find('input[name="net_cost[]"]').val());
+                $('#modal_category').val(editingRow.find('input[name="category_id[]"]').val());
+                $('#modal_volume_less').val(editingRow.find('input[name="volume_less[]"]').val());
+                $('#modal_regular_less').val(editingRow.find('input[name="regular_less[]"]').val());
 
                 $('#itemModal').modal('show');
             });
@@ -540,7 +549,7 @@
                 return `${supplierCode}-${itemNumber}`;
             }
 
-            $('#modal_price, #dis1, #dis2, #dis3, #discount_type').on('change keyup', computeNetCost);
+            $('#modal_price, .dis1, .dis2, .dis3, .discount_type').on('change keyup', computeNetCost);
         });
     </script>
 @endpush

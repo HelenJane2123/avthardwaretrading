@@ -6,6 +6,7 @@ use App\Http\Controllers\TaxController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\SupplierItemController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
@@ -60,6 +61,7 @@ Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
 Route::resource('unit', UnitController::class);
 Route::resource('supplier', SupplierController::class);
+Route::resource('supplier-items', SupplierItemController::class);
 Route::resource('customer', CustomerController::class);
 Route::resource('product', ProductController::class);
 Route::resource('invoice', InvoiceController::class)->except([
@@ -96,6 +98,11 @@ Route::post('/product/{id}/adjustment', [ProductController::class, 'storeAdjustm
 //get supplier information and items
 Route::get('/supplier/{id}/items', [PurchaseController::class, 'getSupplierItems']);
 Route::post('/import-supplier', [ImportController::class, 'import'])->name('import.supplier');
+Route::get('/supplier-items/{id}/edit', [SupplierItemController::class, 'edit'])->name('supplier-item.edit');
+Route::put('/supplier-items/{id}', [SupplierItemController::class, 'update'])
+    ->name('supplier-item.update');
+Route::get('/supplier/{id}/last-item-code', [SupplierItemController::class, 'getLastItemCode']);
+Route::post('/supplier-items', [SupplierItemController::class, 'store'])->name('supplier-items.store');
 
 //get customer information
 Route::get('/customers/{id}', [InvoiceController::class, 'getCustomerInformation']);

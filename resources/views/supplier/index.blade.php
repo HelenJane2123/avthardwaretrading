@@ -88,9 +88,9 @@
                                                     <a class="btn btn-sm btn-info" href="{{ route('supplier.supplier-products', $supplier->id) }}" title="View Products">
                                                         <i class="fa fa-eye"></i>
                                                     </a>
-                                                    <a class="btn btn-sm btn-primary" href="{{ route('supplier.edit', $supplier->id) }}" title="Edit">
+                                                    <!-- <a class="btn btn-sm btn-primary" href="{{ route('supplier.edit', $supplier->id) }}" title="Edit">
                                                         <i class="fa fa-edit"></i>
-                                                    </a>
+                                                    </a> -->
                                                     <button class="btn btn-danger btn-sm" type="button" 
                                                             onclick="deleteTag('{{ $supplier->id }}','{{ $supplier->name }}')">
                                                         <i class="fa fa-trash"></i>
@@ -148,8 +148,9 @@
                         }).then(function() {
                             if (data.status === 'success') {
                                 // Remove row dynamically
-                                var row = document.getElementById('row-' + salesmanId);
+                                var row = document.getElementById('row-' + supplierId);
                                 if (row) row.remove();
+                                location.reload();
                             }
                         });
                     })

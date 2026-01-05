@@ -8,6 +8,7 @@ use App\Models\Unit;
 use App\Models\Category;
 use App\Models\Tax;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SupplierController extends Controller
@@ -56,7 +57,7 @@ class SupplierController extends Controller
             'status' => 'required',
         ]);
 
-        //Step 1: Check for duplicates within the form itself
+        //Check for duplicates within the form itself
         if ($request->has('item_description')) {
             $descriptions = array_map('strtolower', array_filter($request->item_description));
             if (count($descriptions) !== count(array_unique($descriptions))) {
@@ -66,7 +67,7 @@ class SupplierController extends Controller
             }
         }
 
-        // Step 2: Create supplier
+        //Create supplier
         $supplier = Supplier::create([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
@@ -79,7 +80,7 @@ class SupplierController extends Controller
             'status' => $request->status
         ]);
 
-        // Step 3: Check for duplicates in DB before inserting new items
+        //Check for duplicates in DB before inserting new items
         if ($request->has('item_description')) {
             foreach ($request->item_description as $desc) {
                 if (!empty($desc)) {
@@ -99,7 +100,7 @@ class SupplierController extends Controller
             }
         }
 
-        // Step 4: Save items if all checks passed
+        //Save items if all checks passed
         if ($request->has('item_code')) {
             foreach ($request->item_code as $index => $code) {
                 if ($code !== null && $code !== '') {
@@ -114,13 +115,16 @@ class SupplierController extends Controller
                     SupplierItem::create([
                         'supplier_id' => $supplier->id,
                         'item_code' => $code,
-                        'category_id' => $request->item_category[$index] ?? null,
+                        'category_id' => $request->category_id[$index] ?? null,
                         'item_description' => $request->item_description[$index] ?? null,
-                        'item_price' => $request->item_price[$index] ?? 0,
-                        'item_amount' => $request->item_amount[$index] ?? 0,
+                        'item_price' => $request->unit_cost[$index] ?? 0,
+                        'net_price' => $request->net_cost[$index] ?? 0,
                         'unit_id' => $request->unit_id[$index] ?? null,
                         'item_qty' => $request->item_qty[$index] ?? 0,
-                        'discount' => $request->discount[$index] ?? null,
+                        'discount_less_add' => $request->discount_type[$index] ?? null,
+                        'discount_1' => $request->discount1[$index] ?? null,
+                        'discount_2' => $request->discount2[$index] ?? null,
+                        'discount_3' => $request->dis3[$index] ?? null,
                         'item_image' => $imagePath,
                         'volume_less' => $request->volume_less[$index] ?? null,
                         'regular_less' => $request->regular_less[$index] ?? null,
@@ -128,7 +132,6 @@ class SupplierController extends Controller
                 }
             }
         }
-
         return redirect()->back()->with('message', 'New supplier has been added successfully!');
     }
 
@@ -168,7 +171,10 @@ class SupplierController extends Controller
     public function showProducts($id)
     {
         $supplier = Supplier::with('items')->findOrFail($id);
-        return view('supplier.supplier-products', compact('supplier'));
+        $categories = Category::all();
+        $units = Unit::all();
+        $discounts_items = Tax::all();
+        return view('supplier.supplier-products', compact('supplier', 'categories', 'units','discounts_items'));
     }
     /**
      * Update the specified resource in storage.
@@ -190,11 +196,25 @@ class SupplierController extends Controller
             'item_image.*' => 'nullable|image|max:2048',
         ]);
 
-        // ✅ Fetch the supplier
         $supplier = Supplier::findOrFail($id);
 
+        \Log::info('Supplier update started', [
+            'supplier_id' => $supplier->id,
+            'old_data' => $supplier->only([
+                'supplier_code',
+                'name',
+                'mobile',
+                'email',
+                'address',
+                'tax',
+                'details',
+                'status'
+            ]),
+            'updated_by' => auth()->user()->id ?? null,
+        ]);
+
         $supplier->update([
-            'supplier_code' => $request->supplier_code,
+            // 'supplier_code' => $request->supplier_code,
             'name' => $request->name,
             'mobile' => $request->mobile,
             'email' => $request->email,
@@ -204,50 +224,23 @@ class SupplierController extends Controller
             'status' => $request->status
         ]);
 
-        $supplierCode = $supplier->supplier_code;
-        $itemIds = $request->item_ids ?? [];
-        $descriptions = $request->item_description ?? [];
-        $prices = $request->item_price ?? [];
-        $amounts = $request->item_amount ?? [];
-        $codes = $request->item_code ?? [];
-        $item_category = $request->category_id ?? [];
-        $unit_id = $request->unit_id ?? [];
-        $item_qty = $request->item_qty ?? [];
-        $volume_less = $request->volume_less ?? [];
-        $regular_less = $request->regular_less ?? [];
+        \Log::info('Supplier updated successfully', [
+            'supplier_id' => $supplier->id,
+            'new_data' => $supplier->fresh()->only([
+                'supplier_code',
+                'name',
+                'mobile',
+                'email',
+                'address',
+                'tax',
+                'details',
+                'status'
+            ]),
+        ]);
 
-        foreach ($codes as $index => $code) {
-            $itemId = $itemIds[$index] ?? null;
-
-            $data = [
-                'supplier_id' => $supplier->id,
-                'item_code' => $code,
-                'category_id' => $item_category[$index] ?? null,
-                'item_description' => $descriptions[$index] ?? '',
-                'item_price' => $prices[$index] ?? 0,
-                'item_amount' => $amounts[$index] ?? 0,
-                'unit_id' => $unit_id[$index] ?? null,
-                'item_qty' => $item_qty[$index] ?? 0, 
-                'volume_less' => $volume_less[$index] ?? null,
-                'regular_less' => $regular_less[$index] ?? null,
-            ];
-
-            if ($request->hasFile("item_image.$index")) {
-                $file = $request->file("item_image.$index");
-                $randomName = Str::random(40) . '.' . $file->getClientOriginalExtension();
-                $folder = "items/{$code}";
-                $file->storeAs($folder, $randomName, 'public');
-                $data['item_image'] = "$folder/$randomName";
-            }
-
-            if ($itemId) {
-               SupplierItem::where('id', $itemId)->update($data);
-            } else {
-                SupplierItem::create($data);
-            }
-        }
-
-        return redirect()->route('supplier.index')->with('message', 'Supplier updated successfully.');
+        return redirect()
+            ->route('supplier.supplier-products', $supplier->id)
+            ->with('message', 'Supplier updated successfully.');
     }
 
     public function getInfo($id)
@@ -275,7 +268,7 @@ class SupplierController extends Controller
         $isUsedInProductSupplier = $supplier->productSupplier()->exists();
         $isUsedInPurchases = $supplier->purchases()->exists();
 
-        if ($isUsedInSupplierItems || $isUsedInProductSupplier || $isUsedInPurchases) {
+        if ($isUsedInProductSupplier || $isUsedInPurchases) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Cannot delete this supplier because it is used by either supplier items, products or purchases.'
