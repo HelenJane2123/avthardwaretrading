@@ -7,7 +7,7 @@
         <div style="width: 48%;">
             <h4 style="margin-bottom: 8px; border-bottom: 1px solid #000;">Purchase Info</h4>
             <p><strong>PO Number:</strong> {{ $purchase->po_number }}</p>
-            <p><strong>Salesman:</strong> {{ $purchase->salesman['salesman_name'] }}</p>
+            <p><strong>Salesman:</strong> {{ $purchase->salesman['salesman_name'] ?? 'N/A' }}</p>
             <p><strong>Date Purchased:</strong> {{ \Carbon\Carbon::parse($purchase->date)->format('F d, Y') }}</p>
         </div>
 
@@ -45,14 +45,21 @@
                 <td>{{ $item->supplierItem->item_description ?? 'N/A' }}</td>
                 <td style="text-align: center;">{{ $item->qty }}</td>
                 <td style="text-align: center;">
-                    @php
+                     @php
                         $discounts = [];
-                        if ($item->discount_1 > 0) $discounts[] = $item->discount_1 . '%';
-                        if ($item->discount_2 > 0) $discounts[] = $item->discount_2 . '%';
-                        if ($item->discount_3 > 0) $discounts[] = $item->discount_3 . '%';
+
+                        foreach ([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
+                            if ($discount > 0) {
+                                $formatted = fmod($discount, 1) == 0
+                                    ? (int)$discount      
+                                    : rtrim(rtrim($discount, '0'), '.'); // decimal
+
+                                $discounts[] = $formatted . '%';
+                            }
+                        }
                     @endphp
 
-                    @if(count($discounts) > 0)
+                    @if(count($discounts))
                         {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
                     @else
                         -

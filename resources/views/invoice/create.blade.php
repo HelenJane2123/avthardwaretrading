@@ -313,6 +313,7 @@
                             <tr>
                                 <th>Product Code</th>
                                 <th>Supplier Product Code</th>
+                                <th>Supplier Name</th>
                                 <th>Name</th>
                                 <th>Unit Cost</th>
                                 <th>Price</th>
@@ -337,6 +338,7 @@
                                     data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
                                     <td>{{ $product->product_code }}</td>
                                     <td>{{ $product->supplier_product_code }}</td>
+                                    <td>{{ optional($product->supplierItems->first())->supplier->name }}</td>
                                     <td>{{ $product->product_name }}</td>
                                     <td>{{ optional($product->supplierItems->first())->item_price }}</td>
                                     <td>{{ $product->sales_price }}</td>

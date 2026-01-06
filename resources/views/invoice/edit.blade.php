@@ -249,7 +249,7 @@
             <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Select Product</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn btn-close" data-bs-dismiss="modal">x</button>
             </div>
             <div class="modal-body">
                 <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
@@ -266,11 +266,13 @@
                     <table class="table table-bordered" id="productTable">
                         <thead>
                             <tr>
-                                <th>Code</th>
+                                <th>Product Code</th>
+                                <th>Supplier Product Code</th>
+                                <th>Supplier Name</th>
                                 <th>Name</th>
                                 <th>Unit Cost</th>
                                 <th>Price</th>
-                                <th>Stock</th>
+                                <th>Quantity on Hand</th>
                                 <th>Unit</th>
                                 <th>Select</th>
                             </tr>
@@ -290,6 +292,8 @@
                                     data-discount3="{{ $product->discount_3 }}"
                                     data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
                                     <td>{{ $product->product_code }}</td>
+                                    <td>{{ $product->supplier_product_code }}</td>
+                                    <td>{{ optional($product->supplierItems->first())->supplier->name }}</td>
                                     <td>{{ $product->product_name }}</td>
                                     <td>{{ optional($product->supplierItems->first())->item_price }}</td>
                                     <td>{{ $product->sales_price }}</td>
@@ -457,7 +461,9 @@
                 calculateTotals();
             }
         });
-
+        $('#productModal .btn-close').on('click', function() {
+            $('#productModal').modal('hide'); // jQuery fallback
+        });
         // Quantity input validation
         $(document).on('input', '.qty', function () {
             let $row = $(this).closest('tr');

@@ -35,7 +35,12 @@
     <div class="row">
         <div class="col-md-12">
             <div class="tile shadow-sm rounded">
-                <h3 class="tile-title border-bottom pb-2">Edit Product Form</h3>
+                <h3 class="tile-title border-bottom pb-2">Edit Product Form
+                    <small class="text-muted d-block" style="font-size: 0.8rem;">
+                    All fields marked with <span class="text-danger text-sm">*</span> are required.
+                </small>
+
+                </h3>
                 <div class="tile-body">
                     <form action="{{ route('product.update', $product->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -63,7 +68,7 @@
                                 <div class="col-md-9">
                                     <div class="row">
                                         <div class="col-md-8">
-                                            <label class="fw-bold">Product Name</label>
+                                            <label class="fw-bold">Product <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="text" id="product_name" name="product_name" class="form-control form-control-sm" readonly value="{{ $product->product_name }}">
                                                 <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
@@ -92,38 +97,42 @@
                                                 rows="2">{{ $product->volume_less }}</textarea>
                                         </div>
                                     </div>
-                                    <div class="row g-3 mt-2">
+                                    <div class="row mt-2 align-items-start">
+                                        <!-- Regular Less -->
                                         <div class="form-group col-md-4">
                                             <label class="control-label fw-bold">Regular Less</label>
                                             <textarea name="regular_less"
                                                 class="form-control form-control-sm"
                                                 rows="2">{{ $product->regular_less }}</textarea>
                                         </div>
-                                        <!-- <div class="col-md-3">
-                                            <label>Serial Number</label>
-                                            <input type="text" name="serial_number" class="form-control" value="{{ $product->serial_number }}">
-                                        </div> -->
-                                        <div class="col-md-3">
-                                            <label>Category</label>
-                                            <select name="category_id" class="form-control form-control-sm" required>
+
+                                        <!-- Category -->
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Category <span class="text-danger">*</span></label>
+                                            <select name="category_id"
+                                                id="category_id"
+                                                class="form-control form-control-sm"
+                                                required>
                                                 <option value="">--Select--</option>
                                                 @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
+                                                    <option value="{{ $category->id }}"
+                                                        {{ $product->category_id == $category->id ? 'selected' : '' }}>
                                                         {{ $category->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <!-- <div class="col-md-3">
-                                            <label>Model</label>
-                                            <input type="text" name="model" class="form-control" value="{{ $product->model }}">
-                                        </div> -->
-                                        <div class="col-md-3">
-                                            <label>Unit</label>
-                                            <select name="unit_id" class="form-control form-control-sm">
-                                                <option>--Select--</option>
+
+                                        <!-- Unit -->
+                                        <div class="form-group col-md-4">
+                                            <label class="control-label">Unit <span class="text-danger">*</span></label>
+                                            <select name="unit_id"
+                                                id="unit_id"
+                                                class="form-control form-control-sm">
+                                                <option value="">--Select--</option>
                                                 @foreach($units as $unit)
-                                                    <option value="{{$unit->id}}" {{ $product->unit_id == $unit->id ? 'selected' : '' }}>
+                                                    <option value="{{$unit->id}}"
+                                                        {{ $product->unit_id == $unit->id ? 'selected' : '' }}>
                                                         {{$unit->name}}
                                                     </option>
                                                 @endforeach
@@ -423,9 +432,21 @@
 <script type="text/javascript" src="{{asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script type="text/javascript">
     const suppliers = @json($suppliers);
     $(document).ready(function () {
+        $('#category_id').select2({
+            placeholder: "Select Category",
+            allowClear: true,
+             width: '100%'
+        });
+        $('#unit_id').select2({
+            placeholder: "Select Unit",
+            allowClear: true,
+             width: '100%'
+        });
         var maxField = 10;
         var addButton = $('.add_button');
         var wrapper = $('.field_wrapper');

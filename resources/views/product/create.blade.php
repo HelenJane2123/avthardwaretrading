@@ -59,7 +59,13 @@
                         </div>
                         <hr/>
                     @endif
-                    <h3 class="tile-title">Product</h3>
+                    <h3 class="tile-title">
+                        Product
+                        <small class="text-muted d-block" style="font-size: 0.8rem;">
+                            All fields marked with <span class="text-danger text-sm">*</span> are required.
+                        </small>
+                    </h3>
+                    
                     <div class="tile-body">
                         @if ($errors->any())
                             <div class="alert alert-danger">
@@ -105,7 +111,7 @@
                                 <div class="col-md-9">
                                     <div class="row">
                                         <div class="form-group col-md-8 position-relative">
-                                            <label class="control-label">Product</label>
+                                            <label class="control-label">Product <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <input type="text" id="product_name" name="product_name" class="form-control form-control-sm" readonly placeholder="Select product...">
                                                 <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#productModal">Select</button>
@@ -150,8 +156,8 @@
                                         </div> -->
 
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Category</label>
-                                            <select name="category_id" class="form-control form-control-sm">
+                                            <label class="control-label">Category <span class="text-danger">*</span></label>
+                                            <select name="category_id" id="category_id" class="form-control form-control-sm">
                                                 <option>---Select Category---</option>
                                                 @foreach($categories as $category)
                                                     <option value="{{$category->id}}">{{$category->name}}</option>
@@ -175,7 +181,7 @@
                                         </div> -->
 
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Initial Quantity</label>
+                                            <label class="control-label">Initial Quantity <span class="text-danger">*</span></label>
                                             <input name="quantity" class="form-control form-control-sm" type="number" min="0" placeholder="Enter Initial Stock">
                                         </div>
 
@@ -185,8 +191,8 @@
                                         </div>
 
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Selling Price</label>
-                                            <input name="sales_price" id="sales_price" class="form-control form-control-sm @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
+                                            <label class="control-label">Selling Price <span class="text-danger">*</span></label>
+                                            <input name="sales_price" step="0.01" id="sales_price" class="form-control form-control-sm @error('sales_price') is-invalid @enderror" type="number" placeholder="Enter Selling Price">
                                             @error('sales_price')
                                             <span class="invalid-feedback" role="alert">
                                                 <strong>{{ $message }}</strong>
@@ -194,8 +200,8 @@
                                             @enderror
                                         </div>
                                         <div class="form-group col-md-4">
-                                            <label class="control-label">Unit</label>
-                                            <select name="unit_id" class="form-control form-control-sm">
+                                            <label class="control-label">Unit <span class="text-danger">*</span></label>
+                                            <select name="unit_id" id="unit_id" class="form-control form-control-sm">
                                                 <option value="">---Select Unit---</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{$unit->id}}">{{$unit->name}}</option>
@@ -393,8 +399,21 @@
     <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            $('#category_id').select2({
+                placeholder: "Select Category",
+                allowClear: true,
+                width: '280px'
+            });
+            $('#unit_id').select2({
+                placeholder: "Select Unit",
+                allowClear: true,
+                width: '280px'
+            });
+
             var maxField = 10; //Input fields increment limitation
             var addButton = $('.add_button'); //Add button selector
             var wrapper = $('.field_wrapper'); //Input field wrapper

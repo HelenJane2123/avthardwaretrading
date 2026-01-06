@@ -52,6 +52,7 @@
                                     <th>Payment Status</th>
                                     <th>Purchase Status</th>
                                     <th>Order Status</th>
+                                    <th>Remarks</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -112,6 +113,7 @@
                                                 <span class="badge bg-warning">Pending</span>
                                             @endif
                                         </td>
+                                        <td>{{ $purchase->remarks ?? 'N/A' }}</td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
                                                 {{-- View Details --}}

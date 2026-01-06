@@ -293,87 +293,77 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // ✅ Validation (mirrors store)
-        // $request->validate([
-        //     'supplier_id'         => 'required|exists:suppliers,id',
-        //     'date'                => 'required|date',
-        //     'po_number'           => 'required|string|max:50|unique:purchases,po_number,' . $id,
-        //     'salesman'            => 'nullable|string|max:100',
-        //     'payment_id'          => 'nullable|exists:mode_of_payment,id',
-        //     'discount_type'       => 'nullable|string|in:percent,fixed',
-        //     'overall_discount'    => 'nullable|numeric|min:0',
-        //     'subtotal'            => 'required|numeric|min:0',
-        //     'discount_value'      => 'nullable|numeric|min:0',
-        //     'shipping_value'      => 'nullable|numeric|min:0',
-        //     'other_value'         => 'nullable|numeric|min:0',
-        //     'grand_total_value'   => 'required|numeric|min:0',
-        //     'remarks'             => 'nullable|string',
-
-        //     // ✅ Product line validation
-        //     'product_id'          => 'required|array|min:1',
-        //     'product_id.*'        => 'required|exists:supplier_items,id',
-        //     'product_code'        => 'required|array|min:1',
-        //     'product_code.*'      => 'required|string|max:50',
-        //     'qty'                 => 'required|array|min:1',
-        //     'qty.*'               => 'required|integer|min:1',
-        //     'price'               => 'required|array|min:1',
-        //     'price.*'             => 'required|numeric|min:0',
-        //     'dis'                 => 'nullable|array',
-        //     'dis.*'               => 'nullable|numeric|min:0',
-        //     'unit'                => 'required|array|min:1',
-        //     'unit.*'              => 'required|string|max:50',
-        //     'amount'              => 'required|array|min:1',
-        //     'amount.*'            => 'required|numeric|min:0',
-        // ]);
         try {
-            \Log::info('Purchase request data', $request->all());
+            \Log::info('Purchase update request', $request->all());
+
             DB::transaction(function () use ($request, $id) {
+
                 $purchase = Purchase::findOrFail($id);
 
-                // ✅ Update purchase main record
+                // ===============================
+                // Update purchase header
+                // ===============================
                 $purchase->update([
-                    'supplier_id'        => $request->supplier_id,
-                    'po_number'          => $request->po_number,
-                    'salesman_id'        => $request->salesman_id,
-                    'payment_id'         => $request->payment_id,
-                    'date'               => $request->date,
-                    'discount_type'      => $request->discount_type,
-                    'discount_value'     => $request->discount_value ?? 0,
-                    'overall_discount'   => $request->overall_discount ?? 0,
-                    'subtotal'           => $request->subtotal ?? 0,
-                    'shipping'           => $request->shipping ?? 0,
-                    'other_charges'      => $request->other_charges ?? 0,
-                    'remarks'            => $request->remarks,
-                    'grand_total'        => $request->grand_total ?? 0,
+                    'supplier_id'      => $request->supplier_id,
+                    'po_number'        => $request->po_number,
+                    'salesman_id'      => $request->salesman_id ?? null,
+                    'payment_id'       => $request->payment_id ?? null,
+                    'date'             => $request->date,
+                    'discount_type'    => $request->discount_type,
+                    'discount_value'   => $request->discount_value ?? 0,
+                    'overall_discount' => $request->overall_discount ?? 0,
+                    'subtotal'         => $request->subtotal ?? 0,
+                    'shipping'         => $request->shipping ?? 0,
+                    'other_charges'    => $request->other_charges ?? 0,
+                    'grand_total'      => $request->grand_total ?? 0,
+                    'remarks'          => $request->remarks,
                 ]);
 
-                // ✅ Reset and reinsert items
+                // ===============================
+                // Reset items
+                // ===============================
                 $purchase->items()->delete();
 
-                foreach ($request->product_id as $index => $supplierItemId) {
+                $productIds = $request->product_id ?? [];
+
+                foreach ($productIds as $index => $supplierItemId) {
+
+                    // Skip empty rows
+                    if (empty($supplierItemId)) {
+                        continue;
+                    }
+
                     $purchase->items()->create([
-                        'supplier_item_id' => $supplierItemId,
-                        'product_code'     => $request->product_code[$index],
-                        'qty'              => $request->qty[$index],
-                        'unit_price'       => $request->price[$index],
-                        'discount_less_add'    => $request->discount_less_add[$index],
+                        'supplier_item_id'   => $supplierItemId,
+                        'product_code'       => $request->product_code[$index] ?? null,
+                        'qty'                => $request->qty[$index] ?? 0,
+                        'unit_price'         => $request->price[$index] ?? 0,
+                        'discount_less_add'  => $request->discount_less_add[$index] ?? 'less',
                         'discount_1'         => $request->dis1[$index] ?? 0,
                         'discount_2'         => $request->dis2[$index] ?? 0,
                         'discount_3'         => $request->dis3[$index] ?? 0,
-                        'unit'             => $request->unit[$index],
-                        'total'            => $request->amount[$index],
+                        'unit'               => $request->unit[$index] ?? null,
+                        'total'              => $request->amount[$index] ?? 0,
                     ]);
                 }
             });
 
             \Log::info('Purchase successfully updated', ['purchase_id' => $id]);
-            return redirect()->route('purchase.index')->with('message', 'Purchase updated successfully.');
+
+            return redirect()
+                ->route('purchase.index')
+                ->with('message', 'Purchase updated successfully.');
+
         } catch (\Throwable $e) {
-            \Log::error('Purchase creation failed', [
+
+            \Log::error('Purchase update failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return back()->with('error', 'An error occurred while creating the invoice.');
+
+            return back()
+                ->withInput()
+                ->with('error', 'An error occurred while updating the purchase.');
         }
     }
 

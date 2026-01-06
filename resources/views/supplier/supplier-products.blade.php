@@ -101,67 +101,77 @@
                     </thead>
                     <tbody class="medium">
                         @forelse($supplier->items as $item)
-                        <tr id="item-row-{{ $item->id }}">
-                            <td>
-                                @if($item->item_image)
-                                    <img src="{{ asset('storage/' . $item->item_image) }}" width="60" class="img-thumbnail">
-                                @else
-                                    <span class="text-muted">N/A</span>
-                                @endif
-                            </td>
-                            <td>{{ $item->item_code }}</td>
-                            <td>{{ $item->category->name ?? 'N/A' }}</td>
-                            <td>{{ $item->item_description }}</td>
-                            <td>{{ $item->unit->name ?? 'N/A' }}</td>
-                            <td>₱{{ number_format($item->item_price, 2) }}</td>
-                            <td>
-                                @php
-                                    $discounts = [];
-                                    foreach([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
-                                        if ($discount > 0) {
-                                            $discounts[] = rtrim(rtrim($discount, ''), '.') . '%';
+                            <tr id="item-row-{{ $item->id }}">
+                                <td>
+                                    @if($item->item_image)
+                                        <img src="{{ asset('storage/' . $item->item_image) }}" width="60" class="img-thumbnail">
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td>{{ $item->item_code }}</td>
+                                <td>{{ $item->category->name ?? 'N/A' }}</td>
+                                <td>{{ $item->item_description }}</td>
+                                <td>{{ $item->unit->name ?? 'N/A' }}</td>
+                                <td>₱{{ number_format($item->item_price, 2) }}</td>
+                                <td>
+                                    @php
+                                        $discounts = [];
+                                        foreach([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
+                                            if ($discount > 0) {
+                                                $discounts[] = rtrim(rtrim($discount, ''), '.') . '%';
+                                            }
                                         }
-                                    }
-                                @endphp
-                                @if(count($discounts))
-                                    {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>₱{{ number_format($item->net_price, 2) }}</td>
-                            <td>{{ $item->volume_less }}</td>
-                            <td>{{ $item->regular_less }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary edit-item"
-                                        onclick="openEditModal(this)"
-                                        data-item-id="{{ $item->id }}"
-                                        data-category-id="{{ $item->category->id ?? '' }}"
-                                        data-description="{{ $item->item_description }}"
-                                        data-unit-id="{{ $item->unit->id ?? '' }}"
-                                        data-item-price="{{ $item->item_price }}"
-                                        data-net-price="{{ $item->net_price }}"
-                                        data-discount-less-add="{{ $item->discount_less_add }}"
-                                        data-discount-1="{{ $item->discount_1 }}"
-                                        data-discount-2="{{ $item->discount_2 }}"
-                                        data-discount-3="{{ $item->discount_3 }}"
-                                        data-volume-less="{{ $item->volume_less }}"
-                                        data-regular-less="{{ $item->regular_less }}"
-                                        data-image="{{ $item->item_image ? asset('storage/'.$item->item_image) : '' }}"
-                                        title="Edit">
-                                    <i class="fa fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger delete-item"
-                                        data-id="{{ $item->id }}">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="11" class="text-center text-muted">No products available.</td>
-                        </tr>
-                        @endforelse
+                                    @endphp
+                                    @if(count($discounts))
+                                        {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td>₱{{ number_format($item->net_price, 2) }}</td>
+                                <td>{{ $item->volume_less }}</td>
+                                <td>{{ $item->regular_less }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-item"
+                                            onclick="openEditModal(this)"
+                                            data-item-id="{{ $item->id }}"
+                                            data-category-id="{{ $item->category->id ?? '' }}"
+                                            data-description="{{ $item->item_description }}"
+                                            data-unit-id="{{ $item->unit->id ?? '' }}"
+                                            data-item-price="{{ $item->item_price }}"
+                                            data-net-price="{{ $item->net_price }}"
+                                            data-discount-less-add="{{ $item->discount_less_add }}"
+                                            data-discount-1="{{ $item->discount_1 }}"
+                                            data-discount-2="{{ $item->discount_2 }}"
+                                            data-discount-3="{{ $item->discount_3 }}"
+                                            data-volume-less="{{ $item->volume_less }}"
+                                            data-regular-less="{{ $item->regular_less }}"
+                                            data-image="{{ $item->item_image ? asset('storage/'.$item->item_image) : '' }}"
+                                            title="Edit">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-item"
+                                            data-id="{{ $item->id }}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @empty
+                            <!-- <tr>
+                                <td class="text-center text-muted">No products available.</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr> -->
+                            @endforelse
                     </tbody>
                 </table>
             </div>
@@ -415,7 +425,11 @@
 <script src="{{ asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
-    $('#productsTable').DataTable();
+    $('#productsTable').DataTable({
+        language: {
+            emptyTable: "No products available."
+        }
+    });
 
     // Supplier modal
     $('#editSupplierBtn').click(function() {
@@ -603,14 +617,17 @@
         let d2 = parseFloat($('#modal_discount_2').val()) || 0;
         let d3 = parseFloat($('#modal_discount_3').val()) || 0;
         let type = $('#modal_discount_type').val();
+        let net = price;
 
-        let totalDiscount = d1 + d2 + d3;
-        let discountAmount = price * (totalDiscount / 100);
-
-        let net = (type === 'less')
-            ? price - discountAmount
-            : price + discountAmount;
-
+        if (type === 'less') {
+            if (d1 > 0) net -= net * (d1 / 100);
+            if (d2 > 0) net -= net * (d2 / 100);
+            if (d3 > 0) net -= net * (d3 / 100);
+        } else {
+            if (d1 > 0) net += net * (d1 / 100);
+            if (d2 > 0) net += net * (d2 / 100);
+            if (d3 > 0) net += net * (d3 / 100);
+        }
         $('#modal_net_cost').val(net.toFixed(2));
     }
     $('#modal_price, #modal_discount_1, #modal_discount_2, #modal_discount_3, #modal_discount_type').on('change keyup', computeNetCost);
@@ -622,12 +639,19 @@
         let d3 = parseFloat($('#new_discount_3').val()) || 0;
         let type = $('#new_discount_type').val();
 
-        let totalDiscount = d1 + d2 + d3;
-        let discountAmount = price * (totalDiscount / 100);
+        let net = price;
 
-        let net = (type === 'less') ? price - discountAmount : price + discountAmount;
+        if (type === 'less') {
+            if (d1 > 0) net -= net * (d1 / 100);
+            if (d2 > 0) net -= net * (d2 / 100);
+            if (d3 > 0) net -= net * (d3 / 100);
+        } else {
+            if (d1 > 0) net += net * (d1 / 100);
+            if (d2 > 0) net += net * (d2 / 100);
+            if (d3 > 0) net += net * (d3 / 100);
+        }
 
-        $('#new_net_cost').val(net.toFixed(2)); // replicate net cost automatically
+        $('#new_net_cost').val(net.toFixed(2));
     }
 
     // Trigger calculation on change or keyup

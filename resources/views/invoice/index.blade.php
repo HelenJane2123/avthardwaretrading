@@ -236,17 +236,18 @@
                             return;
                         }
 
-                        const token = $('meta[name="csrf-token"]').attr('content');
+                        let formData = new FormData();
+                        formData.append('_method', 'PUT');
+                        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+                        formData.append('password', password); // NO trim
+                        selectedIds.forEach(id => formData.append('ids[]', id));
 
                         $.ajax({
                             url: "{{ route('invoice.bulkApprove') }}",
-                            type: 'POST', // POST + _method: PUT
-                            data: {
-                                _method: 'PUT',
-                                _token: token,
-                                ids: selectedIds,
-                                password: password.trim()
-                            },
+                            type: 'POST',
+                            data: formData,
+                            processData: false,
+                            contentType: false,
                             success: function (response) {
                                 if (response.error) {
                                     reject(response.error);
@@ -255,8 +256,8 @@
                                 }
                             },
                             error: function (xhr) {
-                                console.log(xhr);
-                                reject('An error occurred during approval.');
+                                console.error(xhr);
+                                reject(xhr.responseJSON?.error || 'Bulk approval failed.');
                             }
                         });
                     });
@@ -265,7 +266,7 @@
                 if (result && result.value && result.value.success) {
                     swal({
                         type: 'success',
-                        title: 'Invoices have been approved!',
+                        title: 'Invoices Approved!',
                         text: result.value.success,
                         timer: 1500,
                         showConfirmButton: false
@@ -273,7 +274,7 @@
                     setTimeout(() => location.reload(), 1500);
                 }
             }).catch(function (error) {
-                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
+                swal('Error', error, 'error');
             });
         });
         function deleteTag(id) {

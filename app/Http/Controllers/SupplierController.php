@@ -49,9 +49,9 @@ class SupplierController extends Controller
         $request->validate([
             'supplier_code' => 'required|unique:suppliers',
             'name' => 'required',
-            'mobile' => 'required|min:3|digits:11',
+            'mobile' => 'nullable|min:3|digits:11',
             'address' => 'required|min:3',
-            'details' => 'required|min:3',
+            'details' => 'nullable|min:3',
             'previous_balance' => 'nullable|numeric',
             'item_image.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'status' => 'required',

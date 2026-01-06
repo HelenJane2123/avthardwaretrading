@@ -527,12 +527,17 @@
                 let d3 = parseFloat($('.dis3').val()) || 0;
                 let type = $('.discount_type').val();
 
-                let totalDiscount = d1 + d2 + d3;
-                let discountAmount = price * (totalDiscount / 100);
+                let net = price;
 
-                let net = (type === 'less')
-                    ? price - discountAmount
-                    : price + discountAmount;
+                if (type === 'less') {
+                    if (d1 > 0) net -= net * (d1 / 100);
+                    if (d2 > 0) net -= net * (d2 / 100);
+                    if (d3 > 0) net -= net * (d3 / 100);
+                } else {
+                    if (d1 > 0) net += net * (d1 / 100);
+                    if (d2 > 0) net += net * (d2 / 100);
+                    if (d3 > 0) net += net * (d3 / 100);
+                }
 
                 $('#modal_net_cost').val(net.toFixed(2));
             }

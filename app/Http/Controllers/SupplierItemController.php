@@ -82,6 +82,7 @@ class SupplierItemController extends Controller
 
     public function getLastItemCode($supplierId)
     {
+        $supplier = Supplier::findOrFail($supplierId);
         $lastItem = SupplierItem::where('supplier_id', $supplierId)
                     ->orderBy('id', 'desc')
                     ->first();
@@ -96,7 +97,7 @@ class SupplierItemController extends Controller
             $newCode = $prefix . '-' . $newNumber;
         } else {
             // Default code if no items exist
-            $newCode = 'ITEM-001-001';
+            $newCode = $supplier->supplier_code . '-001';
         }
 
         return response()->json(['new_code' => $newCode]);

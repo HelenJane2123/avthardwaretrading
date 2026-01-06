@@ -166,19 +166,22 @@
                     {{ $item->supplierItem->item_description ?? 'N/A' }}
                     @php
                         $discounts = [];
-                        if ($item->discount_1 > 0) $discounts[] = $item->discount_1 . '%';
-                        if ($item->discount_2 > 0) $discounts[] = $item->discount_2 . '%';
-                        if ($item->discount_3 > 0) $discounts[] = $item->discount_3 . '%';
+
+                        foreach ([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
+                            if ($discount > 0) {
+                                $formatted = fmod($discount, 1) == 0
+                                    ? (int)$discount      
+                                    : rtrim(rtrim($discount, '0'), '.'); // decimal
+
+                                $discounts[] = $formatted . '%';
+                            }
+                        }
                     @endphp
 
-                    @if(count($discounts) > 0)
-                        <strong>{{ ucfirst($item->discount_less_add) }}:</strong> {{ implode(' ', $discounts) }}
+                    @if(count($discounts))
+                        {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
                     @else
                         -
-                    @endif
-
-                    @if(!empty($item->discount) && $item->discount > 0)
-                        <br><small><strong>Overall Discount:</strong> {{ number_format($item->discount, 2) }}%</small>
                     @endif
                 </td>
                 <td>{{ $item->qty }}</td>

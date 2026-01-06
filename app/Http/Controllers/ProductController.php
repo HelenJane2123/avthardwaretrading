@@ -12,6 +12,8 @@ use App\Models\Unit;
 use App\Models\ProductAdjustments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -58,105 +60,113 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        // Get first supplier (since supplier_id is an array)
+        $supplierId = $request->supplier_id[0] ?? null;
+
         $request->validate([
             'product_code' => 'required|unique:products,product_code',
-            'supplier_product_code' => 'required|unique:products,supplier_product_code',
+
+            'supplier_product_code' => 'required|string|max:255',
+
             'product_name' => 'required|string|min:3|max:255',
-            // 'serial_number' => 'required',
             'category_id' => 'required',
-            'base_price' => 'required',
             'sales_price' => 'required|numeric',
             'unit_id' => 'required',
             'quantity' => 'required|integer|min:0',
             'remaining_stock' => 'nullable|numeric|min:0',
-            'supplier_id' => 'required|array',  // must be array
+
+            'supplier_id' => 'required|array',
             'supplier_id.*' => 'exists:suppliers,id',
-            'supplier_price' => 'required|array',
-            'supplier_price.*' => 'numeric|min:0',
-            'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'discount_type' => 'nullable', 
+
+            'supplier_price' => 'nullable|array',
+            'supplier_price.*' => 'nullable|numeric|min:0',
+
+            'net_price' => 'nullable|array',
+            'net_price.*' => 'nullable|numeric|min:0',
+
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+
+            'discount_type' => 'nullable',
             'discount_1' => 'nullable|integer',
             'discount_2' => 'nullable|integer',
             'discount_3' => 'nullable|integer',
-            // 'adjustment' => 'nullable|integer|min:0', // new adjustment input
-            // 'adjustment_status' => 'nullable|in:Return,Others',
-            // 'remarks' => 'nullable|string|max:500',
         ]);
 
-        $product = new Product();
-        $product->product_code = $this->generateProductCode();
-        $product->supplier_product_code = $request->supplier_product_code;
-        $product->product_name = $request->product_name;
-        $product->description = $request->description;
-        $product->serial_number = $request->serial_number;
-        $product->model = $request->model;
-        $product->category_id = $request->category_id;
-        $product->base_price = $request->base_price;
-        $product->sales_price = $request->sales_price;
-        $product->unit_id = $request->unit_id;
-        $product->quantity = $request->quantity;
-        $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
-        $product->discount_type = $request->discount_type;
-        $product->discount_1 = $request->discount_1;
-        $product->discount_2 = $request->discount_2;
-        $product->discount_3 = $request->discount_3;
-        $product->threshold = 0;
-        $product->volume_less = $request->volume_less;
-        $product->regular_less = $request->regular_less;
+        DB::beginTransaction();
 
-        // Set stock status
-        if ($product->quantity <= 0) {
-            $product->status = 'Out of Stock';
-        } elseif ($product->quantity <= $product->threshold) {
-            $product->status = 'Low Stock';
-        } else {
-            $product->status = 'In Stock';
-        }
+        try {
+            // -----------------------------
+            // CREATE PRODUCT
+            // -----------------------------
+            $product = new Product();
+            $product->product_code = $this->generateProductCode();
+            $product->supplier_product_code = $request->supplier_product_code;
+            $product->product_name = $request->product_name;
+            $product->description = $request->description;
+            $product->serial_number = $request->serial_number;
+            $product->model = $request->model;
+            $product->category_id = $request->category_id;
+            $product->sales_price = $request->sales_price;
+            $product->unit_id = $request->unit_id;
+            $product->quantity = $request->quantity;
+            $product->remaining_stock = $request->remaining_stock ?? $request->quantity;
+            $product->discount_type = $request->discount_type;
+            $product->discount_1 = $request->discount_1;
+            $product->discount_2 = $request->discount_2;
+            $product->discount_3 = $request->discount_3;
+            $product->threshold = 0;
+            $product->volume_less = $request->volume_less;
+            $product->regular_less = $request->regular_less;
 
-        // Handle image
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $image->move(public_path('images/product/'), $imageName);
-            $product->image = $imageName;
-        }
-
-        $product->save();
-
-        // Attach suppliers
-        $syncData = [];
-        foreach ($request->supplier_id as $key => $supplierId) {
-            $syncData[$supplierId] = ['price' => $request->supplier_price[$key]];
-        }
-        $product->suppliers()->sync($syncData);
-
-        //Insert into adjustments if adjustment exists
-        if ($request->has('adjustment')) {
-            foreach ($request->adjustment as $index => $adjustment) {
-                // Skip if adjustment is empty or zero
-                if (empty($adjustment) || $adjustment <= 0) continue;
-
-                $status = $request->adjustment_status[$index] ?? 'Others';
-                $remarks = $request->adjustment_remarks[$index] ?? '';
-                $newQty = $adjustment + $product->remaining_stock;
-
-                \DB::table('product_adjustments')->insert([
-                    'product_id' => $product->id,
-                    'adjustment' => $adjustment,
-                    'adjustment_status' => $status,
-                    'remarks' => $remarks,
-                    'new_initial_qty' => $newQty,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // Update product remaining stock
-                $product->remaining_stock += $adjustment;
-                $product->save();
+            // Stock status
+            if ($product->remaining_stock <= 0) {
+                $product->status = 'Out of Stock';
+            } elseif ($product->remaining_stock <= $product->threshold) {
+                $product->status = 'Low Stock';
+            } else {
+                $product->status = 'In Stock';
             }
-        }
 
-        return redirect()->route('product.index')->with('message', 'New product has been added successfully');
+            // -----------------------------
+            // IMAGE UPLOAD
+            // -----------------------------
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $image->move(public_path('images/product/'), $imageName);
+                $product->image = $imageName;
+            }
+
+            $product->save();
+
+            // -----------------------------
+            // ATTACH SUPPLIERS
+            // -----------------------------
+            $syncData = [];
+
+            foreach ($request->supplier_id as $key => $supplierId) {
+                $syncData[$supplierId] = [
+                    'price'     => $request->supplier_price[$key] ?? 0,
+                    'net_price' => $request->net_price[$key] ?? 0,
+                ];
+            }
+
+            $product->suppliers()->sync($syncData);
+
+            DB::commit();
+
+            return redirect()
+                ->route('product.index')
+                ->with('message', 'New product has been added successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Product store failed: ' . $e->getMessage());
+
+            return back()
+                ->withErrors(['error' => 'Failed to add product. Please try again.'])
+                ->withInput();
+        }
     }
 
 
