@@ -50,7 +50,11 @@
                                     <option value="60" {{ old('term', $modeofpayment->term) == '60' ? 'selected' : '' }}>60 days</option>
                                     <option value="90" {{ old('term', $modeofpayment->term) == '90' ? 'selected' : '' }}>90 days</option>
                                     <option value="120" {{ old('term', $modeofpayment->term) == '120' ? 'selected' : '' }}>120 days</option>
+                                    <option value="150" {{ old('term', $modeofpayment->term) == '150' ? 'selected' : '' }}>150 days</option>
+                                    <option value="160" {{ old('term', $modeofpayment->term) == '160' ? 'selected' : '' }}>160 days</option>
+                                    <option value="180" {{ old('term', $modeofpayment->term) == '180' ? 'selected' : '' }}>180 days</option>
                                 </select>
+                                
                             </div>
 
                             <div class="form-group col-md-6">

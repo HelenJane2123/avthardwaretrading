@@ -231,7 +231,7 @@
                 cancelButtonText: 'Cancel',
                 preConfirm: function (password) {
                     return new Promise(function (resolve, reject) {
-                        if (!password || password.trim() === '') {
+                        if (!password || password === '') {
                             reject('Please enter your password');
                             return;
                         }

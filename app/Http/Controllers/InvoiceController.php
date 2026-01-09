@@ -21,6 +21,7 @@ use App\Models\Salesman;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends Controller
 {
@@ -543,37 +544,83 @@ class InvoiceController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $invoice = Invoice::with('items.product')->findOrFail($id);
+        \Log::info('--- SINGLE APPROVE START ---', [
+            'invoice_id' => $id,
+            'request_keys' => array_keys($request->all()),
+        ]);
 
-        $user = User::where('user_role', 'super_admin')->first();
-        if (!$user) {
-            return response()->json(['error' => 'Super Admin account not found.'], 404);
-        }
+        $invoice = Invoice::with('items.product')->findOrFail($id);
 
         $request->validate([
             'password' => 'required|string',
         ]);
 
-        if (!\Hash::check($request->password, $user->password)) {
+        \Log::info('Password received', [
+            'password_present' => $request->filled('password'),
+            'password_length' => strlen($request->password),
+        ]);
+
+        $user = auth()->user();
+
+        \Log::info('Authenticated user check', [
+            'user_exists' => !!$user,
+            'user_id' => $user->id ?? null,
+            'user_role' => $user->user_role ?? null,
+        ]);
+
+        if (!$user) {
+            \Log::warning('Approve failed: no authenticated user');
+            return response()->json(['error' => 'Unauthorized.'], 401);
+        }
+
+        if ($user->user_role !== 'super_admin') {
+            \Log::warning('Approve failed: invalid role', [
+                'role' => $user->user_role
+            ]);
+            return response()->json(['error' => 'Only Super Admin can approve invoices.'], 403);
+        }
+
+        $passwordCheck = \Hash::check($request->password, $user->password);
+
+        \Log::info('Password verification result', [
+            'password_match' => $passwordCheck,
+        ]);
+
+        if (!$passwordCheck) {
             return response()->json(['error' => 'Incorrect password.'], 403);
         }
 
         if ($invoice->invoice_status === 'approved') {
+            \Log::warning('Invoice already approved', [
+                'invoice_id' => $invoice->id
+            ]);
             return response()->json(['error' => 'Invoice is already approved.'], 400);
         }
 
         DB::beginTransaction();
         try {
-
             foreach ($invoice->items as $item) {
                 $product = $item->product;
-                if (!$product) continue;
 
-                // Deduct stock
+                if (!$product) {
+                    \Log::warning('Item without product', ['item_id' => $item->id]);
+                    continue;
+                }
+
                 $newStock = $product->remaining_stock - $item->qty;
+
+                \Log::info('Stock check', [
+                    'product_id' => $product->id,
+                    'current_stock' => $product->remaining_stock,
+                    'qty' => $item->qty,
+                    'new_stock' => $newStock,
+                ]);
 
                 if ($newStock < 0) {
                     DB::rollBack();
+                    \Log::error('Insufficient stock', [
+                        'product' => $product->product_name
+                    ]);
                     return response()->json([
                         'error' => "Insufficient stock for {$product->product_name}."
                     ], 400);
@@ -582,53 +629,96 @@ class InvoiceController extends Controller
                 $product->remaining_stock = $newStock;
                 $product->save();
 
-                // Update product status based on threshold
                 $this->updateProductStatus($product);
             }
 
-            // Approve invoice
-            $invoice->invoice_status = 'approved';
-            $invoice->discount_approved = 1;
-            $invoice->approved_by = $user->id;
-            $invoice->approved_at = now();
-            $invoice->save();
+            $invoice->update([
+                'invoice_status' => 'approved',
+                'discount_approved' => 1,
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
 
             DB::commit();
 
+            \Log::info('Invoice approved successfully', [
+                'invoice_id' => $invoice->id,
+                'approved_by' => $user->id
+            ]);
+
             return response()->json(['success' => 'Invoice approved and stock updated successfully!']);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Error updating stock: '.$e->getMessage());
+            \Log::error('Single approval failed', [
+                'error' => $e->getMessage(),
+            ]);
             return response()->json(['error' => 'Approval failed.'], 500);
         }
     }
 
+
     public function bulkApprove(Request $request)
     {
+        \Log::info('--- BULK APPROVE START ---', [
+            'request_keys' => array_keys($request->all()),
+            'ids_count' => is_array($request->ids) ? count($request->ids) : 0,
+        ]);
+
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:invoices,id',
             'password' => 'required|string',
         ]);
 
-        $user = User::where('user_role', 'super_admin')->first();
+        \Log::info('Password received (bulk)', [
+            'password_present' => $request->filled('password'),
+            'password_length' => strlen($request->password),
+        ]);
+
+        $user = auth()->user();
+
+        \Log::info('Authenticated user (bulk)', [
+            'user_exists' => !!$user,
+            'user_id' => $user->id ?? null,
+            'user_role' => $user->user_role ?? null,
+        ]);
+
         if (!$user) {
-            return response()->json(['error' => 'Super Admin account not found.'], 404);
+            \Log::warning('Bulk approve failed: no authenticated user');
+            return response()->json(['error' => 'Unauthorized.'], 401);
         }
 
-        if (!\Hash::check($request->password, $user->password)) {
+        if ($user->user_role !== 'super_admin') {
+            \Log::warning('Bulk approve failed: invalid role', [
+                'role' => $user->user_role
+            ]);
+            return response()->json(['error' => 'Only Super Admin can approve invoices.'], 403);
+        }
+
+        $passwordCheck = \Hash::check($request->password, $user->password);
+
+        \Log::info('Bulk password verification', [
+            'password_match' => $passwordCheck,
+        ]);
+
+        if (!$passwordCheck) {
             return response()->json(['error' => 'Incorrect password.'], 403);
         }
-
-        $approvedInvoices = 0;
 
         DB::beginTransaction();
         try {
             $invoices = Invoice::with('items.product')
                 ->whereIn('id', $request->ids)
                 ->where('invoice_status', 'pending')
+                ->lockForUpdate()
                 ->get();
+
+            \Log::info('Invoices loaded', [
+                'count' => $invoices->count()
+            ]);
+
+            $approvedInvoices = 0;
 
             foreach ($invoices as $invoice) {
                 foreach ($invoice->items as $item) {
@@ -639,6 +729,10 @@ class InvoiceController extends Controller
 
                     if ($newStock < 0) {
                         DB::rollBack();
+                        \Log::error('Bulk insufficient stock', [
+                            'invoice_id' => $invoice->id,
+                            'product' => $product->product_name
+                        ]);
                         return response()->json([
                             'error' => "Insufficient stock for {$product->product_name} in invoice #{$invoice->id}."
                         ], 400);
@@ -646,30 +740,36 @@ class InvoiceController extends Controller
 
                     $product->remaining_stock = $newStock;
                     $product->save();
-
-                    // Update product status based on threshold
                     $this->updateProductStatus($product);
                 }
 
-                // Approve invoice
-                $invoice->invoice_status = 'approved';
-                $invoice->discount_approved = 1;
-                $invoice->approved_by = $user->id;
-                $invoice->approved_at = now();
-                $invoice->save();
+                $invoice->update([
+                    'invoice_status' => 'approved',
+                    'discount_approved' => 1,
+                    'approved_by' => $user->id,
+                    'approved_at' => now(),
+                ]);
 
                 $approvedInvoices++;
             }
 
             DB::commit();
 
-            return response()->json([
-                'success' => "{$approvedInvoices} invoice(s) approved and stock updated successfully."
+            \Log::info('Bulk approve success', [
+                'approved_count' => $approvedInvoices,
+                'approved_by' => $user->id
             ]);
 
-        } catch (\Exception $e) {
+            return response()->json([
+                'success' => "{$approvedInvoices} invoice(s) approved successfully."
+            ]);
+
+        } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Bulk approval failed: '.$e->getMessage());
+            \Log::error('Bulk approval exception', [
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json(['error' => 'Bulk approval failed.'], 500);
         }
     }

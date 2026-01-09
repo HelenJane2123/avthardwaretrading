@@ -10,6 +10,7 @@ use App\Models\Tax;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class SupplierItemController extends Controller
 {
@@ -20,25 +21,23 @@ class SupplierItemController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Validate input
         $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
-            'item_description' => 'required|string|max:255',
-            'unit_id' => 'nullable|exists:units,id',
-            'item_price' => 'nullable|numeric',
-            'net_price' => 'nullable|numeric',
-            'discount_less_add' => 'nullable|in:less,add',
-            'discount_1' => 'nullable|numeric',
-            'discount_2' => 'nullable|numeric',
-            'discount_3' => 'nullable|numeric',
-            'volume_less' => 'nullable|string|max:50',
-            'regular_less' => 'nullable|string|max:50',
-            'item_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'category_id'        => 'nullable|exists:categories,id',
+            'item_description'   => 'required|string|max:255',
+            'unit_id'            => 'nullable|exists:units,id',
+            'item_price'         => 'nullable|numeric',
+            'net_price'          => 'nullable|numeric',
+            'discount_less_add'  => 'nullable|in:less,add',
+            'discount_1'         => 'nullable|numeric',
+            'discount_2'         => 'nullable|numeric',
+            'discount_3'         => 'nullable|numeric',
+            'volume_less'        => 'nullable|string|max:50',
+            'regular_less'       => 'nullable|string|max:50',
+            'item_image'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $item = SupplierItem::findOrFail($id);
 
-        // Log old data before update
         \Log::info('Updating SupplierItem', [
             'item_id' => $item->id,
             'old_data' => $item->toArray(),
@@ -54,30 +53,39 @@ class SupplierItemController extends Controller
             $request->merge(['item_image' => "$folder/$filename"]);
         }
 
-        // Update item
-        $item->update($request->only([
-            'category_id',
-            'item_description',
-            'unit_id',
-            'item_price',
-            'net_price',
-            'discount_less_add',
-            'discount_1',
-            'discount_2',
-            'discount_3',
-            'volume_less',
-            'regular_less',
-            'item_image',
-        ]));
+        DB::transaction(function () use ($request, $item) {
 
-        // Log new data after update
-        \Log::info('SupplierItem updated successfully', [
+            //Update supplier_items
+            $item->update($request->only([
+                'category_id',
+                'item_description',
+                'unit_id',
+                'item_price',
+                'net_price',
+                'discount_less_add',
+                'discount_1',
+                'discount_2',
+                'discount_3',
+                'volume_less',
+                'regular_less',
+                'item_image',
+            ]));
+
+            // Update linked product inventory items
+            $item->products()->update([
+                'product_name' => $request->item_description,
+                'unit_id'      => $request->unit_id,
+                'category_id'  => $request->category_id,
+            ]);
+        });
+
+        \Log::info('SupplierItem and linked products updated successfully', [
             'item_id' => $item->id,
             'new_data' => $item->fresh()->toArray(),
             'updated_by' => auth()->user()->id ?? null,
         ]);
 
-        return back()->with('message', 'Item updated successfully.');
+        return back()->with('message', 'Supplier Item and linked product inventory updated successfully.');
     }
 
     public function getLastItemCode($supplierId)
