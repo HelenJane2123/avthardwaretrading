@@ -50,12 +50,20 @@
                 <div class="tile">
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
-                        <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
+                        <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap gap-2">
+                            <!-- Filter by Supplier -->
                             <div class="mr-2">
-                                <label for="filterSupplier" class="mr-1">Filter by Supplier:</label>
+                                <label for="filterSupplier" class="me-2 mb-0">Filter by Supplier:</label>
                                 <select id="filterSupplier" class="form-control form-control-sm d-inline-block w-auto">
                                     <option value="">All Suppliers</option>
-                                    <!-- Options will be populated by JS -->
+                                </select>
+                            </div>
+
+                            <!-- Filter by Product Status -->
+                            <div class="mr-2">
+                                <label for="filterProdStatus" class="me-2 mb-0">Filter by Product Status:</label>
+                                <select id="filterProdStatus" class="form-control form-control-sm d-inline-block w-auto">
+                                    <option value="">All Status</option>
                                 </select>
                             </div>
                         </div>
@@ -179,6 +187,26 @@
             var supplierId = $(this).val();
             table.column(0).search(supplierId).draw();
         });
+
+        // Populate Product Status dropdown from table data
+        var statusColumnIndex = 8; // Status column
+        var statuses = invoiceTable.column(statusColumnIndex).data().unique().sort();
+
+        statuses.each(function(d) {
+            // Strip HTML and get only the text inside the span
+            var cleanStatus = $('<div>').html(d).text();
+            $('#filterProdStatus').append('<option value="' + cleanStatus + '">' + cleanStatus + '</option>');
+        });
+
+        // Filter table based on selection
+        $('#filterProdStatus').on('change', function() {
+            var val = $(this).val();
+            // Use regex search to match the text inside the span
+            invoiceTable.column(statusColumnIndex)
+                .search(val ? '^' + val + '$' : '', true, false)
+                .draw();
+        });
+
 
         function deleteTag(productId, productName) {
             Swal.fire({

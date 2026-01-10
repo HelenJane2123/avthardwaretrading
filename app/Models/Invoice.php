@@ -27,6 +27,8 @@ class Invoice extends Model
         'salesman',
         'remarks',
         'discount_approved',
+        'is_printed',
+        'printed_at',
         'created_by',
         'updated_by',
         'approved_by'

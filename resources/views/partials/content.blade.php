@@ -1,36 +1,55 @@
 <style>
+.app-content {
+    padding: 25px;
+}
+
+/* Page Title */
+.app-title h1 {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
 /* Section Styling */
 .section-container {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  margin-bottom: 30px;
-  overflow: hidden;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    border: none;
+    overflow: hidden;
+    padding:20px;
 }
 .section-header {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  padding: 15px 20px;
-  border-bottom: 1px solid #e0e0e0;
-  position: relative;
-  text-transform: uppercase;
+    background: linear-gradient(90deg, #f8f9fc, #ffffff);
+    font-size: 14px;
+    font-weight: 700;
+    color: #343a40;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef0f5;
+    text-transform: uppercase;
 }
+
 .section-header::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 3px;
-  background-color: #007bff;
-  position: absolute;
-  bottom: -1px;
-  left: 0;
+    display: none;
 }
 .section-container table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+    font-size: 13px;
+    width: 100%;
 }
+
+.section-container th {
+    background: #f9fafc;
+    border: none;
+    color: #6c757d;
+}
+
+.section-container td {
+    border: none;
+    border-bottom: 1px solid #f1f3f6;
+}
+
+.section-container tbody tr:hover {
+    background: #f8fbff;
+}
+
 .section-container th, .section-container td {
   padding: 12px 20px;
   border: 1px solid #e0e0e0;
@@ -38,11 +57,7 @@
   vertical-align: middle;
   color: #333;
 }
-.section-container th {
-  background-color: #f5f5f5;
-  color: #555;
-  font-weight: bold;
-}
+
 .section-container tbody tr:last-child td {
   border-bottom: none;
 }
@@ -59,10 +74,11 @@
   margin: 0;
 }
 .product-list-item {
-  display: flex;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+    padding: 16px 20px;
+    transition: background .2s ease;
+}
+.product-list-item:hover {
+    background: #f8fbff;
 }
 .product-list-item:last-child {
   border-bottom: none;
@@ -84,7 +100,7 @@
   font-size: 12px;
   color: #777;
 }
-.product-list-item .product-price {
+.product-list-item {
   background-color: #ffc107;
   color: #fff;
   padding: 5px 10px;
@@ -94,14 +110,48 @@
   margin-left: 15px;
 }
 
-.dashboard-card {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.product-price {
+    background: linear-gradient(135deg, #ff9f43, #ff7849);
+    font-size: 13px;
+    border-radius: 20px;
 }
+
+.tile {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    padding: 20px;
+}
+
+.tile-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    border: none;
+    transition: all .25s ease;
+}
+
 .dashboard-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.12);
+}
+
+.dashboard-card h6 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.dashboard-card h4 {
+    font-weight: 700;
+    font-size: 20px;
 }
 .fade-in {
     animation: fadeIn 0.6s ease-in-out;
@@ -161,9 +211,8 @@
             </div>
         </div>
     </div>
-
-  {{-- Tables and Lists --}}
-  <div class="row">
+  
+  <div class="row mt-4">
       <div class="col-lg-6 fade-in">
           <div class="section-container">
             <div class="section-header"><i class="fa fa-th"></i> Highest Selling Products</div>
@@ -204,7 +253,7 @@
             <tr>
                 <td>{{ $sale->id }}</td>
                 <td>{{ $sale->customer->name ?? 'Unknown' }}</td>
-                <td>{{ $sale->created_at->format('Y-m-d') }}</td>
+                <td>{{ $sale->created_at->format('M d, Y') }}</td>
                 <td>₱{{ number_format($sale->grand_total, 2) }}</td>
             </tr>
             @empty
@@ -214,66 +263,48 @@
         </table>
         </div>
     </div>
-    </div>
+  </div>
 
-    {{-- Lists --}}
-    <div class="row mt-4">
+  <div class="row mt-4">
       <div class="col-lg-6 fade-in">
-        <div class="section-container">
-            <div class="section-header"><i class="fa fa-cube"></i> Recently Added Products</div>
-            <ul class="product-list">
-                @foreach($recentProducts as $rp)
-                <li class="product-list-item">
-                <i class="fa fa-cube product-icon"></i>
-                <div class="product-details">
-                    <div class="product-name">{{ $rp->product_name }}</div>
-                    <div class="product-category">{{ $rp->category->name ?? 'Uncategorized' }}</div>
-                </div>
-                <div class="product-price">₱{{ number_format(floatval($rp->sales_price), 2) }}</div>     
-                </li>
-                @endforeach
-            </ul>
-        </div>
+          <div class="section-container">
+              <div class="section-header"><i class="fa fa-store"></i> Top 20 Stores by Sales</div>
+              <div id="topStoresChart" style="width: 100%; height: 400px;"></div>
+          </div>
       </div>
       <div class="col-lg-6 fade-in">
-            <div class="section-container">
-                <div class="section-header"><i class="fa fa-cash-register"></i> Recent Collections</div>
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Collection Number</th>
-                            <th>Amount Paid</th>
-                            <th>Date</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($recentCollections as $collection)
-                        <tr>
-                            <td>{{ $collection->invoice->customer->name ?? 'N/A' }}</td>
-                            <td>
-                            <a href="{{ route('invoice.show', $collection->collection_number) }}">
-                                {{ $collection->collection_number }}
-                            </a>
-                            </td>
-                            <td>₱{{ number_format($collection->amount_paid, 2) }}</td>
-                            <td>{{ \Carbon\Carbon::parse($collection->created_at)->format('M d, Y') }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="5" class="text-center">No recent collections</td></tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="section-container">
+            <div class="section-header"><i class="fa fa-cash-register"></i> Recent Collections</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Collection Number</th>
+                        <th>Amount Paid</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse($recentCollections as $collection)
+                    <tr>
+                        <td>{{ $collection->invoice->customer->name ?? 'N/A' }}</td>
+                        <td><a href="{{ route('invoice.show', $collection->collection_number) }}">{{ $collection->collection_number }}</a></td>
+                        <td>₱{{ number_format($collection->amount_paid, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($collection->created_at)->format('M d, Y') }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="text-center">No recent collections</td></tr>
+                @endforelse
+                </tbody>
+            </table>
         </div>
-    </div>
-
+      </div>
+  </div>
   {{-- Charts --}}
-  <div class="row">
+  <div class="row mt-4">
     <div class="col-md-6">
       <div class="tile">
-        <h3 class="tile-title">Monthly Sales</h3>
+        <h3 class="tile-title">First 3 Months Sales</h3>
         <div id="monthlySalesChart" style="width: 100%; height: 300px;"></div>
       </div>
     </div>
@@ -284,11 +315,12 @@
       </div>
     </div>
   </div>
-  <div class="row">
+  
+  <div class="row g-4">
     <div class="col-md-6">
       <div class="tile">
-        <h3 class="tile-title">Today's vs. Yesterday's Sales</h3>
-        <div id="sales_chart" style="width: 100%; height: 360px;"></div>
+        <h3 class="tile-title">Monthly Estimated Income</h3>
+        <div id="estimatedIncomeChart" style="width: 100%; height: 400px;"></div>
       </div>
     </div>
     <div class="col-md-6">
@@ -298,122 +330,166 @@
       </div>
     </div>
   </div>
-  <div class="row mt-4">
-    <div class="col-md-12">
-      <div class="tile">
-        <h3 class="tile-title">Monthly Estimated Income</h3>
-        <div id="estimatedIncomeChart" style="width: 100%; height: 400px;"></div>
-      </div>
-    </div>
-  </div>
 </main>
 
 {{-- Google Charts --}}
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script type="text/javascript">
-google.charts.load('current', {'packages':['corechart','bar']});
+  google.charts.load('current', {'packages':['corechart','bar']});
 
-// Monthly Sales
-google.charts.setOnLoadCallback(function() {
-  var salesData = @json($monthlySales);
-  var data = new google.visualization.DataTable();
-  data.addColumn('string', 'Month');
-  data.addColumn('number', 'Total Sales');
-  salesData.forEach(function(sale) { data.addRow([sale.month, sale.total_amount]); });
-  var options = { legend: { position: 'bottom' }, curveType: 'function', series: {0:{color:'#28a745'}} };
-  new google.visualization.LineChart(document.getElementById('monthlySalesChart')).draw(data, options);
-});
-
-// Top 20 Sales
-google.charts.setOnLoadCallback(function() {
-  var data = new google.visualization.DataTable();
-  data.addColumn('string', 'Product');
-  data.addColumn('number', 'Sales');
-  data.addRows([
-    @foreach($formattedTopSales as $sale)
-      ['{{ $sale['productName'] }}', {{ $sale['totalSales'] }}],
-    @endforeach
-  ]);
-  new google.visualization.PieChart(document.getElementById('topSalesChart'))
-    .draw(data, {
-        pieHole: 0.4,
-        colors: [
-            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
-            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
-            '#393b79', '#637939', '#8c6d31', '#843c39', '#7b4173',
-            '#3182bd', '#31a354', '#756bb1', '#e6550d', '#6baed6'
-        ],
-        pieSliceText: 'percentage',   
-        tooltip: {                  
-            text: 'both'
-        },
-        legend: { position: 'right' }
-    });
-});
-
-// Today vs Yesterday
-google.charts.setOnLoadCallback(function() {
-  var data = google.visualization.arrayToDataTable([
-    ['Day','Sales'],
-    ['Yesterday', {{ $yesterdaySales }}],
-    ['Today', {{ $todaySales }}],
-  ]);
-  new google.charts.Bar(document.getElementById('sales_chart'))
-    .draw(data, google.charts.Bar.convertOptions({ colors:['#1b9e77','#d95f02'] }));
-});
-
-// Weekly Comparison
-google.charts.setOnLoadCallback(function() {
-  var data = google.visualization.arrayToDataTable([
-    ['Week','Sales',{ role:'style' }],
-    ['This Week', {{ $thisWeekSales }}, 'color:#3366CC'],
-    ['Last Week', {{ $lastWeekSales }}, 'color:#DC3912']
-  ]);
-  new google.visualization.BarChart(document.getElementById('weekSalesChart'))
-    .draw(data, { chartArea:{width:'50%'}, hAxis:{minValue:0} });
-});
-
-google.charts.load('current', {'packages':['corechart']});
-
-google.charts.setOnLoadCallback(drawEstimatedIncomeChart);
-
-function drawEstimatedIncomeChart() {
-
-    var incomeData = @json($monthlyEstimatedIncome);
-
+  // Monthly Sales
+  google.charts.setOnLoadCallback(function() {
+    var salesData = @json($monthlySales);
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Month');
-    data.addColumn('number', 'Estimated Income');
+    data.addColumn('number', 'Total Sales');
+    salesData.forEach(function(sale) { data.addRow([sale.month, sale.total_amount]); });
+    var options = { legend: { position: 'bottom' }, curveType: 'function', series: {0:{color:'#28a745'}} };
+    new google.visualization.LineChart(document.getElementById('monthlySalesChart')).draw(data, options);
+  });
 
-    incomeData.forEach(function(row) {
-        data.addRow([
-            row.month,
-            parseFloat(row.estimated_income)
-        ]);
-    });
+  // Top 20 Sales
+  google.charts.setOnLoadCallback(function() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Product');
+    data.addColumn('number', 'Sales');
+    data.addRows([
+      @foreach($formattedTopSales as $sale)
+        ['{{ $sale['productName'] }}', {{ $sale['totalSales'] }}],
+      @endforeach
+    ]);
+    new google.visualization.PieChart(document.getElementById('topSalesChart'))
+      .draw(data, {
+          pieHole: 0.4,
+          colors: [
+              '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+              '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+              '#393b79', '#637939', '#8c6d31', '#843c39', '#7b4173',
+              '#3182bd', '#31a354', '#756bb1', '#e6550d', '#6baed6'
+          ],
+          pieSliceText: 'percentage',   
+          tooltip: {                  
+              text: 'both'
+          },
+          legend: { position: 'right' }
+      });
+  });
 
-    var options = {
-        legend: { position: 'bottom' },
-        curveType: 'function',
-        vAxis: {
-            title: 'Estimated Income (₱)',
-            format: '₱#,##0.00'
-        },
-        chartArea: {
-            left: 60,
-            right: 30,
-            top: 30,
-            bottom: 50
-        },
-        series: {
-            0: { color: '#17a2b8' } // teal
-        }
-    };
+  // Today vs Yesterday
+  google.charts.setOnLoadCallback(function() {
+    var data = google.visualization.arrayToDataTable([
+      ['Day','Sales'],
+      ['Yesterday', {{ $yesterdaySales }}],
+      ['Today', {{ $todaySales }}],
+    ]);
+    new google.charts.Bar(document.getElementById('sales_chart'))
+      .draw(data, google.charts.Bar.convertOptions({ colors:['#1b9e77','#d95f02'] }));
+  });
 
-    var chart = new google.visualization.LineChart(
-        document.getElementById('estimatedIncomeChart')
-    );
-    chart.draw(data, options);
-}
+  // Weekly Comparison
+  google.charts.setOnLoadCallback(function() {
+    var data = google.visualization.arrayToDataTable([
+      ['Week','Sales',{ role:'style' }],
+      ['This Week', {{ $thisWeekSales }}, 'color:#3366CC'],
+      ['Last Week', {{ $lastWeekSales }}, 'color:#DC3912']
+    ]);
+    new google.visualization.BarChart(document.getElementById('weekSalesChart'))
+      .draw(data, { chartArea:{width:'50%'}, hAxis:{minValue:0} });
+  });
+
+
+  //get first 3 months estimated income
+  function drawEstimatedIncomeChart() {
+      // Convert your Laravel $monthlyEstimatedIncome array to a JavaScript object
+      var incomeData = @json($monthlyEstimatedIncome);
+
+      // Create a DataTable for Google Charts
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Month');
+      data.addColumn('number', 'Estimated Income');
+
+      // Add rows from your data
+      incomeData.forEach(function(row) {
+          data.addRow([
+              row.month,
+              parseFloat(row.estimated_income)
+          ]);
+      });
+
+      // Chart options
+      var options = {
+          legend: { position: 'bottom' },
+          curveType: 'function',
+          vAxis: {
+              title: 'Estimated Income (₱)',
+              format: '₱#,##0.00'
+          },
+          chartArea: {
+              left: 60,
+              right: 30,
+              top: 30,
+              bottom: 50
+          },
+          series: {
+              0: { color: '#17a2b8' } // teal line
+          }
+      };
+
+      // Draw the chart
+      var chart = new google.visualization.LineChart(
+          document.getElementById('estimatedIncomeChart')
+      );
+      chart.draw(data, options);
+  }
+
+  google.charts.load('current', { packages: ['corechart'] });
+  google.charts.setOnLoadCallback(drawEstimatedIncomeChart);
+
+  google.charts.setOnLoadCallback(drawTopStoresChart);
+    function drawTopStoresChart() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Store');
+      data.addColumn('number', 'Total Sales');
+
+      data.addRows([
+          @foreach($topStores as $store)
+              ['{{ $store->store_name }}', {{ $store->total_sales }}],
+          @endforeach
+      ]);
+
+      var options = {
+          title: 'Top 20 Stores by Sales',
+          chartArea: { width: '60%' },
+          hAxis: { title: 'Total Sales (₱)', minValue: 0, format: '₱#,##0.00', currency: 'PHP' },
+          vAxis: { title: 'Store' },
+          colors: ['#36A2EB'],
+          legend: { position: 'none' },
+      };
+
+      var chart = new google.visualization.BarChart(document.getElementById('topStoresChart'));
+      chart.draw(data, options);
+  }
+   document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('dashboardCalendar');
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          height: 400,
+          headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          },
+          events: [
+              // Mock events, replace with real events later
+              { title: 'Meeting with Supplier', start: '{{ now()->format('Y-m-d') }}' },
+              { title: 'Product Launch: Coffee Beans', start: '{{ now()->addDays(3)->format('Y-m-d') }}' },
+              { title: 'Inventory Audit', start: '{{ now()->addDays(7)->format('Y-m-d') }}' }
+          ]
+      });
+
+      calendar.render();
+  });
 </script>

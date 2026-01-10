@@ -29,9 +29,9 @@
 
                         {{-- Supplier & Purchase Info --}}
                         <div class="row mb-4">
-                            <div class="col-md-4 form-group">
+                            <div class="col-md-3 form-group">
                                 <label>Supplier</label>
-                                <select name="supplier_id" id="supplierSelect" class="form-control form-control-sm" required>
+                                <select name="supplier_id" id="supplier_id" class="form-control form-control-sm" readonly>
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}" {{ $supplier->id == $purchase->supplier_id ? 'selected' : '' }}>
@@ -42,24 +42,24 @@
                             </div>
                             <div class="col-md-3 form-group">
                                 <label>Purchase Date</label>
-                                <input type="date" name="date" class="form-control form-control-sm" value="{{ old('date', $purchase->date) }}" required>
-                            </div>
+                                 <!-- Display -->
+                                <input type="text"
+                                    id="purchase_date_display"
+                                    class="form-control form-control-sm"
+                                    value="{{ \Carbon\Carbon::parse($purchase->date)->format('F d, Y') }}"
+                                    required>
+
+                                <!-- Stored -->
+                                <input type="hidden"
+                                    name="date"
+                                    id="purchase_date"
+                                    value="{{ \Carbon\Carbon::parse($purchase->date)->format('Y-m-d') }}">
+                                </div>
                             <div class="col-md-3 form-group">
                                 <label>PO Number</label>
                                 <input type="text" name="po_number" class="form-control form-control-sm" value="{{ $purchase->po_number }}" readonly>
                             </div>
-                            <div class="col-md-4 form-group">
-                                <label>Salesman</label>
-                                <select name="salesman_id" class="form-control form-control-sm" required>
-                                    <option value="">-- Select Salesman --</option>
-                                    @foreach($salesman as $salesmen)
-                                        <option value="{{ $salesmen->id }}" {{ $salesmen->id == $purchase->salesman_id ? 'selected' : '' }}>
-                                            {{ $salesmen->salesman_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
+                            <div class="col-md-3 form-group">
                                 <label>Mode of Payment</label>
                                 <select name="payment_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Payment Mode --</option>
@@ -167,6 +167,8 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 <script>
 const units = @json($units);
@@ -175,6 +177,20 @@ const purchaseItems = @json($purchaseItemsArray);
 const supplierItems = @json($supplierItems);
 
 $(document).ready(function () {
+    function toYMD(date) {
+        const d = new Date(date);
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    $('#purchase_date_display').datepicker({
+        dateFormat: 'MM dd, yy',
+        onSelect: function(dateText) {
+            $('#purchase_date').val(toYMD(dateText));
+        }
+    });
+
 
     function addRow(supplierItems = [], existingItem = null) {
 
@@ -182,7 +198,16 @@ $(document).ready(function () {
         supplierItems.forEach(item => {
             const selected = existingItem && existingItem.product_id == item.id ? 'selected' : '';
             productOptions += `
-                <option value="${item.id}" ${selected}>
+                <option
+                    value="${item.id}"
+                    data-code="${item.item_code}"
+                    data-price="${item.item_price ?? 0}"
+                    data-dis1="${item.discount_1 ?? 0}"
+                    data-dis2="${item.discount_2 ?? 0}"
+                    data-dis3="${item.discount_3 ?? 0}"
+                    data-discountlessadd="${item.discount_less_add ?? 'less'}"
+                    ${selected}
+                >
                     ${item.item_description}
                 </option>`;
         });
@@ -208,14 +233,15 @@ $(document).ready(function () {
         const row = `
         <tr>
             <td>
-                <input type="hidden" name="product_code[]" value="${existingItem?.product_code || ''}">
+                <input type="hidden" name="product_code[]" class="code" value="${existingItem?.product_code || ''}">
                 <select name="product_id[]" class="form-control form-control-sm purchaseproduct">
                     ${productOptions}
-                </select>
+                </select><br/>
+                <small class="text-muted selected-product-name">${existingItem?.product_code || ''} - ${existingItem?.product_name || ''}</small>
             </td>
 
             <td>
-                <select name="unit[]" class="form-control form-control-sm">
+                <select name="unit[]" id="unit_id" class="form-control form-control-sm">
                     ${unitOptions}
                 </select>
             </td>
@@ -226,22 +252,22 @@ $(document).ready(function () {
             </td>
 
             <td>
-                <select name="discount_less_add[]" class="form-control form-control-sm">
+                <select name="discount_less_add[]" class="form-control form-control-sm discount_less_add">
                     <option value="less" ${disType === 'less' ? 'selected' : ''}>Less (-)</option>
                     <option value="add" ${disType === 'add' ? 'selected' : ''}>Add (+)</option>
                 </select>
 
-                <select name="dis1[]" class="form-control form-control-sm dis">
+                <select name="dis1[]" class="form-control form-control-sm dis1">
                     <option value="0">Discount 1 (%)</option>
                     ${discountOptions(dis1)}
                 </select>
 
-                <select name="dis2[]" class="form-control form-control-sm dis">
+                <select name="dis2[]" class="form-control form-control-sm dis2">
                     <option value="0">Discount 2 (%)</option>
                     ${discountOptions(dis2)}
                 </select>
 
-                <select name="dis3[]" class="form-control form-control-sm dis">
+                <select name="dis3[]" class="form-control form-control-sm dis3">
                     <option value="0">Discount 3 (%)</option>
                     ${discountOptions(dis3)}
                 </select>
@@ -270,8 +296,14 @@ $(document).ready(function () {
             width: '300px'
         });
 
+        $('#po-body tr:last #unit_id').select2({
+            placeholder: 'Select Unit',
+            width: '80px'
+        });
+
         calculateTotals();
     }
+
 
     // Load existing items (EDIT)
     purchaseItems.forEach(item => addRow(supplierItems, item));
@@ -288,11 +320,44 @@ $(document).ready(function () {
         calculateTotals();
     });
 
-    // Recalculate on input
+
+    $(document).on('change', '.purchaseproduct', function () {
+
+        const $row = $(this).closest('tr');
+
+        const data = $(this).select2('data')[0];
+        const option = data.element;
+
+        const code  = option.dataset.code || '';
+        const price = option.dataset.price || '';
+        const dis1  = option.dataset.dis1 || 0;
+        const dis2  = option.dataset.dis2 || 0;
+        const dis3  = option.dataset.dis3 || 0;
+        const discountLessAdd = option.dataset.discountlessadd || 'less';
+        const name  = data.text || '';
+
+        console.log(option.dataset);
+
+        $row.find('.code').val(code);
+        $row.find('.price').val(price);
+        $row.find('.dis1').val(dis1).trigger('change');
+        $row.find('.dis2').val(dis2).trigger('change');
+        $row.find('.dis3').val(dis3).trigger('change');
+        $row.find('.discount_less_add').val(discountLessAdd).trigger('change');
+
+        $row.find('.selected-product-name')
+            .text('(' + code + ') ' + name);
+
+        calculateTotals();
+    });
+
+     // Recalculate on input
     $(document).on('input change',
-        '.qty, .price, .dis, [name="discount_less_add[]"], #discount, #shipping, #other',
+        '.qty, .price, .dis1, .dis2, .dis3, .code, .discount_less_add, #shipping, #other',
         calculateTotals
     );
+
+            
 
     function calculateTotals() {
         let subtotal = 0;

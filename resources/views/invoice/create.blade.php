@@ -41,7 +41,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <label class="form-label">Customer <span class="text-danger">*</span></label>
-                                <select id="customerSelect" name="customer_id" class="form-control form-control-sm" required>
+                                <select id="customerSelect" name="customer_id" class="form-control form-control-sm">
                                     <option value="">Select Customer</option>
                                     @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}">{{ $customer->name }}</option>
@@ -86,7 +86,7 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                                <select name="payment_mode_id" id="payment_id" class="form-control form-control-sm" required>
+                                <select name="payment_mode_id" id="payment_id" class="form-control form-control-sm">
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}" data-term="{{ $mode->term }}">
@@ -106,7 +106,7 @@
                             </div> -->
                             <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
-                               <select name="salesman" id="salesman_id" class="form-control form-control-sm" required>
+                               <select name="salesman" id="salesman_id" class="form-control form-control-sm">
                                     <option value="">-- Select Salesman --</option>
                                     @foreach($salesman as $salesmen)
                                         <option value="{{ $salesmen->id }}">
@@ -138,12 +138,14 @@
                             <table class="table table-bordered align-middle">
                                 <thead class="bg-dark text-white">
                                     <tr>
+                                        <th></th>
                                         <th style="width: 45%">Product</th>
                                         <th style="width: 8%">Unit</th>
                                         <th style="width: 8%">Qty</th>
                                         <th style="width: 20%">Discount (%)</th>
                                         <th style="width: 10%">Unit Price</th>
                                         <th style="width: 12%">Total Price</th>
+                                        <th style="width: 45%">Is free?</th>
                                         <th class="text-center">
                                             <button type="button" class="btn btn-success btn-sm addRow">
                                                 <i class="fa fa-plus"></i>
@@ -153,6 +155,7 @@
                                 </thead>
                                 <tbody id="po-body">
                                     <tr>
+                                        <td>1</td>
                                         <td>
                                             <input type="hidden" name="product_code[]" class="form-control code" readonly>
                                             <div class="input-group">
@@ -222,6 +225,9 @@
                                             <!-- <div class="text-muted small show-base-price mt-1"></div> -->
                                         </td>
                                         <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
+                                        <td>
+                                            <input type="checkbox" name="is_free[]" class="is-free" value="1">
+                                        </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
                                         </td>
@@ -319,6 +325,7 @@
                                 <th>Price</th>
                                 <th>Quantity on Hand</th>
                                 <th>Unit</th>
+                                <th>Status</th>
                                 <th>Select</th>
                             </tr>
                             </thead>
@@ -335,7 +342,8 @@
                                     data-discount1="{{ $product->discount_1 }}"
                                     data-discount2="{{ $product->discount_2 }}"
                                     data-discount3="{{ $product->discount_3 }}"
-                                    data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                                    data-baseprice="{{ optional($product->supplierItems->first())->item_price }}"
+                                    data-productstatus="{{ $product->status }}">
                                     <td>{{ $product->product_code }}</td>
                                     <td>{{ $product->supplier_product_code }}</td>
                                     <td>{{ optional($product->supplierItems->first())->supplier->name }}</td>
@@ -344,6 +352,14 @@
                                     <td>{{ $product->sales_price }}</td>
                                     <td>{{ $product->remaining_stock }}</td>
                                     <td>{{ $product->unit->name }}</td>
+                                    <td>
+                                        @if($product->remaining_stock <= 0)
+                                            <span class="text-danger">Out of Stock</span>
+                                        @elseif($product->remaining_stock <= 5)
+                                            <span class="text-warning">Low Stock</span>
+                                        @else
+                                            <span class="text-success">In Stock</span>
+                                        @endif
                                     <td>
                                     <button type="button" class="btn btn-success btn-sm select-this">Select</button>
                                     </td>
@@ -457,6 +473,8 @@
                 let discount_1 = tr.data('discount1');
                 let discount_2 = tr.data('discount2');
                 let discount_3 = tr.data('discount3');
+                let prodStatus = tr.data('productstatus');
+
 
                 let duplicate = false;
                 $('input.product_id').each(function() {
@@ -464,6 +482,16 @@
                         duplicate = true;
                     }
                 });
+                
+                if (prodStatus === 'Out of Stock') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Inactive Product',
+                        text: 'The selected product is currently out of stock and cannot be added.',
+                        confirmButtonColor: '#ff9f43',
+                    });
+                    return;
+                }
 
                 if (duplicate) {
                     Swal.fire({
@@ -494,18 +522,44 @@
 
                 $('#productModal').modal('hide');
             });
+            
             $('#customerSelect').select2({
                 placeholder: "Select Customer",
                 allowClear: true,
                 width: 'resolve'
             });
+
+            $('.unit').select2({
+                placeholder: "Select Unit",
+                allowClear: true,
+                width: 'resolve'
+            });
+
+            function renumberRows() {
+                $('#po-body tr').each(function (index) {
+                    $(this).find('td:first').text(index + 1);
+                });
+            }
+
             // Disable all Add Discount buttons initially
             $('.add-discount').prop('disabled', true);
+            $('.addRow').on('click', function () {
+                let rowCount = $('#po-body tr').length;
+                if (rowCount >= MAX_ROWS) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Row Limit Reached',
+                        text: 'You can only add up to 15 products per invoice.',
+                        confirmButtonColor: '#ff9f43',
+                    });
+                    return;
+                }
 
-            $('.addRow').on('click', function() {
                 addRow();
+                renumberRows();
                 calculateTotals();
             });
+
             const productOptions = `{!! 
                 $products->map(function($product){
                     return '<option value="'.$product->id.'">'.$product->name.'</option>';
@@ -513,7 +567,9 @@
             !!}`;
 
             let rowIndex = $('#po-body tr').length;
-
+            let rowColumnAdd = rowIndex++ + 1;
+            const MAX_ROWS = 15;
+            
             function addRow() {
                 let options = `<option value="">Select Product</option>`;
 
@@ -527,11 +583,12 @@
                                 </option>`;
                 @endforeach
                 const newRow = `<tr>
+                                    <td></td>
                                     <td>
+                                        <input type="hidden" name="product_id[]" class="product_id">
                                         <input type="hidden" name="product_code[]" class="form-control code" readonly>
                                         <div class="input-group">
                                             <input type="text" name="product_name[]" class="form-control form-control-sm product-input productname" placeholder="Search Product" readonly>
-                                            <input type="hidden" name="product_id[]" class="product_id">
                                             <button type="button" class="btn btn-outline-primary select-product-btn">
                                                 <i class="fa fa-search"></i>
                                             </button>
@@ -596,6 +653,9 @@
                                         <input type="text" name="price[]" class="form-control form-control-sm price">
                                     </td>
                                     <td><input type="number" name="amount[]" class="form-control form-control-sm amount" readonly></td>
+                                    <td>
+                                        <input type="checkbox" name="is_free[]" class="is-free" value="1">
+                                    </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-danger btn-sm remove"><i class="fa fa-trash"></i></button>
                                     </td>
@@ -621,14 +681,17 @@
             }
 
             $(document).on('click', '.remove', function () {
-                var l = $('tbody tr').length;
-                if (l == 1) {
-                    alert('You can\'t delete the last one');
-                    calculateTotals();
-                } else {
-                    $(this).closest('tr').remove();
-                    calculateTotals();
+                let rows = $('#po-body tr').length;
+
+                if (rows === 1) {
+                    alert("You can't delete the last row");
+                    return;
                 }
+
+                $(this).closest('tr').remove();
+                renumberRows();
+                $('.addRow').prop('disabled', false);
+                calculateTotals();
             });
 
             $(document).on('change', '.dis', function() {
@@ -776,51 +839,141 @@
                 calculateTotals();
             });
         });
+        $(document).on('change', '.is-free', function () {
+            const $row = $(this).closest('tr');
+            const is_free = $(this).is(':checked');
 
+            if (is_free) {
+                // Set values to 0
+                $row.find('.qty, .amount').val(0).prop('readonly', true);
+                $row.find('.dis1, .dis2, .dis3').val('');
+                $row.find('.discount_type').val('');
+
+                // Disable discounts
+                $row.find('.dis1, .dis2, .dis3, .discount_type').prop('disabled', true);
+            } else {
+                // Re-enable fields
+                $row.find('.qty, .price').prop('readonly', false);
+
+                $row.find('.dis1, .dis2, .dis3, .discount_type').prop('disabled', false);
+            }
+        });
         let formPendingSubmit = null;
         $('form').on('submit', function(e) {
             e.preventDefault(); // stop default submit
 
             let hasError = false;
             let errorMessages = [];
+            let validItemCount = 0;
+
+            const customerId   = $('#customerSelect').val();
+            const invoiceDate  = $('#invoice_date').val();
+            const paymentMode  = $('#payment_id').val();
+            const salesman     = $('#salesman_id').val();
+
+            if (!customerId) {
+                hasError = true;
+                errorMessages.push('Customer is required.');
+            }
+
+            if (!invoiceDate) {
+                hasError = true;
+                errorMessages.push('Invoice date is required.');
+            }
+
+            if (!paymentMode) {
+                hasError = true;
+                errorMessages.push('Mode of payment is required.');
+            }
+
+            if (!salesman) {
+                hasError = true;
+                errorMessages.push('Salesman is required.');
+            }
 
             $('#po-body tr').each(function(index) {
                 const $row = $(this);
-                const productName = $row.find('.productname option:selected').text();
-                const productId = $row.find('.productname').val();
+                const rowNumber = index + 1;
+
+                const productName = $row.find('.selected-product-info').text();
+                const productId = $row.find('.product_id').val();
                 const stock = parseInt($row.find('.qty').data('stock')) || 0;
                 const qty = parseInt($row.find('.qty').val()) || 0;
+                const price = parseFloat($row.find('.price').val()) || 0;
+                const is_free = $row.find('.is-free').is(':checked');
 
-                // Skip empty rows
-                if (!productId) return;
+                if (isRowEmpty($row)) {
+                    hasError = true;
+                    errorMessages.push(`Row ${rowNumber}: Empty row is not allowed.`);
+                    return;
+                }
 
-                // Out of stock
+                // Product required
+                if (!productId) {
+                    hasError = true;
+                    errorMessages.push(`Row ${index + 1}: Please select a product.`);
+                    return;
+                }
+
+
+                if (is_free) {
+                    $row.find('.dis1, .dis2, .dis3, .discount_type').prop('disabled', true);
+                    $row.find('.qty, .amount').val(0).prop('readonly', true);
+                    // Free item but qty or price has value
+                    if (qty > 0 || price > 0) {
+                        hasError = true;
+                        errorMessages.push(
+                            `${productName} is marked as FREE. Quantity and price must be 0.`
+                        );
+                    }
+                    return;
+                }
+
+                if (qty <= 0) {
+                    hasError = true;
+                    errorMessages.push(`${productName} must have a quantity greater than 0.`);
+                }
+
+                if (price <= 0) {
+                    hasError = true;
+                    errorMessages.push(`${productName} must have a price greater than 0.`);
+                }
+
                 if (stock <= 0) {
                     hasError = true;
                     errorMessages.push(`${productName} is out of stock.`);
                 }
 
-                // Exceeds stock
                 if (qty > stock) {
                     hasError = true;
-                    errorMessages.push(`${productName} quantity (${qty}) exceeds available stock (${stock}).`);
-                }
-
-                // Zero or negative qty
-                if (qty <= 0) {
-                    hasError = true;
-                    errorMessages.push(`${productName} must have a quantity greater than 0.`);
+                    errorMessages.push(
+                        `${productName} quantity (${qty}) exceeds available stock (${stock}).`
+                    );
                 }
             });
 
             if (hasError) {
-                alert("Cannot submit invoice:\n\n" + errorMessages.join("\n"));
+                // SweetAlert2 error
+                swal({
+                    title: 'Cannot submit invoice order',
+                    html: errorMessages.join('<br>'),
+                    type: 'error',
+                    confirmButtonText: 'OK'
+                });
                 return false; // stop submit
             }
 
             // if all good, continue with submission
             this.submit();
         });
+
+        function isRowEmpty($row) {
+            const productId = $row.find('.product_id').val();
+            // const qty = parseFloat($row.find('.qty').val()) || 0;
+            // const price = parseFloat($row.find('.price').val()) || 0;
+
+            return !productId;
+        }
 
         // Disable all discount fields by default
         $('.dis, #discount').prop('disabled', true);
@@ -917,30 +1070,43 @@
             $('#po-body tr').each(function() {
                 const $row = $(this);
                 const qty = parseFloat($row.find('.qty').val()) || 0;
-                let price = parseFloat($row.find('.price').val()) || 0;
+                const price = parseFloat($row.find('.price').val()) || 0;
+
                 let lineTotal = qty * price;
 
-                // Get the discount type for this row
+                // Discount type for this row
                 const discountType = $row.find('select[name="discount_less_add[]"]').val() || 'less';
 
-                // Apply static discounts (dis1, dis2, dis3)
-                const staticDiscounts = [
+                // Static discounts (dis1, dis2, dis3)
+                const discounts = [
                     parseFloat($row.find('select[name="dis1[]"]').val()) || 0,
                     parseFloat($row.find('select[name="dis2[]"]').val()) || 0,
                     parseFloat($row.find('select[name="dis3[]"]').val()) || 0
                 ];
 
-                staticDiscounts.forEach(d => {
-                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
-                    else lineTotal += (lineTotal * d / 100);
-                });
+                // Apply discounts
+                if (discountType === 'less') {
+                    discounts.forEach(d => {
+                        lineTotal *= (1 - d / 100); // LESS
+                    });
 
-                // Apply dynamic discounts (.dis)
-                $row.find('.discount-row .dis').each(function() {
-                    const d = parseFloat($(this).val()) || 0;
-                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
-                    else lineTotal += (lineTotal * d / 100);
-                });
+                    // Apply dynamic discounts (.dis)
+                    $row.find('.discount-row .dis').each(function() {
+                        const d = parseFloat($(this).val()) || 0;
+                        lineTotal *= (1 - d / 100); // LESS
+                    });
+
+                } else if (discountType === 'add') {
+                    // For ADD, multiply by each discount as **multiplier**
+                    discounts.forEach(d => {
+                        if (d > 0) lineTotal *= d; // ADD
+                    });
+
+                    $row.find('.discount-row .dis').each(function() {
+                        const d = parseFloat($(this).val()) || 1;
+                        if (d > 0) lineTotal *= d; // ADD
+                    });
+                }
 
                 // Update row amount
                 $row.find('.amount').val(lineTotal.toFixed(2));
@@ -950,11 +1116,8 @@
             // Overall discount if selected
             const overallType = $('#discount_type').val();
             let overallDis = parseFloat($('#discount').val()) || 0;
-            let overallAmount = 0;
-
             if (overallType === 'overall' && overallDis > 0) {
-                overallAmount = subtotal * (overallDis / 100);
-                subtotal = subtotal - overallAmount;
+                subtotal *= (1 - overallDis / 100);
             }
 
             const shipping = parseFloat($('#shipping').val()) || 0;
@@ -964,6 +1127,7 @@
             $('#subtotal').val(subtotal.toFixed(2));
             $('#grand_total').val(grandTotal.toFixed(2));
         }
+
 
         // Trigger recalculation whenever relevant inputs change
         $(document).on('change input', '.qty, .price, select[name="dis1[]"], select[name="dis2[]"], select[name="dis3[]"], .dis, select[name="discount_less_add[]"], #discount, #shipping, #other', function() {

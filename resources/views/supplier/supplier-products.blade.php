@@ -424,11 +424,25 @@
 <script src="{{ asset('/')}}js/plugins/jquery.dataTables.min.js"></script>
 <script src="{{ asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $('#productsTable').DataTable({
         language: {
             emptyTable: "No products available."
         }
+    });
+
+    $('#new_category').select2({
+        placeholder: "Select Category",
+        allowClear: true,
+        width: '250px'
+    });
+
+    $('#new_unit').select2({
+        placeholder: "Select Unit",
+        allowClear: true,
+        width: '200px'
     });
 
     // Supplier modal
@@ -618,18 +632,20 @@
         let d3 = parseFloat($('#modal_discount_3').val()) || 0;
         let type = $('#modal_discount_type').val();
         let net = price;
-
+        
         if (type === 'less') {
             if (d1 > 0) net -= net * (d1 / 100);
             if (d2 > 0) net -= net * (d2 / 100);
             if (d3 > 0) net -= net * (d3 / 100);
         } else {
-            if (d1 > 0) net += net * (d1 / 100);
-            if (d2 > 0) net += net * (d2 / 100);
-            if (d3 > 0) net += net * (d3 / 100);
+            if (d1 > 0) net = net * d1;
+            if (d2 > 0) net = net * d2;
+            if (d3 > 0) net = net * d3;
         }
+        
         $('#modal_net_cost').val(net.toFixed(2));
     }
+    console.log('compute cost', computeNetCost());
     $('#modal_price, #modal_discount_1, #modal_discount_2, #modal_discount_3, #modal_discount_type').on('change keyup', computeNetCost);
 
     function computeAddNetCost() {
@@ -646,9 +662,9 @@
             if (d2 > 0) net -= net * (d2 / 100);
             if (d3 > 0) net -= net * (d3 / 100);
         } else {
-            if (d1 > 0) net += net * (d1 / 100);
-            if (d2 > 0) net += net * (d2 / 100);
-            if (d3 > 0) net += net * (d3 / 100);
+            if (d1 > 0) net *= net * (d1 / 100);
+            if (d2 > 0) net *= net * (d2 / 100);
+            if (d3 > 0) net *= net * (d3 / 100);
         }
 
         $('#new_net_cost').val(net.toFixed(2));

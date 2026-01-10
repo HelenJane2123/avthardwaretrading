@@ -190,7 +190,7 @@
             <tr>
                 <td>{{ $item->qty }}</td>
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
-                <td>{{ $item->product->product_name ?? 'N/A' }}</td>
+                <td>{{ $item->product->product_name ?? 'N/A' }} - {{ $item->is_free ? 'FREE ITEM' : '' }}</td>
                 <td class="text-center">{{ number_format($item->price, 2) }}</td>
                 <td class="text-center" style="font-size:14px;"> 
                     @php
@@ -270,14 +270,67 @@
      <div class="warning-text" style="margin-bottom: 20px; font-weight: bold; color: black; font-size:14px; text-transform: uppercase;">
         Strictly no cash advances, any cash or stock given to designated agent will not be deducted from your account.
     </div>
-
     <br>
-    <div class="text-center no-print">
-        <button onclick="window.print()" class="btn btn-primary btn-print">
-            <i class="fa fa-print"></i> Print DR
-        </button>
-    </div>
+    @if($invoice->is_printed)
+        <div class="text-center" style="margin-bottom:10px; font-weight:bold; color:green; font-size:16px;">
+            THIS DR HAS BEEN PRINTED
+        </div>
+    @else
+        <div class="text-center no-print">
+            <button class="btn btn-primary btn-print">
+                <i class="fa fa-print"></i> Print DR
+            </button>
+        </div>
+    @endif
 
 </div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+ $(document).ready(function() {
+        $('.btn-print').on('click', function(e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you want to print this DR?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, print it!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // AJAX request to update is_print
+                    $.ajax({
+                        url: "{{ route('invoices.markAsPrinted', $invoice->id) }}",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            // After marking as printed, print the page
+                            window.print();
+                            Swal.fire(
+                                'Printed!',
+                                'The DR has been printed and marked as printed.',
+                                'success'
+                            );
+                            //disable the print button
+                            $('.btn-print').prop('disabled', true);
+                        },
+                        error: function(xhr) {
+                            Swal.fire(
+                                'Error!',
+                                'There was an error updating the invoice status.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
 </html>

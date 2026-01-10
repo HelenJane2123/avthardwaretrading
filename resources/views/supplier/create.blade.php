@@ -327,6 +327,8 @@
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function () {
             let table = $('#suppliercreateTable').DataTable({
@@ -336,6 +338,18 @@
                 language: {
                     "emptyTable": "No data available in table"
                 }
+            });
+
+            $('#modal_category').select2({
+                placeholder: "Select Category",
+                allowClear: true,
+                width: '250px'
+            });
+
+            $('#modal_unit').select2({
+                placeholder: "Select Unit",
+                allowClear: true,
+                width: '150px'
             });
 
             let itemCount = 2;
@@ -533,7 +547,8 @@
                     if (d1 > 0) net -= net * (d1 / 100);
                     if (d2 > 0) net -= net * (d2 / 100);
                     if (d3 > 0) net -= net * (d3 / 100);
-                } else {
+                } 
+                else if (type === 'add') {
                     if (d1 > 0) net += net * (d1 / 100);
                     if (d2 > 0) net += net * (d2 / 100);
                     if (d3 > 0) net += net * (d3 / 100);

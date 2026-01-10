@@ -33,7 +33,6 @@
         <div class="col-md-12">
             <div class="tile shadow-sm">
                 <h3 class="tile-title mb-4"><i class="fa fa-edit"></i> Edit Invoice</h3>
-
                 <form method="POST" action="{{ route('invoice.update', $invoice->id) }}">
                     @csrf
                     @method('PUT')
@@ -93,7 +92,7 @@
                         </div>
                         <div class="col-md-4 form-group">
                             <label for="salesman">Salesman</label>
-                            <select name="salesman" id="salesman_id" class="form-control form-control-sm" required>
+                            <select name="salesman" id="salesman_id" class="form-control form-control-sm">
                                 <option value="">-- Select Salesman --</option>
                                 @foreach($salesman as $salesmen)
                                     <option value="{{ $salesmen->id }}" 
@@ -105,7 +104,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                            <select name="payment_mode_id" class="form-control form-control-sm" required>
+                            <select name="payment_mode_id" id="payment_mode_id" class="form-control form-control-sm">
                                 <option value="">-- Select Payment Mode --</option>
                                 @foreach($paymentModes as $mode)
                                     <option value="{{ $mode->id }}" 
@@ -118,14 +117,14 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
+                        <!-- <div class="col-md-4">
                             <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                             <select id="discount_type" name="discount_type" class="form-control form-control-sm">
                                 <option value="">Select Type of Discount</option>
                                 <option value="per_item" {{ $invoice->discount_type == 'per_item' ? 'selected' : '' }}>Per Item</option>
                                 <option value="overall" {{ $invoice->discount_type == 'overall' ? 'selected' : '' }}>Overall</option>
                             </select>
-                        </div>
+                        </div> -->
                     </div>
 
                     {{-- Customer Info --}}
@@ -168,12 +167,14 @@
                         <table class="table table-bordered align-middle">
                             <thead class="bg-dark text-white">
                                 <tr>
+                                    <th></th>
                                     <th style="width: 45%">Product</th>
                                     <th style="width: 8%">Unit</th>
                                     <th style="width: 8%">Qty</th>
                                     <th style="width: 20%">Discount (%)</th>
                                     <th style="width: 10%">Unit Price</th>
                                     <th style="width: 12%">Total Price</th>
+                                    <th style="width: 5%">Is free?</th>
                                     <th class="text-center">
                                         <button type="button" class="btn btn-success btn-sm addRow">
                                             <i class="fa fa-plus"></i>
@@ -274,6 +275,7 @@
                                 <th>Price</th>
                                 <th>Quantity on Hand</th>
                                 <th>Unit</th>
+                                <th>Status</th>
                                 <th>Select</th>
                             </tr>
                         </thead>
@@ -290,7 +292,8 @@
                                     data-discount1="{{ $product->discount_1 }}"
                                     data-discount2="{{ $product->discount_2 }}"
                                     data-discount3="{{ $product->discount_3 }}"
-                                    data-baseprice="{{ optional($product->supplierItems->first())->item_price }}">
+                                    data-baseprice="{{ optional($product->supplierItems->first())->item_price }}"
+                                    data-productstatus="{{ $product->status }}">
                                     <td>{{ $product->product_code }}</td>
                                     <td>{{ $product->supplier_product_code }}</td>
                                     <td>{{ optional($product->supplierItems->first())->supplier->name }}</td>
@@ -299,6 +302,15 @@
                                     <td>{{ $product->sales_price }}</td>
                                     <td>{{ $product->remaining_stock }}</td>
                                     <td>{{ $product->unit->name }}</td>
+                                    <td>
+                                        @if($product->remaining_stock <= 0)
+                                            <span class="text-danger">Out of Stock</span>
+                                        @elseif($product->remaining_stock <= 5)
+                                            <span class="text-warning">Low Stock</span>
+                                        @else
+                                            <span class="text-success">In Stock</span>
+                                        @endif
+                                    </td>
                                     <td>
                                     <button type="button" class="btn btn-success btn-sm select-this">Select</button>
                                     </td>
@@ -329,11 +341,10 @@
     const taxes = @json($taxes);
     const units = @json($units);
 
-    console.log('Loaded taxes items:', taxes);
-
     $(document).ready(function(){
+        let rowIndex = 0; 
         function toYMD(date) {
-        const d = new Date(date);
+            const d = new Date(date);
             return d.getFullYear() + '-' +
                 String(d.getMonth() + 1).padStart(2, '0') + '-' +
                 String(d.getDate()).padStart(2, '0');
@@ -361,9 +372,6 @@
             allowClear: true,
             width: 'resolve'
         });
-
-        // Load existing invoice items
-        loadInvoiceItems();
 
         // Open modal when search button clicked
         $(document).on('click', '.select-product-btn', function() {
@@ -407,6 +415,7 @@
             let stock = tr.data('stock');
             let unit = tr.data('unit');
             let basePrice = tr.data('baseprice');
+            let prodStatus = tr.data('productstatus');
 
             let duplicate = false;
             $('input.product_id').each(function() {
@@ -414,6 +423,16 @@
                     duplicate = true;
                 }
             });
+
+            if (prodStatus === 'Out of Stock') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Inactive Product',
+                    text: 'The selected product is currently out of stock and cannot be added.',
+                    confirmButtonColor: '#ff9f43',
+                });
+                return;
+            }
 
             if (duplicate) {
                 Swal.fire({
@@ -446,21 +465,24 @@
             calculateTotals();
         });
 
-        // Add new row
-        $(document).on('click', '.addRow', function() {
-            $("#po-body").append(generateRow());
-        });
-
         // Remove row
         $(document).on('click', '.remove', function () {
             let rowCount = $('#po-body tr').length;
+
             if (rowCount === 1) {
-                alert("You can't delete the last row");
-            } else {
-                $(this).closest('tr').remove();
-                calculateTotals();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Action not allowed',
+                    text: "You can't delete the last row.",
+                });
+                return;
             }
+
+            $(this).closest('tr').remove();
+            updateRowNumbers();
+            calculateTotals();
         });
+
         $('#productModal .btn-close').on('click', function() {
             $('#productModal').modal('hide'); // jQuery fallback
         });
@@ -487,14 +509,120 @@
             calculateTotals();
         });
 
-        // Calculate totals when price, qty, or discounts change
-        $(document).on('input change', '.qty, .price, select[name="discount_less_add[]"], select[name="dis1[]"], select[name="dis2[]"], select[name="dis3[]"]', function() {
-            calculateTotals();
+        function isRowEmpty($row) {
+            const productId = $row.find('.product_id').val();
+            // const qty = parseFloat($row.find('.qty').val()) || 0;
+            // const price = parseFloat($row.find('.price').val()) || 0;
+
+            return !productId;
+        }
+
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+
+            let hasError = false;
+            let errorMessages = [];
+
+            const customerId   = $('#customerSelect').val();
+            const invoiceDate  = $('#invoice_date_display').val();
+            const paymentMode  = $('#payment_mode_id').val();
+            const salesman     = $('#salesman_id').val();
+
+            if (!customerId) {
+                hasError = true;
+                errorMessages.push('Customer is required.');
+            }
+
+            if (!invoiceDate) {
+                hasError = true;
+                errorMessages.push('Invoice date is required.');
+            }
+
+            if (!paymentMode) {
+                hasError = true;
+                errorMessages.push('Mode of payment is required.');
+            }
+
+            $('#po-body tr').each(function (index) {
+                const $row = $(this);
+                const rowNumber = index + 1;
+
+                const productName = $row.find('.selected-product-info').text().trim() || `Row ${index + 1}`;
+                const productId = $row.find('.product_id').val();
+
+                const stock = parseInt($row.find('.qty').data('original-stock')) || 0;
+                const qty = parseInt($row.find('.qty').val()) || 0;
+                const price = parseFloat($row.find('.price').val()) || 0;
+                const is_free = $row.find('.is-free').is(':checked');
+
+                if (isRowEmpty($row)) {
+                    hasError = true;
+                    errorMessages.push(`Row ${rowNumber}: Empty row is not allowed.`);
+                    return;
+                }
+
+                // Product required
+                if (!productId) {
+                    hasError = true;
+                    errorMessages.push(`Row ${index + 1}: Please select a product.`);
+                    return;
+                }
+
+                if (is_free) {
+                    if (qty !== 0 || price !== 0) {
+                        hasError = true;
+                        errorMessages.push(
+                            `${productName} is marked as FREE. Quantity and price must be 0.`
+                        );
+                    }
+                    return; // skip all other validations
+                }
+
+                if (qty <= 0) {
+                    hasError = true;
+                    errorMessages.push(`${productName} must have a quantity greater than 0.`);
+                }
+
+                if (price <= 0) {
+                    hasError = true;
+                    errorMessages.push(`${productName} must have a price greater than 0.`);
+                }
+
+                if (stock <= 0) {
+                    hasError = true;
+                    errorMessages.push(`${productName} is out of stock.`);
+                }
+
+                if (qty > stock) {
+                    hasError = true;
+                    errorMessages.push(
+                        `${productName} quantity (${qty}) exceeds available stock (${stock}).`
+                    );
+                }
+            });
+
+            if (hasError) {
+                swal({
+                    title: 'Cannot submit invoice order',
+                    html: errorMessages.join('<br>'),
+                    type: 'error',
+                    confirmButtonText: 'OK'
+                });
+                return false;
+            }
+
+            this.submit();
         });
 
         // Discount type change
         $('#discount_type').on('change', function() {
             toggleDiscountControls();
+            calculateTotals();
+        });
+
+        $(document).on('change', '.is-free', function () {
+            const $row = $(this).closest('tr');
+            applyFreeRowState($row);
             calculateTotals();
         });
 
@@ -515,32 +643,59 @@
         function calculateTotals() {
             let subtotal = 0;
 
-            $('#po-body tr').each(function() {
+            $('#po-body tr').each(function () {
                 const $row = $(this);
+                const isFree = $row.find('.is-free').is(':checked');
+
+                if (isFree) {
+                    $row.find('.amount').val('0.00');
+                    return;
+                }
+
+                // Get qty and price
                 const qty = parseFloat($row.find('.qty').val()) || 0;
-                let price = parseFloat($row.find('.price').val()) || 0;
+                const price = parseFloat($row.find('.price').val()) || 0;
+
                 let lineTotal = qty * price;
 
-                // Per-item discount type
+                // Discount type for this row
                 const discountType = $row.find('select[name="discount_less_add[]"]').val() || 'less';
 
-                // Apply per-item discounts
-                $row.find('.dis').each(function() {
-                    const d = parseFloat($(this).val()) || 0;
-                    if (discountType === 'less') lineTotal -= (lineTotal * d / 100);
-                    else lineTotal += (lineTotal * d / 100);
-                });
+                // Static discounts (dis1, dis2, dis3)
+                const discounts = [
+                    parseFloat($row.find('select[name="dis1[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis2[]"]').val()) || 0,
+                    parseFloat($row.find('select[name="dis3[]"]').val()) || 0
+                ];
 
+                // Apply discounts
+                if (discountType === 'less') {
+                    discounts.forEach(d => {
+                        lineTotal *= (1 - d / 100); // LESS
+                    });
+
+                    // Apply dynamic discounts (.dis)
+                    $row.find('.discount-row .dis').each(function() {
+                        const d = parseFloat($(this).val()) || 0;
+                        lineTotal *= (1 - d / 100); // LESS
+                    });
+
+                } else if (discountType === 'add') {
+                    // For ADD, multiply by each discount as **multiplier**
+                    discounts.forEach(d => {
+                        if (d > 0) lineTotal *= d; // ADD multiplier
+                    });
+
+                    $row.find('.discount-row .dis').each(function() {
+                        const d = parseFloat($(this).val()) || 1;
+                        if (d > 0) lineTotal *= d; // ADD multiplier
+                    });
+                }
+
+                // Update row amount
                 $row.find('.amount').val(lineTotal.toFixed(2));
                 subtotal += lineTotal;
             });
-
-            // Overall discount
-            const overallType = $('#discount_type').val();
-            let overallDis = parseFloat($('#discount').val()) || 0;
-            if (overallType === 'overall' && overallDis > 0) {
-                subtotal = subtotal - (subtotal * overallDis / 100);
-            }
 
             const shipping = parseFloat($('#shipping').val()) || 0;
             const other = parseFloat($('#other').val()) || 0;
@@ -550,13 +705,68 @@
             $('#grand_total').val(grandTotal.toFixed(2));
         }
 
+
+        function applyFreeRowState($row) {
+            const isFree = $row.find('.is-free').is(':checked');
+
+            if (isFree) {
+                // Clear & lock values
+                $row.find('.qty, .price').val(0).prop('readonly', true);
+
+                $row.find('.dis1, .dis2, .dis3').val('');
+                $row.find('.discount_type').val('');
+
+                $row.find('.dis1, .dis2, .dis3, .discount_type')
+                    .prop('disabled', true);
+            } else {
+                $row.find('.qty, .price').prop('readonly', false);
+                $row.find('.dis1, .dis2, .dis3, .discount_type')
+                    .prop('disabled', false);
+            }
+        }
+        // Load existing invoice items
+        loadInvoiceItems();
+
         function loadInvoiceItems() {
             if (!invoiceItems || invoiceItems.length === 0) return;
-            invoiceItems.forEach(item => $("#po-body").append(generateRow(item)));
+
+            invoiceItems.forEach(item => {
+                const $row = $(generateRow(item, rowIndex));
+                $("#po-body").append($row);
+                applyFreeRowState($row);
+                rowIndex++;
+            });
+
+            updateRowNumbers();
             calculateTotals();
         }
 
-        function generateRow(item = null) {
+        const MAX_ROWS = 15;
+        $(document).on('click', '.addRow', function () {
+            let rowCount = $('#po-body tr').length;
+
+            if (rowCount >= MAX_ROWS) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Limit reached',
+                    text: 'You can only add up to 15 items per invoice.',
+                    confirmButtonColor: '#ff9f43',
+                });
+                return;
+            }
+
+            $("#po-body").append(generateRow(null, rowIndex));
+            rowIndex++;
+            updateRowNumbers();
+        });
+
+        function updateRowNumbers() {
+            $('#po-body tr').each(function (index) {
+                $(this).find('.row-number').text(index + 1);
+            });
+        }
+
+        function generateRow(item = null, rowIndex = 0) {
             const productId = item?.product_id || '';
             const productCode = item?.product?.product_code || '';
             const productName = item?.product?.product_name || '';
@@ -569,6 +779,7 @@
             const dis3 = item?.discount_3 || 0;
             const unitId = item?.unit_id || '';
             const stock = item?.product?.remaining_stock || 0;
+            const is_free = item?.is_free ? true : false;
 
             const unitOptions = units.map(u => 
                 `<option value="${u.id}" ${u.id == unitId ? 'selected' : ''}>${u.name}</option>`
@@ -578,8 +789,13 @@
                 `<option value="${t.name}" ${Number(t.name) === Number(val) ? 'selected':''}>${t.name}%</option>`
             ).join('');
 
+            // Use unique rowIndex for each is_free checkbox
+            const hiddenIsFree = `<input type="hidden" name="is_free[${rowIndex}]" value="0">`;
+            const checkboxIsFree = `<input type="checkbox" name="is_free[${rowIndex}]" class="is-free" value="1" ${is_free ? 'checked' : ''}>`;
+
             return `
             <tr>
+                <td class="row-number text-center"></td>
                 <td style="width:400px;">
                     <div class="input-group">
                         <input type="hidden" name="product_id[]" class="product_id" value="${productId}">
@@ -599,35 +815,37 @@
                 <td>
                     <div class="row g-1">
                         <div class="col-12 mb-1">
-                            <select name="discount_less_add[]" class="form-control form-control-sm dis">
+                            <select name="discount_less_add[]" class="form-control form-control-sm discount_type">
                                 <option value="less" ${disLessAdd=='less'?'selected':''}>Less (-)</option>
                                 <option value="add" ${disLessAdd=='add'?'selected':''}>Add (+)</option>
                             </select>
                         </div>
                         <div class="col-12 mb-1">
-                            <select name="dis1[]" class="form-control form-control-sm dis">
+                            <select name="dis1[]" class="form-control form-control-sm dis1">
                                 <option value="0">Discount 1 (%)</option>
                                 ${discountOptions(dis1)}
                             </select>
                         </div>
                         <div class="col-12 mb-1">
-                            <select name="dis2[]" class="form-control form-control-sm dis">
+                            <select name="dis2[]" class="form-control form-control-sm dis2">
                                 <option value="0">Discount 2 (%)</option>
                                 ${discountOptions(dis2)}
                             </select>
                         </div>
                         <div class="col-12">
-                            <select name="dis3[]" class="form-control form-control-sm dis">
+                            <select name="dis3[]" class="form-control form-control-sm dis3">
                                 <option value="0">Discount 3 (%)</option>
                                 ${discountOptions(dis3)}
                             </select>
                         </div>
                     </div>
                 </td>
-                <td>
-                    <input type="text" name="price[]" class="form-control price" value="${price}">
-                </td>
+                <td><input type="text" name="price[]" class="form-control price" value="${price}"></td>
                 <td><input type="text" name="amount[]" class="form-control amount" value="${amount}" readonly></td>
+                <td class="text-center">
+                    ${hiddenIsFree}
+                    ${checkboxIsFree}
+                </td>
                 <td>
                     <button type="button" class="btn btn-danger remove">
                         <i class="fa fa-trash"></i>
@@ -635,7 +853,10 @@
                 </td>
             </tr>`;
         }
-
+        // Calculate totals when price, qty, or discounts change
+        $(document).on('input change', '.qty, .price, .discount_type, .dis1, .dis2, .dis3', function() {
+            calculateTotals();
+        });
     });
 </script>
 @endpush

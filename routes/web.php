@@ -123,6 +123,7 @@ Route::get('/invoice/{id}/collections', [CollectionController::class, 'getInvoic
 Route::get('/invoice/{id}', [InvoiceController::class, 'show'])->name('invoice.show');
 Route::put('/invoice/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
+Route::post('/invoices/{id}/mark-as-printed', [InvoiceController::class, 'markAsPrinted'])->name('invoices.markAsPrinted');
 
 
 //collection details

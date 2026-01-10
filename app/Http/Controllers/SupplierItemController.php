@@ -7,6 +7,8 @@ use App\Models\SupplierItem;
 use App\Models\Unit;
 use App\Models\Category;
 use App\Models\Tax;
+use App\Models\Product;
+use App\Models\ProductSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -115,35 +117,92 @@ class SupplierItemController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
-            'item_code' => 'required|unique:supplier_items,item_code',
+            'supplier_id'      => 'required|exists:suppliers,id',
+            'item_code'        => 'required|unique:supplier_items,item_code',
             'item_description' => 'required',
-            'item_price' => 'required|numeric',
-            'net_price' => 'required|numeric',
+            'item_price'       => 'required|numeric',
+            'net_price'        => 'required|numeric',
         ]);
 
-        $item = new SupplierItem();
-        $item->supplier_id = $request->supplier_id;
-        $item->item_code = $request->item_code;
-        $item->category_id = $request->category_id;
-        $item->unit_id = $request->unit_id;
-        $item->item_description = $request->item_description;
-        $item->item_price = $request->item_price;
-        $item->net_price = $request->net_price;
-        $item->discount_less_add = $request->discount_less_add;
-        $item->discount_1 = $request->discount_1;
-        $item->discount_2 = $request->discount_2;
-        $item->discount_3 = $request->discount_3;
-        $item->volume_less = $request->volume_less;
-        $item->regular_less = $request->regular_less;
+        // Save supplier item first
+        $item = SupplierItem::create([
+            'supplier_id'        => $request->supplier_id,
+            'item_code'          => $request->item_code,
+            'category_id'        => $request->category_id,
+            'unit_id'            => $request->unit_id,
+            'item_description'   => $request->item_description,
+            'item_price'         => $request->item_price,
+            'net_price'          => $request->net_price,
+            'discount_less_add'  => $request->discount_less_add,
+            'discount_1'         => $request->discount_1,
+            'discount_2'         => $request->discount_2,
+            'discount_3'         => $request->discount_3,
+            'volume_less'        => $request->volume_less,
+            'regular_less'       => $request->regular_less,
+        ]);
 
-        if($request->hasFile('item_image')){
+        // Upload image (after item exists)
+        if ($request->hasFile('item_image')) {
             $path = $request->file('item_image')->store('items', 'public');
-            $item->item_image = $path;
+            $item->update(['item_image' => $path]);
         }
 
-        $item->save();
+        $lastCode = Product::lockForUpdate()
+            ->orderBy('id', 'desc')
+            ->value('product_code');
 
-        return redirect()->back()->with('success', 'Item added successfully.');
+        preg_match('/AVT(\d+)/', $lastCode ?? '', $matches);
+        $nextNumber = isset($matches[1]) ? ((int)$matches[1] + 1) : 1;
+
+        $productCode = 'AVT' . str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+
+        // Automatically create inventory product
+        $product = $item->products()->create([
+            'product_code'        => $productCode,
+            'supplier_product_code'=> $request->item_code,
+            'product_name'        => $request->item_description,
+            'unit_id'             => $request->unit_id,
+            'category_id'         => $request->category_id,
+            'quantity'            => 0, 
+            'sales_price'         => $request->item_price,
+            'discount_less_add'   => $request->discount_less_add,
+            'discount_1'          => $request->discount_1,
+            'discount_2'          => $request->discount_2,
+            'discount_3'          => $request->discount_3,
+        ]);
+
+        // Add supplier info to product_supplier
+        ProductSupplier::updateOrCreate(
+            [
+                'product_id'  => $product->id,
+                'supplier_id' => $item->supplier_id,
+            ],
+            [
+                'price'     => $item->item_price,
+                'net_price' => $item->net_price,
+            ]
+        );
+
+        return redirect()->back()->with('message', 'Item and inventory product added successfully.');
+    }
+
+    public function destroy($id)
+    {
+        // Find the supplier item
+        $item = SupplierItem::findOrFail($id);
+
+        // Get the item_code
+        $itemCode = $item->item_code;
+
+        // Delete related products that match supplier_product_code
+        $relatedProducts = Product::where('supplier_product_code', $itemCode)->get();
+        foreach ($relatedProducts as $product) {
+            $product->delete();
+        }
+
+        // Delete the supplier item
+        $item->delete();
+
+        return redirect()->back()->with('message', 'Supplier item and linked products successfully deleted.');
     }
 }

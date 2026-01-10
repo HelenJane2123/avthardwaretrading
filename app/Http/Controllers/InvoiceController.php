@@ -46,7 +46,14 @@ class InvoiceController extends Controller
                 ->where('status', 1)
                 ->whereNotNull('location')
                 ->get();
-        return view('invoice.index', compact('invoices', 'user', 'locations'));
+                
+        $printedInvoices = Invoice::where('invoice_status', 'printed')
+            ->whereNotNull('printed_at')
+            ->get();
+
+        $nonPrintedInvoices = Invoice::whereIn('invoice_status', ['pending', 'approved'])->get();
+
+        return view('invoice.index', compact('invoices', 'user', 'locations','printedInvoices','nonPrintedInvoices'));
     }
 
     /**
@@ -90,7 +97,8 @@ class InvoiceController extends Controller
                 'discount_type',
                 'discount_1',
                 'discount_2',
-                'discount_3')
+                'discount_3',
+                'status')
              ->with([
                     'supplierItems:id,item_code,item_price,supplier_id',
                     'unit:id,name'
@@ -133,12 +141,12 @@ class InvoiceController extends Controller
         try {
             \Log::info('Invoice request data', $request->all());
 
-            $request->validate([
-                'customer_id'  => 'required',
-                'invoice_date' => 'required|date',
-                'product_id'   => 'required|array',
-                'salesman'     => 'required'
-            ]);
+            // $request->validate([
+            //     'customer_id'  => 'required',
+            //     'invoice_date' => 'required|date',
+            //     'product_id'   => 'required|array',
+            //     'salesman'     => 'required'
+            // ]);
 
             $invoiceDate = Carbon::parse($request->invoice_date)->format('Ymd');
 
@@ -188,6 +196,7 @@ class InvoiceController extends Controller
                     'discount_2'         => $request->dis2[$index] ?? 0,
                     'discount_3'         => $request->dis3[$index] ?? 0,
                     'amount'             => $request->amount[$index] ?? 0,
+                    'is_free'            => $request->is_free[$index] ?? 0,
                 ]);
             }
 
@@ -330,21 +339,6 @@ class InvoiceController extends Controller
                 }),
             ]);
 
-            // Restore previous stock for all invoice items
-            // foreach ($invoice->items as $oldItem) {
-            //     $product = Product::find($oldItem->product_id);
-            //     if ($product) {
-            //         $product->quantity += $oldItem->qty;
-            //         $this->updateProductStatus($product);
-            //     }
-            // }
-
-            // Remove old invoice items (and optional discounts)
-            $oldItems = InvoiceSales::where('invoice_id', $invoice->id)->pluck('id');
-            // InvoiceSalesDiscount::whereIn('invoice_sale_id', $oldItems)->delete(); // optional
-            InvoiceSales::where('invoice_id', $invoice->id)->delete();
-
-            // Update main invoice details
             $invoice->update([
                 'customer_id'    => $request->customer_id,
                 'invoice_number' => $request->invoice_number,
@@ -363,24 +357,26 @@ class InvoiceController extends Controller
                 'updated_at'     => now()
             ]);
 
-            // Insert new invoice items
-            $newProductIds = $request->product_id ?? [];
-            foreach ($newProductIds as $key => $productId) {
-                if (!$productId) continue; // skip empty rows
+            // Remove old invoice items (and optional discounts)
+            InvoiceSales::where('invoice_id', $invoice->id)->delete();
+            $productIds = $request->product_id ?? [];
+            foreach ($productIds as $index => $productId) {
+                if (!$productId) continue;
 
-                $qty = $request->qty[$key] ?? 0;
-                $price = $request->price[$key] ?? 0;
-                $amount = $request->amount[$key] ?? 0;
-                $discount_less_add = $request->discount_less_add[$key] ?? 'less';
-                $discount_1 = $request->dis1[$key] ?? 0;
-                $discount_2 = $request->dis2[$key] ?? 0;
-                $discount_3 = $request->dis3[$key] ?? 0;
+                $qty = $request->qty[$index] ?? 0;
+                $price = $request->price[$index] ?? 0;
+                $amount = $request->amount[$index] ?? 0;
+                $discount_less_add = $request->discount_less_add[$index] ?? 'less';
+                $discount_1 = $request->dis1[$index] ?? 0;
+                $discount_2 = $request->dis2[$index] ?? 0;
+                $discount_3 = $request->dis3[$index] ?? 0;
+                $is_free = $request->is_free[$index] ?? 0;
 
-                $invoiceSale = InvoiceSales::create([
+                InvoiceSales::create([
                     'invoice_id'        => $invoice->id,
                     'product_id'        => $productId,
-                    'product_code'      => $request->product_code[$key] ?? '',
-                    'unit_id'           => $request->unit[$key] ?? null,
+                    'product_code'      => $request->product_code[$index] ?? '',
+                    'unit_id'           => $request->unit[$index] ?? null,
                     'qty'               => $qty,
                     'price'             => $price,
                     'discount_less_add' => $discount_less_add,
@@ -388,14 +384,8 @@ class InvoiceController extends Controller
                     'discount_2'        => $discount_2,
                     'discount_3'        => $discount_3,
                     'amount'            => $amount,
+                    'is_free'           => $is_free,
                 ]);
-
-                // Adjust product stock
-                // $product = Product::find($productId);
-                // if ($product) {
-                //     $product->quantity = max(0, $product->remaining_stock - $qty);
-                //     $this->updateProductStatus($product);
-                // }
             }
 
             // Optional: Log after update
@@ -790,5 +780,16 @@ class InvoiceController extends Controller
         }
 
         $product->save();
+    }
+
+    public function markAsPrinted($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        $invoice->invoice_status = 'printed';
+        $invoice->printed_at = now();
+        $invoice->is_printed = 1;
+        $invoice->save();
+
+        return response()->json(['success' => true]);
     }
 }

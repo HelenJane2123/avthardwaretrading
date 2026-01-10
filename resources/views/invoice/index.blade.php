@@ -39,51 +39,52 @@
             </div>
         @endif
         <div class="row mt-2">
-            <div class="col-md-12">
+            {{-- Non-Printed Invoices --}}
+            <div class="col-md-12 mb-4">
                 <div class="tile">
-                <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Invoice Records</h3>
-                    <div class="tile-body">
-                        <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
-                            <div class="mr-2">
-                                <label for="filterLocation" class="mr-1">Filter by Location:</label>
-                                <select id="filterLocation" class="form-control form-control-sm d-inline-block w-auto">
-                                    <option value="">All Locations</option>
-                                    <!-- Options will be populated by JS -->
-                                </select>
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Non-Printed Invoices</h3>
+                        <div class="tile-body">
+                            <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap">
+                                <div class="mr-2">
+                                    <label for="filterLocation" class="mr-1">Filter by Location:</label>
+                                    <select id="filterLocation" class="form-control form-control-sm d-inline-block w-auto">
+                                        <option value="">All Locations</option>
+                                        <!-- Options will be populated by JS -->
+                                    </select>
 
-                                <button id="bulkApprove" class="btn btn-success btn-sm">
-                                    <i class="fa fa-check"></i> Approve Selected
-                                </button>
+                                    <button id="bulkApprove" class="btn btn-success btn-sm">
+                                        <i class="fa fa-check"></i> Approve Selected
+                                    </button>
+                                </div>
                             </div>
                         </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-hover table-bordered" id="invoiceTable">
-                                <thead class="thead-dark medium">
-                                    <tr>
-                                        <th><input type="checkbox" id="selectAll"></th>
-                                        <th>Invoice #</th>
-                                        <th>Customer</th>
-                                        <th>Location</th>
-                                        <th>Invoice Date</th>
-                                        <th>Due Date</th>
-                                        <th>Subtotal</th>
-                                        <th>Grand Total</th>
-                                        <th>Outstanding</th>
-                                        <th>Status</th>
-                                        <th>Payment</th>
-                                        <th>Created By</th>
-                                        <th>Date Created</th>
-                                        <th>Updated By</th>
-                                        <th>Date Updated</th>
-                                        <th>Approved By</th>
-                                        <th>Date Approved</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="medium">
-                                    @foreach($invoices as $invoice)
-                                        <tr>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered" id="nonPrintedInvoiceTable">
+                            <thead class="thead-dark medium">
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Location</th>
+                                    <th>Invoice Date</th>
+                                    <th>Due Date</th>
+                                    <th>Subtotal</th>
+                                    <th>Grand Total</th>
+                                    <th>Outstanding</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Created By</th>
+                                    <th>Date Created</th>
+                                    <th>Updated By</th>
+                                    <th>Date Updated</th>
+                                    <th>Approved By</th>
+                                    <th>Date Approved</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($nonPrintedInvoices as $invoice)
+                                     <tr>
                                             <td>
                                                 @if($invoice->invoice_status != 'approved' && $invoice->invoice_status != 'canceled')
                                                     <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
@@ -145,16 +146,91 @@
                                                         </button>
                                                     @endif
                                                 @endif
-
-                                                <!-- <button class="btn btn-danger btn-sm p-1" onclick="deleteTag({{ $invoice->id }})">
-                                                    <i class="fa fa-trash fa-xs"></i>
-                                                </button> -->
                                             </td>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Printed Invoices --}}
+            <div class="col-md-12">
+                <div class="tile">
+                    <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Printed Invoices</h3>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered" id="printedInvoiceTable">
+                            <thead class="thead-dark medium">
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th>Invoice #</th>
+                                    <th>Customer</th>
+                                    <th>Location</th>
+                                    <th>Invoice Date</th>
+                                    <th>Due Date</th>
+                                    <th>Subtotal</th>
+                                    <th>Grand Total</th>
+                                    <th>Outstanding</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Created By</th>
+                                    <th>Date Created</th>
+                                    <th>Updated By</th>
+                                    <th>Date Updated</th>
+                                    <th>Approved By</th>
+                                    <th>Date Approved</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($printedInvoices as $invoice)
+                                        <tr>
+                                            <td>
+                                                @if($invoice->invoice_status != 'approved' && $invoice->invoice_status != 'canceled')
+                                                    <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
+                                                @endif
+                                            </td>
+                                            <td><span class="badge bg-info px-1 py-1 fs-4">
+                                                    {{ $invoice->invoice_number }}
+                                                </span></td>
+                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
+                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->location }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
+                                            <td>{{ number_format($invoice->subtotal, 2) }}</td>
+                                            <td>{{ number_format($invoice->grand_total, 2) }}</td>
+                                            <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
+                                            <td>
+                                                <span class="badge bg-warning px-1 py-1">
+                                                    {{ ucfirst($invoice->invoice_status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge 
+                                                    @if($invoice->payment_status == 'paid') bg-success
+                                                    @elseif($invoice->payment_status == 'pending') bg-warning
+                                                    @elseif($invoice->payment_status == 'overdue') bg-danger
+                                                    @elseif($invoice->payment_status == 'partial') bg-info
+                                                    @endif px-1 py-1">
+                                                    {{ ucfirst($invoice->payment_status) }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $invoice->created_by && $invoice->user ? $invoice->user->f_name . ' ' . $invoice->user->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') }}</td>
+                                            <td>{{ $invoice->updated_by && $invoice->updater ? $invoice->updater->f_name . ' ' . $invoice->updater->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') }}</td>
+                                            <td>{{ $invoice->approved_by && $invoice->approver ? $invoice->approver->f_name . ' ' . $invoice->approver->l_name : 'N/A' }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($invoice->approved_at)->format('M d, Y') }}</td>
+                                            <td class="text-nowrap">
+                                                <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
+                                                    <i class="fa fa-eye fa-xs"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -184,8 +260,14 @@
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
-        var invoiceTable = $('#invoiceTable').DataTable({
-            "order": [[1, "desc"]],
+       let invoiceTable = $('#nonPrintedInvoiceTable').DataTable({
+            "order": [[0, "desc"]],
+            "pageLength": 10,
+            "responsive": true
+        });
+
+        $('#printedInvoiceTable').DataTable({
+            "order": [[0, "desc"]],
             "pageLength": 10,
             "responsive": true
         });

@@ -7,6 +7,8 @@ use App\Models\SupplierItem;
 use App\Models\Unit;
 use App\Models\Category;
 use App\Models\Tax;
+use App\Models\Product;
+use App\Models\ProductSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -47,9 +49,9 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_code' => 'required|unique:suppliers',
+            'supplier_code' => 'required|unique:suppliers,supplier_code',
             'name' => 'required',
-            'mobile' => 'nullable|min:3|digits:11',
+            'mobile' => 'nullable|digits:11',
             'address' => 'required|min:3',
             'details' => 'nullable|min:3',
             'previous_balance' => 'nullable|numeric',
@@ -57,7 +59,7 @@ class SupplierController extends Controller
             'status' => 'required',
         ]);
 
-        //Check for duplicates within the form itself
+        // Check for duplicates within the form itself
         if ($request->has('item_description')) {
             $descriptions = array_map('strtolower', array_filter($request->item_description));
             if (count($descriptions) !== count(array_unique($descriptions))) {
@@ -67,7 +69,7 @@ class SupplierController extends Controller
             }
         }
 
-        //Create supplier
+        // Create supplier
         $supplier = Supplier::create([
             'supplier_code' => $request->supplier_code,
             'name' => $request->name,
@@ -77,62 +79,95 @@ class SupplierController extends Controller
             'tax' => $request->tax,
             'email' => $request->email,
             'previous_balance' => $request->previous_balance ?? 0,
-            'status' => $request->status
+            'status' => $request->status,
         ]);
 
-        //Check for duplicates in DB before inserting new items
-        if ($request->has('item_description')) {
-            foreach ($request->item_description as $desc) {
-                if (!empty($desc)) {
-                    $exists = SupplierItem::where('item_description', $desc)
-                        ->where('supplier_id', $supplier->id)
-                        ->exists();
+        // Loop through items
+        $item_codes = $request->item_code ?? [];
+        $item_descriptions = $request->item_description ?? [];
 
-                    if ($exists) {
-                        // Rollback supplier if duplicate detected
-                        $supplier->delete();
+        foreach ($item_codes as $index => $code) {
+            $code = trim($code);
+            $desc = $item_descriptions[$index] ?? null;
+            if (!$code || !$desc) continue; // skip empty rows
 
-                        return redirect()->back()
-                            ->withInput()
-                            ->with('error', "The product '{$desc}' already exists for this supplier.");
-                    }
-                }
+            // Check for duplicates in DB
+            $exists = SupplierItem::where('supplier_id', $supplier->id)
+                ->where('item_description', $desc)
+                ->exists();
+
+            if ($exists) {
+                $supplier->delete(); // rollback
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "The product '{$desc}' already exists for this supplier.");
             }
+
+            // Handle image
+            $imagePath = null;
+            if ($request->hasFile('item_image') && isset($request->file('item_image')[$index])) {
+                $image = $request->file('item_image')[$index];
+                $supplierFolder = $supplier->supplier_code ?? 'items';
+                $imagePath = $image->store("items/{$supplierFolder}", 'public');
+            }
+
+            // Save SupplierItem
+            $item = SupplierItem::create([
+                'supplier_id' => $supplier->id,
+                'item_code' => $code,
+                'category_id' => $request->category_id[$index] ?? null,
+                'item_description' => $desc,
+                'item_price' => $request->unit_cost[$index] ?? 0,
+                'net_price' => $request->net_cost[$index] ?? 0,
+                'unit_id' => $request->unit_id[$index] ?? null,
+                'item_qty' => $request->item_qty[$index] ?? 0,
+                'discount_less_add' => $request->discount_type[$index] ?? null,
+                'discount_1' => $request->discount1[$index] ?? null,
+                'discount_2' => $request->discount2[$index] ?? null,
+                'discount_3' => $request->dis3[$index] ?? null,
+                'item_image' => $imagePath,
+                'volume_less' => $request->volume_less[$index] ?? null,
+                'regular_less' => $request->regular_less[$index] ?? null,
+            ]);
+
+            // Generate product code
+            $lastCode = Product::lockForUpdate()
+                ->orderBy('id', 'desc')
+                ->value('product_code');
+
+            preg_match('/AVT(\d+)/', $lastCode ?? '', $matches);
+            $nextNumber = isset($matches[1]) ? ((int)$matches[1] + 1) : 1;
+            $productCode = 'AVT' . str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+
+            // Create Product linked to SupplierItem
+            $product = $item->products()->create([
+                'product_code' => $productCode,
+                'supplier_product_code' => $code,
+                'product_name' => $desc,
+                'unit_id' => $request->unit_id[$index] ?? null,
+                'category_id' => $request->category_id[$index] ?? null,
+                'quantity' => 0,
+                'sales_price' => $request->unit_cost[$index] ?? 0,
+                'discount_less_add' => $request->discount_type[$index] ?? null,
+                'discount_1' => $request->discount_1[$index] ?? null,
+                'discount_2' => $request->discount_2[$index] ?? null,
+                'discount_3' => $request->discount_3[$index] ?? null,
+            ]);
+
+            // Add supplier info to product_supplier
+            ProductSupplier::updateOrCreate(
+                [
+                    'product_id' => $product->id,
+                    'supplier_id' => $supplier->id,
+                ],
+                [
+                    'price' => $request->unit_cost[$index] ?? 0,
+                    'net_price' => $request->net_cost[$index] ?? 0,
+                ]
+            );
         }
 
-        //Save items if all checks passed
-        if ($request->has('item_code')) {
-            foreach ($request->item_code as $index => $code) {
-                if ($code !== null && $code !== '') {
-                    $imagePath = null;
-
-                    if ($request->hasFile('item_image') && isset($request->file('item_image')[$index])) {
-                        $image = $request->file('item_image')[$index];
-                        $supplierFolder = $supplier->supplier_code ?? 'items';
-                        $imagePath = $image->store("items/{$supplierFolder}", 'public');
-                    }
-
-                    SupplierItem::create([
-                        'supplier_id' => $supplier->id,
-                        'item_code' => $code,
-                        'category_id' => $request->category_id[$index] ?? null,
-                        'item_description' => $request->item_description[$index] ?? null,
-                        'item_price' => $request->unit_cost[$index] ?? 0,
-                        'net_price' => $request->net_cost[$index] ?? 0,
-                        'unit_id' => $request->unit_id[$index] ?? null,
-                        'item_qty' => $request->item_qty[$index] ?? 0,
-                        'discount_less_add' => $request->discount_type[$index] ?? null,
-                        'discount_1' => $request->discount1[$index] ?? null,
-                        'discount_2' => $request->discount2[$index] ?? null,
-                        'discount_3' => $request->dis3[$index] ?? null,
-                        'item_image' => $imagePath,
-                        'volume_less' => $request->volume_less[$index] ?? null,
-                        'regular_less' => $request->regular_less[$index] ?? null,
-                    ]);
-                }
-            }
-        }
-        return redirect()->back()->with('message', 'New supplier has been added successfully!');
+        return redirect()->back()->with('message', 'Supplier and items have been added successfully!');
     }
 
 

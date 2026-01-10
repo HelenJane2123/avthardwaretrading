@@ -57,6 +57,7 @@ class PurchaseController extends Controller
 
          // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
+    
 
         //get salesman
         $salesman = Salesman::where('status',1)->get();
@@ -68,7 +69,7 @@ class PurchaseController extends Controller
         try {
             $supplier = Supplier::findOrFail($id);
             $items = SupplierItem::where('supplier_id', $id)
-                ->select('id', 'item_code', 'item_description', 'item_price', 'item_amount')
+                ->select('id', 'item_code', 'item_description', 'item_price', 'unit_id','discount_less_add','discount_1','discount_2','discount_3')
                 ->get();
 
            return response()->json([
@@ -119,40 +120,6 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
-        // ✅ Validation rules
-        // $request->validate([
-        //     'supplier_id'         => 'required|exists:suppliers,id',
-        //     'date'                => 'required|date',
-        //     'po_number'           => 'required|string|max:50|unique:purchases,po_number',
-        //     'salesman'            => 'nullable|string|max:100',
-        //     'payment_id'          => 'nullable|exists:mode_of_payment,id',
-        //     'discount_type'       => 'nullable|string|in:percent,fixed',
-        //     'overall_discount'    => 'nullable|numeric|min:0',
-        //     'subtotal_value'      => 'required|numeric|min:0',
-        //     'discount_value'      => 'nullable|numeric|min:0',
-        //     'shipping_value'      => 'nullable|numeric|min:0',
-        //     'other_value'         => 'nullable|numeric|min:0',
-        //     'grand_total_value'   => 'required|numeric|min:0',
-        //     'remarks'             => 'nullable|string',
-
-        //     // ✅ Validate product line arrays
-        //     'product_id'          => 'required|array|min:1',
-        //     'product_id.*'        => 'required|exists:supplier_items,id',
-        //     'product_code'        => 'required|array|min:1',
-        //     'product_code.*'      => 'required|string|max:50',
-        //     'qty'                 => 'required|array|min:1',
-        //     'qty.*'               => 'required|integer|min:1',
-        //     'price'               => 'required|array|min:1',
-        //     'price.*'             => 'required|numeric|min:0',
-        //     'dis'                 => 'nullable|array',
-        //     'dis.*'               => 'nullable|numeric|min:0',
-        //     'unit'                => 'required|array|min:1',
-        //     'unit.*'              => 'required|string|max:50',
-        //     'amount'              => 'required|array|min:1',
-        //     'amount.*'            => 'required|numeric|min:0',
-        // ]);
-
-        // dd("Validation passed!", $request->all());
 
         DB::transaction(function () use ($request) {
             $purchase = Purchase::create([

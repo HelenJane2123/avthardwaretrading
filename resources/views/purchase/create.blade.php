@@ -40,9 +40,9 @@
                         @csrf
                         {{-- Supplier & Order Details --}}
                         <div class="row g-3 mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select name="supplier_id" id="supplierSelect" class="form-control form-control-sm" required>
+                                <select name="supplier_id" id="supplier_id" class="form-control form-control-sm" required>
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -51,13 +51,24 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Purchase Date</label>
-                                <input type="date" name="date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                                 <!-- Displayed to user -->
+                                    <input type="text"
+                                        id="purchase_date_display"
+                                        class="form-control form-control-sm"
+                                        value="{{ date('F d, Y') }}"
+                                        required>
+
+                                    <!-- Actual value submitted -->
+                                    <input type="hidden"
+                                        name="date"
+                                        id="purchase_date"
+                                        value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">PO Number</label>
                                 <input type="text" name="po_number" id="po_number" class="form-control form-control-sm" readonly>
                             </div>
-                            <div class="col-md-4">
+                            <!-- <div class="col-md-4">
                                 <label class="form-label">Salesman</label>
                                <select name="salesman_id" id="salesman_id" class="form-control form-control-sm">
                                     <option value="">-- Select Salesman --</option>
@@ -67,8 +78,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="col-md-4">
+                            </div> -->
+                            <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
                                 <select name="payment_id" id="payment_id" class="form-control form-control-sm" required>
                                     <option value="">-- Select Payment Mode --</option>
@@ -128,7 +139,7 @@
 
                                         <!-- UNIT -->
                                         <td>
-                                            <select name="unit[]" class="form-control form-control-sm">
+                                            <select name="unit[]" id="unit_id" class="form-control form-control-sm unit">
                                                 <option value="">Unit</option>
                                                 @foreach($units as $unit)
                                                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -146,7 +157,7 @@
                                             <div class="row g-1">
                                                 <!-- Discount Type -->
                                                 <div class="col-8">
-                                                    <select name="discount_less_add[]" class="form-control form-control-sm">
+                                                    <select name="discount_less_add[]" class="form-control form-control-sm discount_less_add">
                                                         <option value="less">Less (-)</option>
                                                         <option value="add">Add (+)</option>
                                                     </select>
@@ -154,7 +165,7 @@
 
                                                 <!-- Discount 1 -->
                                                 <div class="col-8">
-                                                    <select name="dis1[]" class="form-control form-control-sm">
+                                                    <select name="dis1[]" class="form-control form-control-sm dis1">
                                                         <option value="0">Discount 1 (%)</option>
                                                         @foreach($taxes as $tax)
                                                             <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
@@ -164,7 +175,7 @@
 
                                                 <!-- Discount 2 -->
                                                 <div class="col-8">
-                                                    <select name="dis2[]" class="form-control form-control-sm">
+                                                    <select name="dis2[]" class="form-control form-control-sm dis2">
                                                         <option value="0">Discount 2 (%)</option>
                                                         @foreach($taxes as $tax)
                                                             <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
@@ -174,7 +185,7 @@
 
                                                 <!-- Discount 3 -->
                                                 <div class="col-8">
-                                                    <select name="dis3[]" class="form-control form-control-sm mt-1">
+                                                    <select name="dis3[]" class="form-control form-control-sm mt-1 dis3">
                                                         <option value="0">Discount 3 (%)</option>
                                                         @foreach($taxes as $tax)
                                                             <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
@@ -195,7 +206,6 @@
                                             <input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount" readonly>
                                         </td>
 
-                                        <!-- REMOVE BUTTON -->
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remove">
                                                 <i class="fa fa-trash"></i>
@@ -237,7 +247,6 @@
                                     </tr>
                                 </tfoot>
                             </table>
-
                         </div>
 
                         {{-- Remarks --}}
@@ -264,7 +273,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
-
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
             $('.purchaseproduct').select2({
@@ -273,130 +283,21 @@
                 width: '400px'
             });
             $('#supplier_id').select2({
-                placeholder: "Select Customer",
+                placeholder: "Select Supplier",
                 allowClear: true,
                 width: 'resolve'
             });
-            $('.addRow').on('click', function() {
-                if (!window.supplierItems || window.supplierItems.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Warning',
-                        text: 'Please select supplier first.',
-                        confirmButtonColor: '#ff9f43',
-                    });
-                    return;
-                }
-                addRow(window.supplierItems);
-                calculateTotals();
+            $('#unit_id').select2({
+                placeholder: "Select Unit",
+                allowClear: true,
+                width: 'resolve'
             });
-            const productOptions = `{!! 
-                $products->map(function($product){
-                    return '<option value="'.$product->id.'">'.$product->name.'</option>';
-                })->implode('') 
-            !!}`;
 
-            function addRow(supplierItems = []) {
-                let options = '<option value="">Select Product</option>';
-
-                supplierItems.forEach(function(item){
-                    options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}" data-dis="${item.item_amount || 0}">
-                                   ${item.item_description}
-                                </option>`;
-                });
-
-                const addRow = `<tr>
-                    <td>
-                        <input type="hidden" name="product_code[]" class="form-control form-control-sm code">
-                        <select name="product_id[]" class="form-control form-control-sm purchaseproduct">
-                            ${options}
-                        </select>
-                       <small class="text-muted selected-product-name"></small>
-                    </td>
-                    <td>
-                        <select name="unit[]" class="form-control form-control-sm unit">
-                            <option value="">Unit</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </td>
-                    <td><input type="number" name="qty[]" class="form-control form-control-sm qty"  placeholder="0"></td>
-                    <td>
-                        <div class="row g-1">
-                            <!-- Discount Type -->
-                            <div class="col-8">
-                                <select name="discount_less_add[]" class="form-control form-control-sm">
-                                    <option value="less">Less (-)</option>
-                                    <option value="add">Add (+)</option>
-                                </select>
-                            </div>
-
-                            <!-- Discount 1 -->
-                            <div class="col-8">
-                                <select name="dis1[]" class="form-control form-control-sm">
-                                    <option value="0">Discount 1 (%)</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Discount 2 -->
-                            <div class="col-8">
-                                <select name="dis2[]" class="form-control form-control-sm">
-                                    <option value="0">Discount 2 (%)</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Discount 3 -->
-                            <div class="col-8">
-                                <select name="dis3[]" class="form-control form-control-sm mt-1">
-                                    <option value="0">Discount 3 (%)</option>
-                                    @foreach($taxes as $tax)
-                                        <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </td>
-                    <td><input type="number" step="0.01" name="price[]" class="form-control form-control-sm price" placeholder="0.00"></td>
-                    <td><input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount" readonly></td>
-                    <td><a class="btn btn-danger remove"><i class="fa fa-remove"></i></a></td>
-                </tr>`;
-
-                $('#po-body').append(addRow);
-                $('.purchaseproduct').select2({
-                    placeholder: "Select Product",
-                    allowClear: true,
-                    width: '400px'
-                });
-
-                // DISABLE discount input if overall is selected
-                if ($('#discount_type').val() === 'overall') {
-                    $('#po-body tr:last').find('.dis').prop('disabled', true);
+            $('#purchase_date_display').datepicker({
+                dateFormat: 'MM dd, yy',
+                onSelect: function(dateText) {
+                    $('#invoice_date').val(formatToYMD(dateText));
                 }
-            }
-
-            $('.remove').live('click', function () {
-                var l =$('tbody tr').length;
-                if(l==1){
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Cannot delete',
-                        text: 'You cannot delete the last one.',
-                        confirmButtonColor: '#ff9f43',
-                    });
-                    return;
-                    calculateTotals();
-                }
-                else{
-                    $(this).parent().parent().remove();
-                }
-
             });
 
             //Populate Supplier Information
@@ -423,7 +324,14 @@
                         $('.purchaseproduct').each(function () {
                             let options = '<option value="">Select Product</option>';
                             window.supplierItems.forEach(function(item){
-                                options += `<option value="${item.id}" data-code="${item.item_code}" data-price="${item.item_price}" data-dis="${item.item_amount || 0}">
+                                options += `<option value="${item.id}" 
+                                                data-code="${item.item_code}" 
+                                                data-price="${item.item_price}" 
+                                                data-discountlessadd="${item.discount_less_add || 'less'}"
+                                                data-dis1="${item.discount_1}"
+                                                data-dis2="${item.discount_2}"
+                                                data-dis3="${item.discount_3}"
+                                                data-unit="${item.unit_id}">
                                                ${item.item_description}
                                             </option>`;
                             });
@@ -440,9 +348,19 @@
                 const code  = selected.data('code') || '';
                 const price = selected.data('price') || '';
                 const name  = selected.text().trim() || '';
+                const discountLessAdd = selected.data('discountlessadd') || 'less';
+                const dis1 = selected.data('dis1') || 0;
+                const dis2 = selected.data('dis2') || 0;
+                const dis3 = selected.data('dis3') || 0;
+                const unit_id = selected.data('unit') || '';
 
                 $row.find('.code').val(code);
                 $row.find('.price').val(price);
+                $row.find('.dis1').val(dis1).trigger('change');
+                $row.find('.dis2').val(dis2).trigger('change');
+                $row.find('.dis3').val(dis3).trigger('change');
+                $row.find('.unit').val(unit_id).trigger('change');
+                $row.find('.discount_less_add').val(discountLessAdd).trigger('change');
                 $row.find('.selected-product-name').text('('+ code +') '+name);
 
                 calculateTotals(); 
@@ -514,7 +432,11 @@
                                     value: item.id,
                                     text: item.item_description,
                                     'data-code': item.item_code,
-                                    'data-price': item.item_price
+                                    'data-price': item.item_price,
+                                    'data-discountlessadd': item.discount_less_add || 'less',
+                                    'data-dis1': item.discount_1,
+                                    'data-dis2': item.discount_2,
+                                    'data-dis3': item.discount_3
                                 });
                                 $dropdown.append($option);
                             });
@@ -526,6 +448,129 @@
             }
 
             $('#discount_type').trigger('change');
+        });
+
+         $('.addRow').on('click', function() {
+            addRow(window.supplierItems);
+            calculateTotals();
+        });
+        const productOptions = `{!! 
+            $products->map(function($product){
+                return '<option value="'.$product->id.'">'.$product->name.'</option>';
+            })->implode('') 
+        !!}`;
+
+        function addRow(supplierItems = []) {
+            let options = '<option value="">Select Product</option>';
+
+            supplierItems.forEach(function(item){
+                options += `<option value="${item.id}" data-code="${item.item_code}" 
+                                data-price="${item.item_price}" 
+                                data-dis1="${item.discount_1}"
+                                data-dis2="${item.discount_2}"
+                                data-dis3="${item.discount_3}"
+                                data-discountlessadd="${item.discount_less_add || 'less'}
+                                data-unit="${item.unit_id}">
+                            ${item.item_description}
+                            </option>`;
+            });
+
+            const addRow = `<tr>
+                <td>
+                    <input type="hidden" name="product_code[]" class="form-control form-control-sm code">
+                    <select name="product_id[]" class="form-control form-control-sm purchaseproduct">
+                        ${options}
+                    </select>
+                <small class="text-muted selected-product-name"></small>
+                </td>
+                <td>
+                    <select name="unit[]" class="form-control form-control-sm unit">
+                        <option value="">Unit</option>
+                        @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td><input type="number" name="qty[]" class="form-control form-control-sm qty"  placeholder="0"></td>
+                <td>
+                    <div class="row g-1">
+                        <!-- Discount Type -->
+                        <div class="col-8">
+                            <select name="discount_less_add[]" class="form-control form-control-sm discount_less_add">
+                                <option value="less">Less (-)</option>
+                                <option value="add">Add (+)</option>
+                            </select>
+                        </div>
+
+                        <!-- Discount 1 -->
+                        <div class="col-8">
+                            <select name="dis1[]" class="form-control form-control-sm dis1">
+                                <option value="0">Discount 1 (%)</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Discount 2 -->
+                        <div class="col-8">
+                            <select name="dis2[]" class="form-control form-control-sm dis2">
+                                <option value="0">Discount 2 (%)</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Discount 3 -->
+                        <div class="col-8">
+                            <select name="dis3[]" class="form-control form-control-sm mt-1 dis3">
+                                <option value="0">Discount 3 (%)</option>
+                                @foreach($taxes as $tax)
+                                    <option value="{{ $tax->name }}">{{ $tax->name }}%</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </td>
+                <td><input type="number" step="0.01" name="price[]" class="form-control form-control-sm price" placeholder="0.00"></td>
+                <td><input type="number" step="0.01" name="amount[]" class="form-control form-control-sm amount" readonly></td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm remove">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+
+            $('#po-body').append(addRow);
+            $('.purchaseproduct').select2({
+                placeholder: "Select Product",
+                allowClear: true,
+                width: '400px'
+            });
+
+            // DISABLE discount input if overall is selected
+            if ($('#discount_type').val() === 'overall') {
+                $('#po-body tr:last').find('.dis').prop('disabled', true);
+            }
+        }
+
+        $('.remove').live('click', function () {
+            var l =$('tbody tr').length;
+            if(l==1){
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cannot delete',
+                    text: 'You cannot delete the last one.',
+                    confirmButtonColor: '#ff9f43',
+                });
+                return;
+                calculateTotals();
+            }
+            else{
+                $(this).parent().parent().remove();
+            }
+
         });
 
         function calculateTotals() {
@@ -582,7 +627,7 @@
         }
 
         $(document).on('input change', 
-            '.qty, .price, [name="dis1[]"], [name="dis2[]"], [name="dis3[]"], [name="discount_less_add[]"], #discount, #tax, #shipping, #other', 
+            '.qty, .price, .dis1, .dis2, .dis3, .discount_less_add, #discount, #tax, #shipping, #other', 
             function() {
                 calculateTotals();
         });

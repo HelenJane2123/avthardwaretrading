@@ -17,6 +17,7 @@ class InvoiceSales extends Model
         'discount_2',
         'discount_3',
         'amount',
+        'is_free',
     ];
 
     public function product()

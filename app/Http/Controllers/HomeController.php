@@ -127,19 +127,25 @@ class HomeController extends Controller
             ->take(5)
             ->get();
 
-        // =============================
-        // DATE RANGE (CURRENT YEAR)
-        // =============================
+        // First 3 months Estimated Income (stored procedure)
         $startDate = Carbon::now()->startOfYear()->toDateString();
         $endDate   = Carbon::now()->endOfYear()->toDateString();
 
-        // =============================
-        // CALL STORED PROCEDURE
-        // =============================
         $monthlyEstimatedIncome = DB::select(
             'CALL sp_monthly_estimated_income(?, ?)',
             [$startDate, $endDate]
         );
+
+        $topStores = DB::table('invoices as sales')
+            ->join('customers', 'sales.customer_id', '=', 'customers.id') // or stores table
+            ->select(
+                'customers.name as store_name',
+                DB::raw('SUM(sales.grand_total) as total_sales')
+            )
+            ->groupBy('customers.id', 'customers.name')
+            ->orderByDesc('total_sales')
+            ->limit(20)
+            ->get();
 
         return view('home', [
             'monthlySales'     => $formattedMonthlySales,
@@ -160,6 +166,7 @@ class HomeController extends Controller
             'recentProducts'   => $recentProducts,
             'recentCollections' => $recentCollections,
             'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
+            'topStores'         => $topStores,
         ]);
     }
 
