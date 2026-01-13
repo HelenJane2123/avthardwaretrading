@@ -135,7 +135,6 @@
 </head>
 <body>
 <div class="invoice-box">
-
     <!-- Header -->
     <div class="header text-center">
         <h4>AVT HARDWARE TRADING</h4>

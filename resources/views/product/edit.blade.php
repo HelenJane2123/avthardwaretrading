@@ -162,7 +162,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label>Remaining Stock</label>
-                                    <input type="number" name="remaining_stock" class="form-control form-control-sm" value="{{ $product->remaining_stock }}" readonly>
+                                    <input type="number" name="remaining_stock" class="form-control form-control-sm" value="{{ $product->remaining_stock }}">
                                 </div>
                                 <div class="col-md-2">
                                     <label>Selling Price</label>

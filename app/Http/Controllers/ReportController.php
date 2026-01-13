@@ -592,8 +592,14 @@ class ReportController extends Controller
             : null;
 
         $salesmanName = $request->input('salesman_name') ?? null;
-        $startDate = $request->input('start_date') ?: null;
-        $endDate = $request->input('end_date') ?: null;
+        $startDateInput = $request->input('start_date') ?: null;
+        $endDateInput = $request->input('end_date') ?: null;
+         $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
         $location    = $request->input('location') ?: null;
 
         // Call stored procedure

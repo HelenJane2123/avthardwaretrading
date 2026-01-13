@@ -281,7 +281,9 @@
 <script src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
-    $('#sampleTable').DataTable();
+    $('#sampleTable').DataTable({
+        "order": [[3, "desc"]] 
+    });
 
     function deleteTag(id) {
         swal({

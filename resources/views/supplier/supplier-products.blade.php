@@ -433,18 +433,34 @@
         }
     });
 
-    $('#new_category').select2({
-        placeholder: "Select Category",
-        allowClear: true,
-        width: '250px'
-    });
+    $('#itemAddModal').on('shown.bs.modal', function () {
+        $('#new_category').select2({
+            placeholder: "Select Category",
+            allowClear: true,
+            width: '100%',
+            minimumResultsForSearch: 0,
+            dropdownParent: $('#itemAddModal') 
+        });
 
-    $('#new_unit').select2({
-        placeholder: "Select Unit",
-        allowClear: true,
-        width: '200px'
+        $('#new_unit').select2({
+            placeholder: "Select Unit",
+            allowClear: true,
+            width: '100%',
+            minimumResultsForSearch: 0,
+            dropdownParent: $('#itemAddModal') 
+        });
     });
+    $('#itemEditModal').on('shown.bs.modal', function () {
+        $('#modal_category').select2({
+            dropdownParent: $('#itemEditModal'),
+            width: '100%'
+        });
 
+        $('#modal_unit').select2({
+            dropdownParent: $('#itemEditModal'),
+            width: '100%'
+        });
+    });
     // Supplier modal
     $('#editSupplierBtn').click(function() {
         $('#supplierModal').modal('show');

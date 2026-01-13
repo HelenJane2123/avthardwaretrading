@@ -195,7 +195,6 @@
                                             </div>
                                         </td>
 
-
                                         <!-- UNIT PRICE -->
                                         <td>
                                             <input type="number" step="0.01" name="price[]" class="form-control form-control-sm price" placeholder="0.00">
@@ -302,7 +301,7 @@
 
             //Populate Supplier Information
             let supplierProductOptions = '';
-            $('#supplierSelect').on('change', function () {
+            $('#supplier_id').on('change', function () {
                 const supplierId = $(this).val();
                 if (!supplierId) return;
 
@@ -543,10 +542,16 @@
             </tr>`;
 
             $('#po-body').append(addRow);
-            $('.purchaseproduct').select2({
+            $('#po-body tr:last .purchaseproduct').select2({
                 placeholder: "Select Product",
                 allowClear: true,
                 width: '400px'
+            });
+
+            $('#po-body tr:last .unit').select2({
+                placeholder: "Select Unit",
+                allowClear: true,
+                width: '80px'
             });
 
             // DISABLE discount input if overall is selected

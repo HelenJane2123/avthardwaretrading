@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Facades\Response;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 
 class ExportController extends Controller
 {
@@ -304,79 +305,224 @@ class ExportController extends Controller
 
     //Export Invoice
     public function exportInvoices()
-    {
-        // eager load relations - adjust relation names to your app (customer, items.product)
-        $invoices = Invoice::with(['customer', 'items.product'])->get();
+{
+    $statuses = ['pending', 'approved', 'printed'];
+    $spreadsheet = new Spreadsheet();
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+    // Fetch all invoices with customers and items
+    $invoices = Invoice::with(['customer', 'items.product'])
+        ->orderBy('customer_id')
+        ->orderBy('invoice_date')
+        ->get();
 
-        // Add header / logo (if exists)
-        $this->addHeader($sheet, 'Invoice List with Details');
+    // Group invoices by location
+    $invoicesByLocation = $invoices->groupBy(function ($invoice) {
+        return $invoice->customer->location ?? 'N/A';
+    });
 
-        $row = 6; // start row
+    // === SUMMARY SHEET WITH ALL INVOICES PER CUSTOMER ===
+    $summarySheet = $spreadsheet->createSheet(0);
+    $summarySheet->setTitle('Summary Invoices');
+    $row = 2;
 
-        foreach ($invoices as $invoice) {
-            // Invoice header block
-            $sheet->setCellValue('A' . $row, 'Invoice #: ' . ($invoice->invoice_number ?? $invoice->id));
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-            $sheet->setCellValue('C' . $row, 'Customer: ' . ($invoice->customer->name ?? 'N/A'));
-            $sheet->setCellValue('E' . $row, 'Date: ' . ($invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : ($invoice->created_at ? $invoice->created_at->format('Y-m-d') : '')));
+    $summarySheet->setCellValue('A' . $row, 'Location');
+    $summarySheet->setCellValue('B' . $row, 'DR Number');
+    $summarySheet->setCellValue('C' . $row, 'Customer');
+    $summarySheet->setCellValue('D' . $row, 'Invoice #');
+    $summarySheet->setCellValue('E' . $row, 'Status');
+    $summarySheet->setCellValue('F' . $row, 'Grand Total');
+    $summarySheet->setCellValue('G' . $row, 'Date');
+    $summarySheet->getStyle('A' . $row . ':G' . $row)->getFont()->setBold(true);
+    $row++;
+
+    foreach ($invoicesByLocation as $location => $locationInvoices) {
+        foreach ($locationInvoices as $invoice) {
+            $customerName = $invoice->customer->name ?? 'N/A';
+            $drNumber = $invoice->invoice_number ?? ($invoice->doctor->invoice_number ?? 'N/A');
+            $invoiceNumber = $invoice->invoice_number ?? $invoice->id;
+            $status = $invoice->invoice_status ?? 'N/A';
+            $grandTotal = $invoice->grand_total ?? 0;
+            $invoiceDate = $invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : '';
+
+            $summarySheet->setCellValue('A' . $row, $location);
+            $summarySheet->setCellValue('B' . $row, $drNumber);
+            $summarySheet->setCellValue('C' . $row, $customerName);
+            $summarySheet->setCellValue('D' . $row, $invoiceNumber);
+            $summarySheet->setCellValue('E' . $row, $status);
+            $summarySheet->setCellValue('F' . $row, $grandTotal); // numeric
+            $summarySheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $summarySheet->setCellValue('G' . $row, $invoiceDate);
+
+            // Highlight grand total
+            $summarySheet->getStyle('F' . $row)->getFont()->setBold(true);
+            $summarySheet->getStyle('F' . $row)->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFF00');
+
             $row++;
+        }
+    }
 
-            $sheet->setCellValue('A' . $row, 'Status: ' . ($invoice->invoice_status ?? ''));
-            $sheet->setCellValue('C' . $row, 'Grand Total: ' . number_format($invoice->grand_total ?? 0, 2));
-            $row += 1;
+    foreach (range('A', 'G') as $col) {
+        $summarySheet->getColumnDimension($col)->setAutoSize(true);
+    }
 
-            // Items header
-            $sheet->setCellValue('A' . $row, 'Product');
-            $sheet->setCellValue('B' . $row, 'Qty');
-            $sheet->setCellValue('C' . $row, 'Unit Price');
-            $sheet->setCellValue('D' . $row, 'Discount');
-            $sheet->setCellValue('E' . $row, 'Amount');
-            // bold header row
-            $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
-            $row++;
+    // === PER-LOCATION SHEETS ===
+    foreach ($invoicesByLocation as $location => $locationInvoices) {
+        $safeLocation = substr(preg_replace('/[:\\\\\/\?\*\[\]]/', '', $location), 0, 31);
+        if (empty($safeLocation)) $safeLocation = 'Unknown';
 
-            // Invoice items (guard if relation missing)
-            $items = $invoice->items ?? collect();
-            if ($items->isEmpty()) {
-                $sheet->setCellValue('A' . $row, '(no items)');
+        $sheet = $spreadsheet->createSheet();
+        $sheet->setTitle($safeLocation);
+        $row = 6;
+
+        $this->addHeader($sheet, "Invoice List for Location: $location");
+
+        foreach ($statuses as $status) {
+            $statusColor = match($status) {
+                'pending' => 'FFFFCC',
+                'approved' => 'CCFFCC',
+                'printed' => 'CCCCFF',
+                default => 'FFFFFF',
+            };
+
+            $sheet->setCellValue('A' . $row, strtoupper($status) . ' INVOICES');
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(14);
+            $sheet->getStyle('A' . $row . ':E' . $row)
+                ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($statusColor);
+            $row += 2;
+
+            $statusInvoices = $locationInvoices->where('invoice_status', $status);
+            if ($statusInvoices->isEmpty()) {
+                $sheet->setCellValue('A' . $row, '(no invoices)');
+                $row += 2;
+                continue;
+            }
+
+            $totalsPerCustomer = [];
+            $currentCustomer = null;
+            $customerSubtotal = 0;
+
+            foreach ($statusInvoices as $invoice) {
+                $customerName = $invoice->customer->name ?? 'N/A';
+                $grandTotal = $invoice->grand_total ?? 0;
+
+                $totalsPerCustomer[$customerName] = ($totalsPerCustomer[$customerName] ?? 0) + $grandTotal;
+
+                if ($currentCustomer && $currentCustomer !== $customerName) {
+                    $sheet->setCellValue('C' . $row, 'Subtotal for ' . $currentCustomer);
+                    $sheet->setCellValue('E' . $row, $customerSubtotal);
+                    $sheet->getStyle('C' . $row . ':E' . $row)->getFont()->setBold(true);
+                    $sheet->getStyle('E' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $row += 2;
+                    $customerSubtotal = 0;
+                }
+                $currentCustomer = $customerName;
+
+                $sheet->setCellValue('A' . $row, 'Invoice #: ' . ($invoice->invoice_number ?? $invoice->id));
+                $sheet->setCellValue('C' . $row, 'Customer: ' . $customerName);
+                $sheet->setCellValue('E' . $row, 'Date: ' . ($invoice->invoice_date ? \Carbon\Carbon::parse($invoice->invoice_date)->format('Y-m-d') : ''));
+                $sheet->getStyle('A' . $row . ':E' . $row)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($statusColor);
+                $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
                 $row++;
-            } else {
-                foreach ($items as $item) {
-                    // Adjust property names to your invoice item model (product->product_name or product->name)
+
+                $sheet->setCellValue('A' . $row, 'Status: ' . ($invoice->invoice_status ?? ''));
+                $sheet->setCellValue('C' . $row, 'Grand Total: ' . $grandTotal);
+                $sheet->getStyle('C' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('A' . $row . ':E' . $row)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($statusColor);
+                $row++;
+
+                // Items header
+                $sheet->setCellValue('A' . $row, 'Product');
+                $sheet->setCellValue('B' . $row, 'Qty');
+                $sheet->setCellValue('C' . $row, 'Unit Price');
+                $sheet->setCellValue('D' . $row, 'Discount');
+                $sheet->setCellValue('E' . $row, 'Amount');
+                $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
+                $row++;
+
+                foreach ($invoice->items ?? [] as $item) {
                     $productName = $item->product->product_name ?? $item->product->name ?? 'Unknown Product';
-                    $qty = $item->qty ?? $item->quantity ?? ($item->quantity_sold ?? 0);
+                    $qty = $item->qty ?? $item->quantity ?? 0;
                     $unitPrice = $item->price ?? $item->unit_price ?? 0;
                     $discount = $item->discount ?? 0;
-                    $amount = $item->amount ?? ($qty * $unitPrice) - $discount;
+                    $amount = $item->amount ?? ($qty * $unitPrice - $discount);
 
                     $sheet->setCellValue('A' . $row, $productName);
                     $sheet->setCellValue('B' . $row, $qty);
                     $sheet->setCellValue('C' . $row, $unitPrice);
                     $sheet->setCellValue('D' . $row, $discount);
                     $sheet->setCellValue('E' . $row, $amount);
+
+                    $sheet->getStyle('C' . $row . ':E' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $sheet->getStyle('A' . $row . ':E' . $row)
+                        ->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB($statusColor);
                     $row++;
                 }
+
+                $customerSubtotal += $grandTotal;
+                $row += 2;
             }
 
-            // space before next invoice
-            $row += 2;
-        }
+            // Final subtotal for last customer
+            if ($currentCustomer) {
+                $sheet->setCellValue('C' . $row, 'Subtotal for ' . $currentCustomer);
+                $sheet->setCellValue('E' . $row, $customerSubtotal);
+                $sheet->getStyle('C' . $row . ':E' . $row)->getFont()->setBold(true);
+                $sheet->getStyle('E' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $row += 2;
+            }
 
-        // Auto-size some columns
-        foreach (range('A', 'E') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+            // Grand totals per customer
+            $sheet->setCellValue('A' . $row, 'Grand Totals Per Customer (' . strtoupper($status) . ')');
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Customer');
+            $sheet->setCellValue('B' . $row, 'Total');
+            $sheet->getStyle('A' . $row . ':B' . $row)->getFont()->setBold(true);
+            $row++;
+            foreach ($totalsPerCustomer as $customer => $total) {
+                $sheet->setCellValue('A' . $row, $customer);
+                $sheet->setCellValue('B' . $row, $total);
+                $sheet->getStyle('B' . $row)->getFont()->setBold(true);
+                $sheet->getStyle('B' . $row)->getFill()
+                    ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFF00');
+                $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $row++;
+            }
 
-        // Write file to temp and return download
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'invoices_export_' . now()->format('Ymd_His') . '.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), 'invoices_export_') . '.xlsx'; // ensure .xlsx
-        $writer->save($tempFile);
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+            // Grand total for this status in location
+            $totalForLocation = $statusInvoices->sum('grand_total'); // only this status
+            $sheet->setCellValue('A' . $row, 'Grand Total for Location (' . strtoupper($status) . ')');
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $row++;
+            $sheet->setCellValue('A' . $row, $location);
+            $sheet->setCellValue('B' . $row, $totalForLocation);
+            $sheet->getStyle('B' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('B' . $row)->getFill()
+                ->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFF00');
+            $row += 4;
+
+            foreach (range('A', 'E') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
     }
+
+    // Remove default empty sheet if exists
+    if ($spreadsheet->getSheetCount() > 1 && $spreadsheet->getSheet(0)->getTitle() === 'Worksheet') {
+        $spreadsheet->removeSheetByIndex(0);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $fileName = 'invoices_by_location_' . now()->format('Ymd_His') . '.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), 'invoices_export_') . '.xlsx';
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+}
+
 
      /**
      * Export purchase orders.

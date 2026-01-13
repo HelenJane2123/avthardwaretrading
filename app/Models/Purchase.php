@@ -67,5 +67,10 @@ class Purchase extends Model
     {
         return $this->belongsTo(Salesman::class, 'salesman_id','id');
     }
+
+    public function items_purchase()
+    {
+        return $this->hasMany(PurchaseItem::class, 'purchase_id', 'id');
+    }
 }
 

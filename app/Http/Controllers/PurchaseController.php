@@ -36,7 +36,9 @@ class PurchaseController extends Controller
     public function index()
     {
         $paymentModes = ModeofPayment::all();
-        $purchases = Purchase::with('supplier','salesman')->get();
+        $purchases = Purchase::with('supplier','salesman')
+                ->orderBy('created_at', 'desc')
+                ->get();
         return view('purchase.index', compact('purchases','paymentModes'));
     }
 
@@ -376,77 +378,111 @@ class PurchaseController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $purchase = Purchase::findOrFail($id);
+        $purchase = Purchase::with('items_purchase')->findOrFail($id);
 
-        // Find the super admin record
+        // Find the super admin
         $user = User::where('user_role', 'super_admin')->first();
 
-        // Check if super admin record exists
         if (!$user) {
             return response()->json(['error' => 'Super Admin account not found.'], 404);
         }
 
-        // Validate password input
         $request->validate([
             'password' => 'required|string',
         ]);
 
-        // Check password match
         if (!\Hash::check($request->password, $user->password)) {
             return response()->json(['error' => 'Incorrect password.'], 403);
         }
 
-        \Log::info('Approval attempt:', [
-            'user_found' => $user ? true : false,
-            'role' => $user->user_role ?? 'none',
-            'entered_password' => $request->password,
-        ]);
-
-        // Approve the invoice
+        // Approve purchase
         $purchase->is_approved = 1;
         $purchase->save();
 
-        return response()->json(['success' => 'Purchase approved successfully!']);
+        // Update supplier_items prices
+        foreach ($purchase->items as $item) {
+            \DB::table('supplier_items')->updateOrInsert(
+                [
+                    'supplier_id' => $purchase->supplier_id,
+                    'item_code'  => $item->product_code,
+                ],
+                [
+                    'item_price'      => $item->unit_price, 
+                    'net_price'     => $item->unit_price,
+                    'discount_less_add' => $item->discount_less_add,
+                    'discount_1' => $item->discount_1,
+                    'discount_2' => $item->discount_2,
+                    'discount_3' => $item->discount_3,
+                    'created_at' => now(),
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => 'Purchase approved and supplier prices updated successfully!'
+        ]);
     }
 
     public function completePurchaseOrder($id)
     {
         $purchase = Purchase::with('items.product')->findOrFail($id);
 
-        // Prevent double receiving
         if ($purchase->is_completed == 1) {
             return response()->json(['error' => 'This purchase order is already completed.'], 400);
         }
 
         DB::beginTransaction();
+
         try {
             foreach ($purchase->items as $item) {
+
                 $product = $item->product;
+                if (!$product) {
+                    \Log::warning('Missing product for item', [
+                        'purchase_item_id' => $item->id,
+                        'product_code' => $item->product_code,
+                        'price'      => $item->unit_price
+                    ]);
+                    continue;
+                }
 
-                if (!$product) continue;
-
-                // Add purchased quantity to inventory
                 $product->remaining_stock += $item->qty;
                 $product->save();
 
-                // Update product threshold status
                 $this->updateProductStatus($product);
+
+                DB::table('product_suppliers')->updateOrInsert(
+                    [
+                        'product_id'  => $product->id,
+                        'supplier_id' => $purchase->supplier_id,
+                    ],
+                    [
+                        'price'      => $item->unit_price,
+                        'net_price' => $item->unit_price,
+                        'created_at' => now(),
+                    ]
+                );
             }
 
-            // Mark PO as completed
             $purchase->is_completed = 1;
             $purchase->save();
 
             DB::commit();
 
-            return response()->json(['success' => 'Purchase order received and inventory updated!']);
+            return response()->json([
+                'success' => 'Purchase order completed. Inventory and supplier pricing updated!'
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error completing purchase order: '.$e->getMessage());
-            return response()->json(['error' => 'Failed to complete purchase order.'], 500);
+            \Log::error('Error completing purchase order: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to complete purchase order.'
+            ], 500);
         }
     }
+
 
     protected function updateProductStatus(Product $product)
     {

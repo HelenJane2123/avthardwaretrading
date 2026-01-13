@@ -102,9 +102,10 @@
                                             <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
                                             <td>
                                                 <span class="badge 
-                                                    @if($invoice->invoice_status == 'approved') bg-success
-                                                    @elseif($invoice->invoice_status == 'pending') bg-warning
-                                                    @elseif($invoice->invoice_status == 'canceled') bg-danger
+                                                    @if($invoice->invoice_status == 'approved') bg-success badge-lg
+                                                    @elseif($invoice->invoice_status == 'pending') bg-warning badge-lg
+                                                    @elseif($invoice->invoice_status == 'canceled') bg-danger badge-lg
+                                                    @elseif($invoice->invoice_status == 'printed') bg-info badge-lg
                                                     @endif px-1 py-1">
                                                     {{ ucfirst($invoice->invoice_status) }}
                                                 </span>
@@ -119,12 +120,12 @@
                                                     {{ ucfirst($invoice->payment_status) }}
                                                 </span>
                                             </td>
-                                            <td>{{ $invoice->created_by && $invoice->user ? $invoice->user->f_name . ' ' . $invoice->user->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') }}</td>
-                                            <td>{{ $invoice->updated_by && $invoice->updater ? $invoice->updater->f_name . ' ' . $invoice->updater->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') }}</td>
-                                            <td>{{ $invoice->approved_by && $invoice->approver ? $invoice->approver->f_name . ' ' . $invoice->approver->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->approved_at)->format('M d, Y') }}</td>
+                                            <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->created_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->updated_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->approved_at?->format('M d, Y') ?? '' }}</td>                                            
                                             <td class="text-nowrap">
                                                 <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
                                                     <i class="fa fa-eye fa-xs"></i>
@@ -202,7 +203,7 @@
                                             <td>{{ number_format($invoice->grand_total, 2) }}</td>
                                             <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
                                             <td>
-                                                <span class="badge bg-warning px-1 py-1">
+                                                <span class="badge bg-info text-dark badge-lg px-1 py-1">
                                                     {{ ucfirst($invoice->invoice_status) }}
                                                 </span>
                                             </td>
@@ -210,18 +211,19 @@
                                                 <span class="badge 
                                                     @if($invoice->payment_status == 'paid') bg-success
                                                     @elseif($invoice->payment_status == 'pending') bg-warning
+                                                    @elseif($invoice->payment_status == 'draft') bg-warning
                                                     @elseif($invoice->payment_status == 'overdue') bg-danger
                                                     @elseif($invoice->payment_status == 'partial') bg-info
                                                     @endif px-1 py-1">
                                                     {{ ucfirst($invoice->payment_status) }}
                                                 </span>
                                             </td>
-                                            <td>{{ $invoice->created_by && $invoice->user ? $invoice->user->f_name . ' ' . $invoice->user->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') }}</td>
-                                            <td>{{ $invoice->updated_by && $invoice->updater ? $invoice->updater->f_name . ' ' . $invoice->updater->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') }}</td>
-                                            <td>{{ $invoice->approved_by && $invoice->approver ? $invoice->approver->f_name . ' ' . $invoice->approver->l_name : 'N/A' }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->approved_at)->format('M d, Y') }}</td>
+                                            <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->created_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->updated_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
+                                            <td>{{ $invoice->approved_at?->format('M d, Y') ?? '' }}</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
                                                     <i class="fa fa-eye fa-xs"></i>
@@ -260,37 +262,45 @@
     <script type="text/javascript" src="{{asset('/')}}js/plugins/dataTables.bootstrap.min.js"></script>
     <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
-       let invoiceTable = $('#nonPrintedInvoiceTable').DataTable({
-            "order": [[0, "desc"]],
+       let nonPrintedTable = $('#nonPrintedInvoiceTable').DataTable({
+            "order": [[1, "desc"]],
             "pageLength": 10,
             "responsive": true
         });
 
-        $('#printedInvoiceTable').DataTable({
-            "order": [[0, "desc"]],
+        let printedTable = $('#printedInvoiceTable').DataTable({
+            "order": [[1, "desc"]],
             "pageLength": 10,
             "responsive": true
         });
-        // Populate Location dropdown from table data
-        var locationColumnIndex = 3; // Location column
-        var locations = invoiceTable.column(locationColumnIndex).data().unique().sort();
 
-        locations.each(function(d) {
+        // Populate Location dropdown from both tables
+        let locations = nonPrintedTable.column(3).data().unique()
+            .toArray()
+            .concat(printedTable.column(3).data().unique().toArray())
+            .filter((v, i, a) => a.indexOf(v) === i) // remove duplicates
+            .sort();
+
+        locations.forEach(function(d) {
             $('#filterLocation').append('<option value="' + d + '">' + d + '</option>');
         });
 
-        // Filter table based on selection
+        // Filter both tables by location
         $('#filterLocation').on('change', function() {
-            var val = $(this).val();
-            invoiceTable.column(locationColumnIndex).search(val ? '^' + val + '$' : '', true, false).draw();
+            let val = $(this).val();
+            let regex = val ? '^' + val + '$' : '';
+            nonPrintedTable.column(3).search(regex, true, false).draw();
+            printedTable.column(3).search(regex, true, false).draw();
         });
-        $('#filterLocation').on('change', function() {
-            var locationId = $(this).val();
-            table.column(0).search(locationId).draw();
+
+        // Select all checkboxes for each table separately
+        $('#selectAllNonPrinted').on('click', function() {
+            $('#nonPrintedInvoiceTable .invoice-checkbox').prop('checked', this.checked);
         });
-        $('#selectAll').on('click', function() {
-            $('.invoice-checkbox').prop('checked', this.checked);
+        $('#selectAllPrinted').on('click', function() {
+            $('#printedInvoiceTable .invoice-checkbox').prop('checked', this.checked);
         });
+        
         //bulk approval
         $('#bulkApprove').on('click', function () {
             var selectedIds = $('.invoice-checkbox:checked').map(function () {

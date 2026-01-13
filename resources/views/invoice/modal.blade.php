@@ -127,10 +127,12 @@
     </div>
 
     <!-- Status Update -->
+    
     <form id="statusForm" class="mt-3">
         @csrf
         <div class="mb-3">
             <label class="fw-bold">Status</label>
+            <input type="hidden" name="invoice_status" id="hiddenInvoiceStatus" value="{{ $invoice->invoice_status }}">
             <select name="invoice_status" class="form-control"
                 {{ $invoice->invoice_status == 'canceled' ? 'disabled' : '' }}>
                 <option value="pending" {{ $invoice->invoice_status == 'pending' ? 'selected' : '' }}>Pending</option>
@@ -150,6 +152,7 @@
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         </div>
     </form>
+    
 </div>
 <!-- Approve Confirmation Modal -->
 <div class="modal fade" id="confirmApproveModal" tabindex="-1" role="dialog" aria-labelledby="confirmApproveLabel" aria-hidden="true">
@@ -178,37 +181,32 @@ $('.update-status').on('click', function () {
     const id = $(this).data('id');
     const selectedStatus = $('select[name="invoice_status"]').val();
 
-    // If approving, show inline password box
-    if (selectedStatus === 'approved') {
-        // Build password prompt markup
-        const passwordPrompt = `
-            <div id="approveBox" class="mt-3 p-3 border rounded bg-light">
-                <label class="fw-bold mb-2">Super Admin Password:</label>
-                <input type="password" id="adminPassword" class="form-control mb-2" placeholder="Enter password">
-                <div class="text-end">
-                    <button type="button" class="btn btn-success btn-sm" id="confirmApproveBtn">Confirm Approval</button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="cancelApproveBtn">Cancel</button>
-                </div>
-            </div>
-        `;
+    // Always sync hidden input
+    $('#hiddenInvoiceStatus').val(selectedStatus);
 
-        // Prevent duplicate prompt
+    // APPROVE FLOW
+    if (selectedStatus === 'approved') {
+
         if (!$('#approveBox').length) {
-            $('.modal-footer').before(passwordPrompt);
+            $('.modal-footer').before(`
+                <div id="approveBox" class="mt-3 p-3 border rounded bg-light">
+                    <label class="fw-bold mb-2">Super Admin Password:</label>
+                    <input type="password" id="adminPassword" class="form-control mb-2">
+                    <div class="text-end">
+                        <button type="button" class="btn btn-success btn-sm" id="confirmApproveBtn">Confirm Approval</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancelApproveBtn">Cancel</button>
+                    </div>
+                </div>
+            `);
         }
 
-        // Handle cancel button
-        $(document).on('click', '#cancelApproveBtn', function () {
+        $(document).off('click', '#cancelApproveBtn').on('click', '#cancelApproveBtn', function () {
             $('#approveBox').remove();
         });
 
-        // Handle confirm button
-        $(document).on('click', '#confirmApproveBtn', function () {
+        $(document).off('click', '#confirmApproveBtn').on('click', '#confirmApproveBtn', function () {
             const password = $('#adminPassword').val().trim();
-            if (!password) {
-                alert('Please enter password.');
-                return;
-            }
+            if (!password) return alert('Enter password');
 
             $.ajax({
                 url: "{{ url('invoice') }}/" + id + "/approve",
@@ -217,39 +215,17 @@ $('.update-status').on('click', function () {
                     _token: '{{ csrf_token() }}',
                     password: password
                 },
-                success: function (response) {
-                    if (response.error) {
-                        $('#statusMessageTitle').text('Approval Failed!');
-                        $('#statusMessageText').text(response.error);
-                        $('#statusMessageModal .modal-body i').removeClass('text-success').addClass('text-danger');
-                        $('#statusMessageModal').modal('show');
-                    } else {
-                        $('#statusMessageTitle').text('Invoice Approved!');
-                        $('#statusMessageText').text('The invoice was successfully approved.');
-                        $('#statusMessageModal .modal-body i').removeClass('text-danger').addClass('text-success');
-                        $('#statusMessageModal').modal('show');
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                },
-                error: function (xhr) {
-                    alert(xhr.responseJSON?.error || 'Approval failed.');
-                }
+                success: () => location.reload()
             });
         });
 
     } else {
-        // Regular update (Pending or Canceled)
+        // PENDING / CANCELED FLOW
         $.ajax({
             url: "{{ url('invoice') }}/" + id + "/status",
             type: "PATCH",
             data: $('#statusForm').serialize(),
-            success: function () {
-                $('#statusMessageTitle').text('Invoice Status Updated!');
-                $('#statusMessageText').text('Status successfully approved.');
-                $('#statusMessageModal .modal-body i').removeClass('text-danger').addClass('text-success');
-                $('#statusMessageModal').modal('show');
-                setTimeout(() => location.reload(), 1500);
-            }
+            success: () => location.reload()
         });
     }
 });

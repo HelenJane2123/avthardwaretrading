@@ -101,6 +101,7 @@ class InvoiceController extends Controller
                 'status')
              ->with([
                     'supplierItems:id,item_code,item_price,supplier_id',
+                    'supplierItems.supplier:id,name',
                     'unit:id,name'
                 ])
             ->get();
@@ -442,7 +443,7 @@ class InvoiceController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'invoice_status' => 'required|in:pending,approved,canceled',
+            'invoice_status' => 'required|in:pending,approved,canceled,printed',
         ]);
 
         $invoice = Invoice::with('items.product')->findOrFail($id);
@@ -450,43 +451,56 @@ class InvoiceController extends Controller
         $oldStatus = $invoice->invoice_status;
         $newStatus = $request->invoice_status;
 
-        DB::transaction(function () use ($invoice, $oldStatus, $newStatus) {
-            // If moving from approved → pending or canceled, restore stock
-            if ($oldStatus === 'approved' && in_array($newStatus, ['pending', 'canceled'])) {
-                foreach ($invoice->items as $item) {
-                    $product = $item->product;
-                    if ($product) {
-                        $product->remaining_stock += $item->qty;
-                        $product->save();
-                    }
-                }
-            }
+        if ($oldStatus === $newStatus) {
+            return response()->json(['message' => 'No status change']);
+        }
 
-            // If moving from pending → approved, deduct stock
+        DB::transaction(function () use ($invoice, $oldStatus, $newStatus) {
+
+            /**
+             * APPROVE → deduct stock
+             */
             if ($oldStatus !== 'approved' && $newStatus === 'approved') {
                 foreach ($invoice->items as $item) {
-                    $product = $item->product;
-                    if ($product) {
-                        $newStock = $product->remaining_stock - $item->qty;
-                        if ($newStock < 0) {
-                            throw new \Exception("Insufficient stock for {$product->product_name}");
-                        }
-                        $product->remaining_stock = $newStock;
-                        $product->save();
+                    $product = $item->product()->lockForUpdate()->first();
+
+                    $newStock = $product->remaining_stock - $item->qty;
+                    if ($newStock < 0) {
+                        throw new \Exception("Insufficient stock for {$product->product_name}");
                     }
+
+                    $product->update([
+                        'remaining_stock' => $newStock
+                    ]);
                 }
             }
 
-            // Update invoice status
-            $invoice->invoice_status = $newStatus;
-            $invoice->save();
+            /**
+             * APPROVED → PENDING / CANCELED
+             * (printed or not, always restore)
+             */
+            if (in_array($oldStatus, ['approved', 'printed']) && in_array($newStatus, ['pending', 'canceled'])) {
+                foreach ($invoice->items as $item) {
+                    $product = $item->product()->lockForUpdate()->first();
+                    $product->increment('remaining_stock', $item->qty);
+                }
+
+                // Reset print state
+                $invoice->forceFill([
+                    'is_printed' => false,
+                    'printed_at' => null,
+                ])->save();
+            }
+
+            // Update status LAST
+            $invoice->update([
+                'invoice_status' => $newStatus
+            ]);
         });
 
-        return response()->json([
-            'success' => true,
-            'invoice' => $invoice
-        ]);
+        return response()->json(['success' => true]);
     }
+
 
     public function print($id)
     {

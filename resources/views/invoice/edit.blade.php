@@ -174,7 +174,7 @@
                                     <th style="width: 20%">Discount (%)</th>
                                     <th style="width: 10%">Unit Price</th>
                                     <th style="width: 12%">Total Price</th>
-                                    <th style="width: 5%">Is free?</th>
+                                    <!-- <th style="width: 5%">Is free?</th> -->
                                     <th class="text-center">
                                         <button type="button" class="btn btn-success btn-sm addRow">
                                             <i class="fa fa-plus"></i>
@@ -296,7 +296,7 @@
                                     data-productstatus="{{ $product->status }}">
                                     <td>{{ $product->product_code }}</td>
                                     <td>{{ $product->supplier_product_code }}</td>
-                                    <td>{{ optional($product->supplierItems->first())->supplier->name }}</td>
+                                    <td>{{ optional(optional($product->supplierItems->first())->supplier)->name ?? '-' }}</td>
                                     <td>{{ $product->product_name }}</td>
                                     <td>{{ optional($product->supplierItems->first())->item_price }}</td>
                                     <td>{{ $product->sales_price }}</td>
@@ -354,6 +354,7 @@
             dateFormat: 'MM dd, yy',
             onSelect: function(dateText) {
                 $('#invoice_date').val(toYMD(dateText));
+                 computeDueDate(); 
             }
         });
 
@@ -522,6 +523,7 @@
 
             let hasError = false;
             let errorMessages = [];
+            let validItemCount = 0;
 
             const customerId   = $('#customerSelect').val();
             const invoiceDate  = $('#invoice_date_display').val();
@@ -554,6 +556,10 @@
                 const qty = parseInt($row.find('.qty').val()) || 0;
                 const price = parseFloat($row.find('.price').val()) || 0;
                 const is_free = $row.find('.is-free').is(':checked');
+                const d1 = parseFloat($row.find('.dis1').val()) || 0;
+                const d2 = parseFloat($row.find('.dis2').val()) || 0;
+                const d3 = parseFloat($row.find('.dis3').val()) || 0;
+                const discountType = $row.find('.discount_type').val();
 
                 if (isRowEmpty($row)) {
                     hasError = true;
@@ -568,14 +574,39 @@
                     return;
                 }
 
-                if (is_free) {
-                    if (qty !== 0 || price !== 0) {
-                        hasError = true;
-                        errorMessages.push(
-                            `${productName} is marked as FREE. Quantity and price must be 0.`
-                        );
-                    }
-                    return; // skip all other validations
+                // if (is_free) {
+                //     if (qty !== 0 || price !== 0) {
+                //         hasError = true;
+                //         errorMessages.push(
+                //             `${productName} is marked as FREE. Quantity and price must be 0.`
+                //         );
+                //     }
+                //     return; // skip all other validations
+                // }
+
+                let netDiscount = 0;
+                if (discountType === 'less') {
+                    netDiscount = d1 + d2 + d3;
+                } else if (discountType === 'add') {
+                    netDiscount = 0; // ADD never makes item free
+                }
+
+                // Clamp between 0–100
+                netDiscount = Math.min(Math.max(netDiscount, 0), 100);
+
+                // Determine FREE via discount
+                const isFullyDiscounted = netDiscount >= 100;
+
+                if (is_free || isFullyDiscounted) {
+                    $row.find('.dis1, .dis2, .dis3, .discount_type')
+                        .prop('disabled', true);
+
+                    $row.find('.qty, .price, .amount')
+                        .val(0)
+                        .prop('readonly', true);
+
+                    validItemCount++;
+                    return; // skip qty/price validation
                 }
 
                 if (qty <= 0) {
@@ -611,7 +642,17 @@
                 return false;
             }
 
-            this.submit();
+            const form = this;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you want to submit this invoice?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, submit it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                form.submit();
+            });
         });
 
         // Discount type change
@@ -645,65 +686,62 @@
 
             $('#po-body tr').each(function () {
                 const $row = $(this);
-                const isFree = $row.find('.is-free').is(':checked');
-
-                if (isFree) {
-                    $row.find('.amount').val('0.00');
-                    return;
-                }
-
-                // Get qty and price
                 const qty = parseFloat($row.find('.qty').val()) || 0;
                 const price = parseFloat($row.find('.price').val()) || 0;
 
                 let lineTotal = qty * price;
 
-                // Discount type for this row
                 const discountType = $row.find('select[name="discount_less_add[]"]').val() || 'less';
 
-                // Static discounts (dis1, dis2, dis3)
                 const discounts = [
                     parseFloat($row.find('select[name="dis1[]"]').val()) || 0,
                     parseFloat($row.find('select[name="dis2[]"]').val()) || 0,
                     parseFloat($row.find('select[name="dis3[]"]').val()) || 0
                 ];
 
-                // Apply discounts
                 if (discountType === 'less') {
+                    // LESS = subtract %
                     discounts.forEach(d => {
-                        lineTotal *= (1 - d / 100); // LESS
+                        if (d > 0) lineTotal *= (1 - d / 100);
                     });
 
-                    // Apply dynamic discounts (.dis)
-                    $row.find('.discount-row .dis').each(function() {
+                    $row.find('.discount-row .dis').each(function () {
                         const d = parseFloat($(this).val()) || 0;
-                        lineTotal *= (1 - d / 100); // LESS
+                        if (d > 0) lineTotal *= (1 - d / 100);
                     });
 
                 } else if (discountType === 'add') {
-                    // For ADD, multiply by each discount as **multiplier**
+                    // ADD = convert % → multiplier
                     discounts.forEach(d => {
-                        if (d > 0) lineTotal *= d; // ADD multiplier
+                        if (d > 0) lineTotal *= (1 + d / 100);
                     });
 
-                    $row.find('.discount-row .dis').each(function() {
-                        const d = parseFloat($(this).val()) || 1;
-                        if (d > 0) lineTotal *= d; // ADD multiplier
+                    $row.find('.discount-row .dis').each(function () {
+                        const d = parseFloat($(this).val()) || 0;
+                        if (d > 0) lineTotal *= (1 + d / 100);
                     });
                 }
 
-                // Update row amount
                 $row.find('.amount').val(lineTotal.toFixed(2));
                 subtotal += lineTotal;
             });
 
-            const shipping = parseFloat($('#shipping').val()) || 0;
-            const other = parseFloat($('#other').val()) || 0;
-            const grandTotal = subtotal + shipping + other;
+            // OVERALL DISCOUNT
+            const overallType = $('#discount_type').val();
+            let overallDis = parseFloat($('#discount').val()) || 0;
 
-            $('#subtotal').val(subtotal.toFixed(2));
-            $('#grand_total').val(grandTotal.toFixed(2));
-        }
+            if (overallType === 'overall' && overallDis > 0) {
+                subtotal *= (1 - overallDis / 100);
+            }
+
+            const shipping = parseFloat($('#shipping').val()) || 0;
+    const other = parseFloat($('#other').val()) || 0;
+
+    const grandTotal = subtotal + shipping + other;
+
+    $('#subtotal').val(subtotal.toFixed(2));
+    $('#grand_total').val(grandTotal.toFixed(2));
+}
 
 
         function applyFreeRowState($row) {
@@ -792,7 +830,8 @@
             // Use unique rowIndex for each is_free checkbox
             const hiddenIsFree = `<input type="hidden" name="is_free[${rowIndex}]" value="0">`;
             const checkboxIsFree = `<input type="checkbox" name="is_free[${rowIndex}]" class="is-free" value="1" ${is_free ? 'checked' : ''}>`;
-
+            const safeProductName = productName.replace(/"/g, '&quot;'); 
+            const inputHtml = `<input type="text" class="form-control productname" value="${safeProductName}" readonly>`;
             return `
             <tr>
                 <td class="row-number text-center"></td>
@@ -800,7 +839,7 @@
                     <div class="input-group">
                         <input type="hidden" name="product_id[]" class="product_id" value="${productId}">
                         <input type="hidden" class="form-control code" value="${productCode}" readonly>
-                        <input type="text" class="form-control productname" value="${productName}" readonly>
+                        ${inputHtml}
                         <button type="button" class="btn btn-outline-primary select-product-btn">
                             <i class="fa fa-search"></i>
                         </button>
@@ -842,10 +881,7 @@
                 </td>
                 <td><input type="text" name="price[]" class="form-control price" value="${price}"></td>
                 <td><input type="text" name="amount[]" class="form-control amount" value="${amount}" readonly></td>
-                <td class="text-center">
-                    ${hiddenIsFree}
-                    ${checkboxIsFree}
-                </td>
+             
                 <td>
                     <button type="button" class="btn btn-danger remove">
                         <i class="fa fa-trash"></i>
@@ -857,6 +893,36 @@
         $(document).on('input change', '.qty, .price, .discount_type, .dis1, .dis2, .dis3', function() {
             calculateTotals();
         });
+
+        $('#payment_mode_id').on('change', function () {
+            computeDueDate();
+        });
+
+        function computeDueDate() {
+            const invoiceDate = $('#invoice_date').val();
+            const term = parseInt(
+                $('#payment_mode_id option:selected').data('term')
+            ) || 0;
+
+            if (!invoiceDate) return;
+
+            const date = new Date(invoiceDate);
+            date.setDate(date.getDate() + term);
+
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+
+            const formattedYMD = `${yyyy}-${mm}-${dd}`;
+            const formattedDisplay = date.toLocaleDateString('en-US', {
+                month: 'long',
+                day: '2-digit',
+                year: 'numeric'
+            });
+
+            $('#due_date').val(formattedYMD);
+            $('#due_date_display').val(formattedDisplay);
+        }
     });
 </script>
 @endpush
