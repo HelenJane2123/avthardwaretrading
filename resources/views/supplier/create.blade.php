@@ -29,7 +29,7 @@
             </div>
         @endif
         @if (session()->has('error'))
-             <div class="alert alert-dange alert-dismissible fade show shadow-sm" role="alert">
+             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                 <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -67,7 +67,7 @@
                     <h3 class="tile-title">Supplier Details</h3>
                     <small class="text-muted">Fields marked with <span class="text-danger">*</span> are required</small>
                     <div class="tile-body">
-                        <form method="POST" action="{{ route('supplier.store') }}" enctype="multipart/form-data">
+                        <form method="POST" id="supplierorm" action="{{ route('supplier.store') }}" enctype="multipart/form-data">
                             @csrf
                             <div class="row">
                                 <!-- Supplier Code -->
@@ -152,7 +152,7 @@
                             </div>
 
                             <!-- Item Details Table -->
-                            <h5 class="mt-4">Item Details</h5>
+                            <!-- <h5 class="mt-4">Item Details</h5>
                             <button
                                 type="button"
                                 class="btn btn-sm btn-primary"
@@ -166,7 +166,6 @@
                                             <th>Item Code</th>
                                             <th>Category</th>
                                             <th>Description</th>
-                                            <!-- <th>Qty</th> -->
                                             <th>Unit</th>
                                             <th>Unit Cost</th>
                                             <th>Net Cost</th>
@@ -178,16 +177,9 @@
                                         </tr>
                                     </thead>
                                     <tbody id="itemsTableBody">
-                                        <!-- dynamically added rows -->
                                     </tbody>
-                                    <!-- <tfoot>
-                                        <tr>
-                                            <td colspan="6" class="text-right"><strong>Total Amount:</strong></td>
-                                            <td colspan="3"><input type="text" id="total_amount" class="form-control" readonly></td>
-                                        </tr>
-                                    </tfoot> -->
                                 </table>
-                            </div>
+                            </div> -->
 
                             <!-- Submit Button -->
                             <div class="form-group text-end">
@@ -324,13 +316,14 @@
 @push('js')
     <script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
     <script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
-    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script>
         $(document).ready(function () {
+        
             let table = $('#suppliercreateTable').DataTable({
                 paging: true,
                 searching: true,  

@@ -189,7 +189,7 @@
             <tr>
                 <td>{{ $item->qty }}</td>
                 <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
-                <td>{{ $item->product->product_name ?? 'N/A' }} - {{ $item->is_free ? 'FREE ITEM' : '' }}</td>
+                <td>{{ $item->product->product_name ?? 'N/A' }}</td>
                 <td class="text-center">{{ number_format($item->price, 2) }}</td>
                 <td class="text-center" style="font-size:14px;"> 
                     @php

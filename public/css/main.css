@@ -1,8 +1,4 @@
 @charset "UTF-8";
-/*!
- * Vali Admin
- * Author: Pratik Borsadiya
- * ================================*/
 @import url(https://fonts.googleapis.com/css?family=Lato:300,400,400i,700);
 @import url(https://fonts.googleapis.com/css?family=Niconne);
 /*!
@@ -1674,7 +1670,7 @@ pre code {
   max-width: 100%;
   margin-bottom: 1rem;
   background-color: transparent;
-  font-size:10px;
+  font-size:14px;
 }
 
 .table th,

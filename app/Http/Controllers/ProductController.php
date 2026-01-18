@@ -95,6 +95,19 @@ class ProductController extends Controller
         DB::beginTransaction();
 
         try {
+            //------------------------------
+            // CHECK EXISTING PRODUCTS
+            //------------------------------
+            $existingProduct = Product::where('supplier_product_code', $request->supplier_product_code)
+                ->where('model', $request->model)
+                ->first();
+
+            if ($existingProduct) {
+                return redirect()
+                    ->back()
+                    ->with('swal_error', 'Cannot add '.$request->product_name.'. This product already exists.')
+                    ->withInput();
+            }
             // -----------------------------
             // CREATE PRODUCT
             // -----------------------------

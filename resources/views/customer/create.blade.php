@@ -37,7 +37,7 @@
                 <h3 class="tile-title mb-3">Customer Information</h3>
                 <small class="text-muted">Fields marked with <span class="text-danger">*</span> are required</small>
                 <div class="tile-body">
-                    <form method="POST" action="{{ route('customer.store') }}">
+                    <form method="POST" id="customerForm" action="{{ route('customer.store') }}">
                         @csrf
                         <div class="row g-3">
                             <!-- Customer Code -->
@@ -156,6 +156,7 @@
 @endsection
 
 @push('js')
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Auto-generate customer code
@@ -168,6 +169,39 @@
         const codeField = document.getElementById("customer_code");
         if (codeField && !codeField.value) {
             codeField.value = generateCustomerCode();
+        }
+    });
+    document.getElementById('customerForm').addEventListener('submit', function (e) {
+        const requiredFields = [
+            { name: 'name', label: 'Customer Name' },
+            { name: 'address', label: 'Address' },
+            { name: 'location', label: 'Location' },
+            { name: 'status', label: 'Status' }
+        ];
+
+        let missing = [];
+
+        requiredFields.forEach(field => {
+            const input = document.querySelector(`[name="${field.name}"]`);
+            if (!input || !input.value.trim()) {
+                missing.push(field.label);
+                input && input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        if (missing.length > 0) {
+            e.preventDefault();
+
+            swal({
+                title: 'Required Fields Missing',
+                html: '<b>Please complete the following:</b><br><br>' + missing.join('<br>'),
+                type: 'warning',
+                confirmButtonText: 'OK'
+            });
+
+            return false;
         }
     });
 </script>

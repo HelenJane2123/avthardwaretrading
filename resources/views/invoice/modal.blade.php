@@ -63,7 +63,7 @@
             @foreach($invoice->items as $item)
                 <tr>
                     <td>{{ $item->product->product_code ?? '-' }}</td>
-                    <td>{{ $item->product->product_name ?? 'Unknown' }} - {{ $item->is_free ? 'FREE ITEM' : '' }}</td>
+                    <td>{{ $item->product->product_name ?? 'Unknown' }}</td>
                     <td>{{ $item->qty }}</td>
                     <td>₱{{ number_format($item->price, 2) }}</td>
                     <td>

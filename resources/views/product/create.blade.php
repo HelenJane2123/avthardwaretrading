@@ -17,7 +17,7 @@
             </ul>
         </div>
 
-         @if(session()->has('message'))
+        @if(session()->has('message'))
             <div class="alert alert-success shadow-sm">
                 <i class="fa fa-check-circle"></i> {{ session()->get('message') }}
             </div>
@@ -401,8 +401,17 @@
     <script src="{{asset('/')}}js/multifield/jquery.multifield.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
     <script type="text/javascript">
         $(document).ready(function(){
+            @if (session('swal_error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Duplicate Product',
+                    text: '{{ session('swal_error') }}',
+                    confirmButtonColor: '#d33'
+                });
+            @endif
             $('#category_id').select2({
                 placeholder: "Select Category",
                 allowClear: true,
