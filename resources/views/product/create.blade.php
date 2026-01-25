@@ -145,15 +145,6 @@
                                                 class="form-control form-control-sm"
                                                 rows="2"></textarea>
                                         </div>
-                                        <!-- <div class="form-group col-md-4">
-                                            <label class="control-label">Serial Number</label>
-                                            <input name="serial_number" class="form-control @error('serial_number') is-invalid @enderror" type="number" placeholder="Enter Serial Number">
-                                            @error('serial_number')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                            @enderror
-                                        </div> -->
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Category <span class="text-danger">*</span></label>
@@ -169,16 +160,6 @@
                                             </span>
                                             @enderror
                                         </div>
-
-                                        <!-- <div class="form-group col-md-4">
-                                            <label class="control-label">Model</label>
-                                            <input name="model" class="form-control @error('model') is-invalid @enderror" type="text" placeholder="Enter Model">
-                                            @error('model')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                            @enderror
-                                        </div> -->
 
                                         <div class="form-group col-md-4">
                                             <label class="control-label">Initial Quantity <span class="text-danger">*</span></label>
@@ -316,44 +297,7 @@
                                         </div>
                                     </div>
                                 </div>      
-                            </div>
-                            {{-- Adjustment Section --}}
-                            <!-- <div class="card mt-4">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0"><i class="fa fa-exchange-alt"></i> Adjustments</h6>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-bordered table-sm" id="adjustmentTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Adjustment</th>
-                                                <th>Adjustment Status</th>
-                                                <th>Remarks</th>
-                                                <th>New Initial Qty</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    <input type="number" name="adjustment[]" class="form-control form-control-sm adjustment" value="0" min="0">
-                                                </td>
-                                                <td>
-                                                    <select name="adjustment_status[]" class="form-control form-control-sm">
-                                                        <option value="Return">Return</option>
-                                                        <option value="Others">Others</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="text" name="adjustment_remarks[]" class="form-control form-control-sm" placeholder="Enter remarks">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="new_initial_qty[]" class="form-control  form-control-sm new-initial-qty" readonly>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div> -->
+                            </div>        
                             <div class="form-group col-md-4 mt-4 align-self-end">
                                 <button class="btn btn-sm btn-success" type="submit"><i class="fa fa-fw fa-lg fa-check-circle"></i>Add Product</button>
                                 <a href="{{ route('product.index') }}" class="btn btn-sm btn-secondary px-4">
@@ -637,64 +581,7 @@
                     desc.style.display = 'none';
                 }
             }
-
-            //--- start this should be in invoice
-            // Function to calculate selling price after discounts 
-            //const salesPriceInput = $('input[name="sales_price"]');
-
-            // Store the original price as the base for discount calculation
-            // function storeOriginalPrice() {
-            //     if (!salesPriceInput.data('original')) {
-            //         let val = parseFloat(salesPriceInput.val()) || 0;
-            //         salesPriceInput.data('original', val);
-            //     }
-            // }
-
-            // Apply compound discounts
-            // function applyDiscounts() {
-            //     // Keep original price
-            //     storeOriginalPrice();
-            //     let price = parseFloat(salesPriceInput.data('original')) || 0;
-
-            //     // Only one discount type for all 3 discounts
-            //     let type = $('select[name="discount_type"]').val(); // less or add
-
-            //     // Apply 3 sequential discounts
-            //     for (let i = 1; i <= 3; i++) {
-            //         let d = parseFloat($(`select[name="discount_${i}"]`).val()) || 0;
-
-            //         if (d > 0) {
-            //             if (type === "less") {
-            //                 price = price * (1 - d / 100);
-            //             } else {
-            //                 price = price * (1 + d / 100);
-            //             }
-            //         }
-            //     }
-
-            //     // Update sales price
-            //     salesPriceInput.val(price.toFixed(2));
-            // }
-
-            
-            // Trigger calculation when the user changes the price or selects discounts
-            // salesPriceInput.on('input', function() {
-            //     // Reset original price if user manually edits
-            //     salesPriceInput.data('original', parseFloat(salesPriceInput.val()) || 0);
-            // });
-
-            // $('select[name="discount_1"], select[name="discount_2"], select[name="discount_3"]').on('change', applyDiscounts);
-            //--end invoice price computation
         });
-        // function generateProductCode() {
-        //     const prefix = "AVT";
-        //     const timestamp = Date.now().toString().slice(-6); // last 6 digits of timestamp
-        //     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        //     return prefix + timestamp + random;
-        // }
-
-        // Set it when the page loads
-       // $('#product_code').val(generateProductCode());
 
          // Initial stock & remaining stock inputs
         const initialStockInput = $('input[name="quantity"]');

@@ -556,6 +556,7 @@
                 const qty = parseInt($row.find('.qty').val()) || 0;
                 const price = parseFloat($row.find('.price').val()) || 0;
                 const is_free = $row.find('.is-free').is(':checked');
+
                 const d1 = parseFloat($row.find('.dis1').val()) || 0;
                 const d2 = parseFloat($row.find('.dis2').val()) || 0;
                 const d3 = parseFloat($row.find('.dis3').val()) || 0;
@@ -574,28 +575,23 @@
                     return;
                 }
 
-                // if (is_free) {
-                //     if (qty !== 0 || price !== 0) {
-                //         hasError = true;
-                //         errorMessages.push(
-                //             `${productName} is marked as FREE. Quantity and price must be 0.`
-                //         );
-                //     }
-                //     return; // skip all other validations
-                // }
+                let effectiveMultiplier = 1;
 
-                let netDiscount = 0;
                 if (discountType === 'less') {
-                    netDiscount = d1 + d2 + d3;
+                    [d1, d2, d3].forEach(d => {
+                        if (d > 0) {
+                            effectiveMultiplier *= (1 - d / 100);
+                        }
+                    });
                 } else if (discountType === 'add') {
-                    netDiscount = 0; // ADD never makes item free
+                    netDiscount = 0;
                 }
 
                 // Clamp between 0–100
-                netDiscount = Math.min(Math.max(netDiscount, 0), 100);
+                const netDiscount = (1 - effectiveMultiplier) * 100;
 
                 // Determine FREE via discount
-                const isFullyDiscounted = netDiscount >= 100;
+                const isFullyDiscounted = netDiscount >= 99.999;
 
                 if (is_free || isFullyDiscounted) {
                     $row.find('.dis1, .dis2, .dis3, .discount_type')
@@ -700,25 +696,16 @@
                 ];
 
                 if (discountType === 'less') {
-                    // LESS = subtract %
-                    discounts.forEach(d => {
-                        if (d > 0) lineTotal *= (1 - d / 100);
+                     discounts.forEach(d => {
+                        if (d > 0) {
+                            lineTotal *= (1 - d / 100);
+                        }
                     });
-
-                    $row.find('.discount-row .dis').each(function () {
-                        const d = parseFloat($(this).val()) || 0;
-                        if (d > 0) lineTotal *= (1 - d / 100);
-                    });
-
                 } else if (discountType === 'add') {
-                    // ADD = convert % → multiplier
                     discounts.forEach(d => {
-                        if (d > 0) lineTotal *= (1 + d / 100);
-                    });
-
-                    $row.find('.discount-row .dis').each(function () {
-                        const d = parseFloat($(this).val()) || 0;
-                        if (d > 0) lineTotal *= (1 + d / 100);
+                        if (d > 0) {
+                            lineTotal *= (1 + d / 100);
+                        }
                     });
                 }
 
@@ -735,13 +722,13 @@
             }
 
             const shipping = parseFloat($('#shipping').val()) || 0;
-    const other = parseFloat($('#other').val()) || 0;
+            const other = parseFloat($('#other').val()) || 0;
 
-    const grandTotal = subtotal + shipping + other;
+            const grandTotal = subtotal + shipping + other;
 
-    $('#subtotal').val(subtotal.toFixed(2));
-    $('#grand_total').val(grandTotal.toFixed(2));
-}
+            $('#subtotal').val(subtotal.toFixed(2));
+            $('#grand_total').val(grandTotal.toFixed(2));
+        }
 
 
         function applyFreeRowState($row) {

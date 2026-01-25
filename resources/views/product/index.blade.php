@@ -97,12 +97,14 @@
                                             <td>{{ $add->supplier->name }}</td>
                                             <td>{{ $add->product->threshold }}</td>
                                             <td>
-                                                @if ($add->product->status === 'In Stock')
+                                                @if ($add->product->status === 'In Stock' && $add->product->remaining_stock > 0)
                                                     <span class="badge badge-success">{{ $add->product->status }}</span>
                                                 @elseif ($add->product->status === 'Low Stock')
                                                     <span class="badge badge-warning">{{ $add->product->status }}</span>
-                                                @else
+                                                @elseif ($add->product->remaining_stock <= 0 || $add->product->remaining_stock === null)
                                                     <span class="badge badge-danger">{{ $add->product->status }}</span>
+                                                @else
+                                                    <span class="badge badge-secondary">{{ $add->product->status }}</span>
                                                 @endif
                                             </td>                                            
                                             <td>{{ $add->product->created_at->format('F d, Y') }}</td>

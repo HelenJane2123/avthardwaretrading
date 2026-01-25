@@ -42,7 +42,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-3">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select name="supplier_id" id="supplier_id" class="form-control form-control-sm" required>
+                                <select name="supplier_id" id="supplier_id" class="form-control form-control-sm">
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
@@ -68,20 +68,9 @@
                                 <label class="form-label">PO Number</label>
                                 <input type="text" name="po_number" id="po_number" class="form-control form-control-sm" readonly>
                             </div>
-                            <!-- <div class="col-md-4">
-                                <label class="form-label">Salesman</label>
-                               <select name="salesman_id" id="salesman_id" class="form-control form-control-sm">
-                                    <option value="">-- Select Salesman --</option>
-                                    @foreach($salesman as $salesmen)
-                                        <option value="{{ $salesmen->id }}">
-                                            {{ $salesmen->salesman_name }} 
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div> -->
                             <div class="col-md-3">
                                 <label class="form-label">Mode of Payment <span class="text-danger">*</span></label>
-                                <select name="payment_id" id="payment_id" class="form-control form-control-sm" required>
+                                <select name="payment_id" id="payment_id" class="form-control form-control-sm">
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}">
@@ -295,9 +284,18 @@
             $('#purchase_date_display').datepicker({
                 dateFormat: 'MM dd, yy',
                 onSelect: function(dateText) {
-                    $('#invoice_date').val(formatToYMD(dateText));
+                    $('#purchase_date').val(formatToYMD(dateText));
                 }
             });
+
+            function formatToYMD(dateText) {
+                const date = new Date(dateText);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            }
 
             //Populate Supplier Information
             let supplierProductOptions = '';
@@ -397,20 +395,99 @@
             $row.find('.selected-product-name').text(name);
         });
 
-        $('form').on('submit', function () {
-            const type = $('#discount_type').val();
-            $('#hidden_discount_type').val(type);
+        $('form').on('submit', function (e) {
+            e.preventDefault();
 
-            // store overall discount PERCENT only when overall mode
-            $('#hidden_overall_discount').val(type === 'overall' ? ($('#discount').val() || 0) : 0);
+            if (!$('#supplier_id').val()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Supplier',
+                    text: 'Please select a supplier.',
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
 
-            // these are already set inside calculateTotals, but keep them fresh
-            $('#hidden_subtotal').val($('#subtotal').val() || 0);
-            $('#hidden_shipping').val($('#shipping').val() || 0);
-            $('#hidden_other').val($('#other').val() || 0);
-            $('#hidden_grand_total').val($('#grand_total').val() || 0);
+            if (!$('#payment_id').val()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Mode of Payment',
+                    text: 'Please select a mode of payment.',
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
+
+            let hasValidRow = false;
+            let rowError = '';
+
+            $('#po-body tr').each(function (index) {
+                const product = $(this).find('.purchaseproduct').val();
+                const qty     = $(this).find('.qty').val();
+                const unit    = $(this).find('.unit').val();
+
+                if (!product && !qty && !unit) return;
+
+                if (!product) {
+                    rowError = `Row ${index + 1}: Product is required.`;
+                    return false;
+                }
+
+                if (!qty || qty <= 0) {
+                    rowError = `Row ${index + 1}: Quantity must be greater than 0.`;
+                    return false;
+                }
+
+                if (!unit) {
+                    rowError = `Row ${index + 1}: Unit is required.`;
+                    return false;
+                }
+
+                hasValidRow = true;
+            });
+
+            if (rowError) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Item',
+                    text: rowError,
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
+
+            if (!hasValidRow) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Products Added',
+                    text: 'Please add at least one valid product row.',
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
+
+            const form = this;
+
+            Swal.fire({
+                title: 'Confirm Purchase',
+                text: 'Are you sure you want to submit this purchase order?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, submit',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+            }).then((result) => {
+                if (result.value === true) {
+                    $('#hidden_subtotal').val($('#subtotal').val() || 0);
+                    $('#hidden_shipping').val($('#shipping').val() || 0);
+                    $('#hidden_other').val($('#other').val() || 0);
+                    $('#hidden_grand_total').val($('#grand_total').val() || 0);
+
+                    form.submit();
+                }
+            });
         });
-
 
         //Populate Product details
         $(document).on('change', 'select[name="supplier_id"]', function () {

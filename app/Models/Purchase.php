@@ -55,7 +55,7 @@ class Purchase extends Model
 
     public function payment()
     {
-        return $this->belongsTo(ModeOfPayment::class, 'payment_id');
+        return $this->belongsTo(ModeofPayment::class, 'payment_id');
     }
 
     public function payments()

@@ -30,8 +30,19 @@ class Invoice extends Model
         'is_printed',
         'printed_at',
         'created_by',
+        'created_at',
         'updated_by',
-        'approved_by'
+        'updated_at',
+        'approved_by',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'invoice_date' => 'datetime',
+        'due_date' => 'datetime',
+        'approved_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function salesman_relation()

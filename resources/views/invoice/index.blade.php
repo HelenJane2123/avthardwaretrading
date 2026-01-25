@@ -121,11 +121,19 @@
                                                 </span>
                                             </td>
                                             <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->created_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ $invoice->created_at 
+                                                ? \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') 
+                                                : '-' 
+                                            }}</td>
                                             <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->updated_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>{{ $invoice->updated_at 
+                                                ? \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') 
+                                                : '-' 
+                                            }}</td>
                                             <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->approved_at?->format('M d, Y') ?? '' }}</td>                                            
+                                            <td>@if($invoice->approver && $invoice->approved_at)
+                                                    {{ $invoice->approved_at->format('M d, Y') }}
+                                                @endif</td>                                            
                                             <td class="text-nowrap">
                                                 <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
                                                     <i class="fa fa-eye fa-xs"></i>
@@ -219,11 +227,23 @@
                                                 </span>
                                             </td>
                                             <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->created_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>
+                                                {{ $invoice->created_at 
+                                                    ? \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') 
+                                                    : '-' 
+                                                }}
+                                            </td>
                                             <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->updated_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>
+                                                {{ $invoice->updated_at 
+                                                    ? \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') 
+                                                    : '-' 
+                                                }}
+                                            </td>
                                             <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->approved_at?->format('M d, Y') ?? '' }}</td>
+                                            <td>@if($invoice->approver && $invoice->approved_at)
+                                                    {{ $invoice->approved_at->format('M d, Y') }}
+                                                @endif</td>
                                             <td class="text-nowrap">
                                                 <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
                                                     <i class="fa fa-eye fa-xs"></i>

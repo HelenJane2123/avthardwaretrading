@@ -175,13 +175,6 @@
 
   {{-- Widgets --}}
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card dashboard-card text-center p-3">
-                <i class="fa fa-line-chart fa-2x text-primary mb-2"></i>
-                <h6>Total Sales</h6>
-                <h4>₱{{ number_format($totalSales ?? 0, 2) }}</h4>
-            </div>
-        </div>
         <div class="col-md-2">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-cubes fa-2x text-warning mb-2"></i>
@@ -203,7 +196,21 @@
                 <h4>{{ $totalSuppliers ?? 0 }}</h4>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <div class="card dashboard-card text-center p-3">
+                <i class="fa fa-line-chart fa-2x text-primary mb-2"></i>
+                <h6>Total Sales</h6>
+                <h4>₱{{ number_format($totalSales ?? 0, 2) }}</h4>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card dashboard-card text-center p-3">
+                <i class="fa fa-shopping-cart fa-2x text-primary mb-2"></i>
+                <h6>Total Purchases</h6>
+                <h4>₱{{ number_format($totalPurchases ?? 0, 2) }}</h4>
+            </div>
+        </div>
+        <div class="col-md-2">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-money fa-2x text-info mb-2"></i>
                 <h6>Total Collections</h6>

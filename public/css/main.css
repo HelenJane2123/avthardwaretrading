@@ -15498,3 +15498,7 @@ be a descendant of the grid when it is being dragged.
 .app-main {
     flex: 1;
 }
+
+.font-size-17 {
+  font-size: 17px !important;
+}

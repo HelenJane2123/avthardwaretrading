@@ -9,6 +9,13 @@
             <p><strong>PO Number:</strong> {{ $purchase->po_number }}</p>
             <p><strong>Salesman:</strong> {{ $purchase->salesman['salesman_name'] ?? 'N/A' }}</p>
             <p><strong>Date Purchased:</strong> {{ \Carbon\Carbon::parse($purchase->date)->format('F d, Y') }}</p>
+            <p><strong>Mode of Payment:</strong> 
+                @if($purchase->payment === 'Cash' || $purchase->payment === 'Gcash')
+                    {{ $purchase->payment->name }}    
+                @else
+                    {{ $purchase->payment->term }} - {{ $purchase->payment->name }}
+                @endif
+            </p>
         </div>
 
         <!-- Supplier Info (Right) -->

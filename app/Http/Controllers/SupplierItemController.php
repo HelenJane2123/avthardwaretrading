@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Tax;
 use App\Models\Product;
 use App\Models\ProductSupplier;
+use App\Models\InvoiceSales;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -169,6 +170,7 @@ class SupplierItemController extends Controller
             'discount_1'          => $request->discount_1,
             'discount_2'          => $request->discount_2,
             'discount_3'          => $request->discount_3,
+            'status'              => 'Out of Stock',
         ]);
 
         // Add supplier info to product_supplier
@@ -186,6 +188,18 @@ class SupplierItemController extends Controller
         return redirect()->back()->with('message', 'Item and inventory product added successfully.');
     }
 
+    public function checkDescription(Request $request)
+    {
+        $exists = SupplierItem::where('supplier_id', $request->supplier_id)
+            ->whereRaw('LOWER(item_description) = ?', [strtolower($request->item_description)])
+            ->when($request->item_id, function ($q) use ($request) {
+                $q->where('id', '!=', $request->item_id);
+            })
+            ->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
     public function destroy($id)
     {
         // Find the supplier item
@@ -194,8 +208,19 @@ class SupplierItemController extends Controller
         // Get the item_code
         $itemCode = $item->item_code;
 
-        // Delete related products that match supplier_product_code
+        // Get related products that match supplier_product_code
         $relatedProducts = Product::where('supplier_product_code', $itemCode)->get();
+
+        // Check if any related product is used in invoices
+        $usedProducts = $relatedProducts->filter(function($product) {
+            return $product->sales()->exists();
+        });
+
+        if ($usedProducts->count() > 0) {
+            return redirect()->back()->with('error', 'Cannot delete this item. One or more related products are already used in invoices.');
+        }
+
+        // Delete related products
         foreach ($relatedProducts as $product) {
             $product->delete();
         }
@@ -206,3 +231,4 @@ class SupplierItemController extends Controller
         return redirect()->back()->with('message', 'Supplier item and linked products successfully deleted.');
     }
 }
+

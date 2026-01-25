@@ -85,7 +85,7 @@ class PurchaseController extends Controller
 
     public function showDetails($id)
     {
-        $purchase = Purchase::with(['supplier', 'items.supplierItem'])->findOrFail($id);
+        $purchase = Purchase::with(['supplier', 'payment','items.supplierItem'])->findOrFail($id);
         return view('purchase.partial.details', compact('purchase'));
     }
 

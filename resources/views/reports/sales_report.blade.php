@@ -51,7 +51,7 @@
                                         : now()->format('F d, Y') }}"
                                 >
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <label for="product_id" class="form-label">Product</label>
                                 <select name="product_id" id="product_id" class="form-control form-control-sm">
                                     <option value="">All Products</option>
@@ -62,7 +62,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label for="customer_id" class="form-label">Customer</label>
                                 <select name="customer_id" id="customer_id" class="form-control form-control-sm">
                                     <option value="">All Customers</option>
@@ -151,7 +151,6 @@
                                 </tbody>
                             </table>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -195,17 +194,17 @@
         $('#customer_id').select2({
             placeholder: "Select Customer",
             allowClear: true,
-            width: 'resolve'
+            width: '100%'  // match container
         });
         $('#product_id').select2({
             placeholder: "Select Product",
             allowClear: true,
-            width: 'resolve'
+            width: '100%'
         });
         $('#locationSelect').select2({
             placeholder: "Select Location",
             allowClear: true,
-            width: 'resolve'
+            width: '100%'
         });
         $('#salesman_name').select2({
             placeholder: "Select Salesman",

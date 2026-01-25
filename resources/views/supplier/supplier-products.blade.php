@@ -40,7 +40,7 @@
         </form>
     </div>
 
-    <div class="tile mb-4">
+    <div class="tile mb-4 font-size-17">
         <div class="tile-body">
             <h5 class="text-dark mb-3">Supplier Information</h5>
             <div class="row">
@@ -53,6 +53,14 @@
                     <p><strong>Email:</strong> {{ $supplier->email }}</p>
                     <p><strong>Tax:</strong> {{ $supplier->tax }}</p>
                     <p><strong>Details:</strong> {{ $supplier->details }}</p>
+                    <p>
+                        <strong>Status:</strong>
+                        @if ($supplier->status == 1)
+                            <span class="badge badge-success">Active</span>
+                        @else
+                            <span class="badge badge-danger">Inactive</span>
+                        @endif
+                    </p>                
                 </div>
             </div>
         </div>
@@ -67,7 +75,7 @@
         </div>
     @endif
     @if (session()->has('error'))
-            <div class="alert alert-dange alert-dismissible fade show shadow-sm" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
             <i class="fa fa-check-circle"></i> {{ session()->get('error') }}
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
@@ -155,22 +163,13 @@
                                             data-id="{{ $item->id }}">
                                         <i class="fa fa-trash"></i>
                                     </button>
+                                    <form id="deleteItemForm" method="POST" style="display:none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
                                 </td>
                             </tr>
                             @empty
-                            <!-- <tr>
-                                <td class="text-center text-muted">No products available.</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr> -->
                             @endforelse
                     </tbody>
                 </table>
@@ -207,6 +206,13 @@
                             <input type="email" class="form-control" id="email" name="email" value="{{ $supplier->email }}">
                         </div>
                         <div class="form-group">
+                            <label for="status">Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="1" {{ $supplier->status == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ $supplier->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="address">Address</label>
                             <textarea class="form-control" id="address" name="address" rows="2">{{ $supplier->address }}</textarea>
                         </div>
@@ -239,7 +245,7 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="form-group col-md-4">
-                                <label>Category</label>
+                                <label>Category <span class="text-danger">*</span></label>
                                 <select name="category_id" id="modal_category" class="form-control form-control-sm">
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
@@ -248,11 +254,11 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Description</label>
+                                <label>Description <span class="text-danger">*</span></label>
                                 <input type="text" name="item_description" id="modal_description" class="form-control form-control-sm">
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Unit</label>
+                                <label>Unit <span class="text-danger">*</span></label>
                                 <select name="unit_id" id="modal_unit" class="form-control form-control-sm">
                                     @foreach($units as $unit)
                                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -260,11 +266,11 @@
                                 </select>
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Unit Cost</label>
+                                <label>Unit Cost <span class="text-danger">*</span></label>
                                 <input type="number" name="item_price" id="modal_price" class="form-control form-control-sm" step="0.01">
                             </div>
                             <div class="form-group col-md-4">
-                                <label>Net Cost</label>
+                                <label>Net Cost <span class="text-danger">*</span></label>
                                 <input type="number" name="net_price" id="modal_net_cost" class="form-control form-control-sm" step="0.01">
                             </div>
                             <div class="form-group col-md-4">
@@ -334,7 +340,7 @@
                             </div>
                             <!-- Category -->
                             <div class="form-group col-md-4">
-                                <label>Category</label>
+                                <label>Category <span class="text-danger">*</span></label>
                                 <select name="category_id" id="new_category" class="form-control form-control-sm">
                                     <option value="">Select Category</option>
                                     @foreach($categories as $category)
@@ -344,12 +350,12 @@
                             </div>
                             <!-- Description -->
                             <div class="form-group col-md-4">
-                                <label>Description</label>
+                                <label>Description <span class="text-danger">*</span></label>
                                 <input type="text" name="item_description" id="new_description" class="form-control form-control-sm">
                             </div>
                             <!-- Unit -->
                             <div class="form-group col-md-4">
-                                <label>Unit</label>
+                                <label>Unit <span class="text-danger">*</span></label>
                                 <select name="unit_id" id="new_unit" class="form-control form-control-sm">
                                     @foreach($units as $unit)
                                         <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -358,12 +364,12 @@
                             </div>
                             <!-- Price -->
                             <div class="form-group col-md-4">
-                                <label>Unit Cost</label>
+                                <label>Unit Cost <span class="text-danger">*</span></label>
                                 <input type="number" name="item_price" id="new_price" class="form-control form-control-sm" step="0.01">
                             </div>
                             <!-- Net Cost -->
                             <div class="form-group col-md-4">
-                                <label>Net Cost</label>
+                                <label>Net Cost <span class="text-danger">*</span></label>
                                 <input type="number" name="net_price" id="new_net_cost" class="form-control form-control-sm" step="0.01">
                             </div>
                             <!-- Discounts -->
@@ -416,7 +422,6 @@
             </form>
         </div>
     </div>
-
 </main>
 @endsection
 
@@ -427,6 +432,147 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    function showError(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: message
+        });
+    }
+
+    function validateItemForm(formPrefix) {
+        let category = $(`#${formPrefix}_category`).val();
+        let description = $(`#${formPrefix}_description`).val()?.trim();
+        let unit = $(`#${formPrefix}_unit`).val();
+        let price = parseFloat($(`#${formPrefix}_price`).val());
+        let net = parseFloat($(`#${formPrefix}_net_cost`).val());
+
+        if (!category) {
+            showError('Category is required.');
+            return false;
+        }
+
+        if (!description) {
+            showError('Product description is required.');
+            return false;
+        }
+
+        if (!unit) {
+            showError('Unit is required.');
+            return false;
+        }
+
+        if (!price || price <= 0) {
+            showError('Unit cost must be greater than 0.');
+            return false;
+        }
+
+        if (!net || net <= 0) {
+            showError('Net cost must be greater than 0.');
+            return false;
+        }
+
+        return true;
+    }
+    $(document).on('submit', '#itemAddForm', function (e) {
+        e.preventDefault();
+
+        if (!validateItemForm('new')) {
+            return false;
+        }
+
+        let description = $('#new_description').val().trim();
+        let supplierId = {{ $supplier->id }};
+        let form = this;
+
+        console.log('Checking description:', description);
+        console.log('Supplier ID:', supplierId);
+        $.ajax({
+            url: '/supplier-items/check-description',
+            type: 'GET',
+            data: {
+                supplier_id: supplierId,
+                item_description: description
+            },
+            success: function (res) {
+                Swal.fire({
+                    title: 'Add Item?',
+                    text: 'Are you sure you want to submit this item?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, add',
+                    cancelButtonText: 'Cancel'
+                }).then(result => {
+                    if (result.value === true) {
+                        Swal.fire('Success', 'Item added successfully', 'success')
+                            .then(() => {
+                                form.submit();
+                            });
+                    }
+                });
+            },
+            error: function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to validate product description.'
+                });
+            }
+        });
+
+        return false;
+    });
+
+    $(document).on('submit', '#itemEditForm', function (e) {
+         e.preventDefault(); // always prevent default
+
+        // check required fields
+        if (!validateItemForm('modal')) return;
+
+        let description = $('#modal_description').val().trim();
+        let supplierId = {{ $supplier->id }};
+        let itemId = $('#modal_item_id').val();
+
+        // Check for duplicate
+        $.get('/supplier-items/check-description', {
+            supplier_id: supplierId,
+            item_description: description,
+            item_id: itemId
+        }, function(res){
+            if(res.exists){
+                showError('This product description already exists for this supplier.');
+                return; 
+            }
+            Swal.fire({
+                title: 'Update Item?',
+                text: 'Are you sure you want to save changes?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, update',
+                cancelButtonText: 'Cancel'
+            }).then(result => {
+                if(result.value === true){
+                    let formData = new FormData($('#itemEditForm')[0]);
+                    let actionUrl = $('#itemEditForm').attr('action');
+                    $.ajax({
+                        url: actionUrl,
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function(response){
+                            Swal.fire('Success', 'Item updated successfully', 'success')
+                                .then(() => location.reload());
+                        },
+                        error: function(err){
+                            Swal.fire('Error', 'Failed to update item.', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    });
+
     $('#productsTable').DataTable({
         language: {
             emptyTable: "No products available."
@@ -450,6 +596,7 @@
             dropdownParent: $('#itemAddModal') 
         });
     });
+
     $('#itemEditModal').on('shown.bs.modal', function () {
         $('#modal_category').select2({
             dropdownParent: $('#itemEditModal'),
@@ -467,16 +614,23 @@
     });
 
     // Delete supplier
-    $('#deleteSupplierBtn').click(function() {
+    $(document).on('click', '.delete-item', function () {
+        let id = $(this).data('id');
+        let url = "{{ route('supplier-items.destroy', ':id') }}".replace(':id', id);
+
         Swal.fire({
-            title: 'Delete Supplier?',
-            text: 'This will delete supplier and all items!',
+            title: 'Delete Item?',
+            text: 'This will delete the supplier item and all linked products!',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33'
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete',
+            cancelButtonText: 'Cancel'
         }).then(result => {
-            if (result.value) {
-                $('#deleteSupplierForm').submit();
+            if (result.value === true) {
+                let form = $('#deleteItemForm');
+                form.attr('action', url);
+                form.submit();
             }
         });
     });
@@ -515,28 +669,6 @@
             $('#modal_image_preview').attr('src', e.target.result).show();
         }
         reader.readAsDataURL(this.files[0]);
-    });
-
-    // Delete item
-    $('.delete-item').click(function () {
-        let id = $(this).data('id');
-        Swal.fire({
-            title: 'Delete Item?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33'
-        }).then(result => {
-            if (result.value) {
-                $('<form>', {
-                    method: 'POST',
-                    action: `/supplier-items/${id}`
-                })
-                .append('@csrf')
-                .append('@method("DELETE")')
-                .appendTo('body')
-                .submit();
-            }
-        });
     });
 
     // AJAX update for item

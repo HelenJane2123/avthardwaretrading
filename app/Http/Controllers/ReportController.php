@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Models\Product;
 use App\Models\Customer;
+use App\Models\Supplier;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -231,7 +232,6 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
 
     /**
      * Show AR Aging Report in Blade
@@ -531,14 +531,13 @@ class ReportController extends Controller
         exit;
     }
 
-
     public function sales_report(Request $request)
     {
         $startDateInput = $request->start_date; 
         $endDateInput   = $request->end_date;
 
-        $customerName = $request->customer_id ? Customer::find($request->customer_id)->name : null;
-        $productName  = $request->product_id ? Product::find($request->product_id)->product_name : null;
+        $customerName = $request->customer_id ?? null;
+        $productName  = $request->product_id ?? null;
         $salesmanName = $request->salesman_name ?? null;
         $startDate = $startDateInput
             ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
@@ -713,7 +712,6 @@ class ReportController extends Controller
         $writer->save('php://output');
         exit;
     }
-
 
     public function customer_report(Request $request)
     {
@@ -1222,32 +1220,50 @@ class ReportController extends Controller
 
     public function purchase_report(Request $request)
     {
-        $productName = $request->product_id ? Product::find($request->product_id)->product_name : null;
-        $startDate   = $request->start_date ?? null;
-        $endDate     = $request->end_date ?? null;
+        $productName = $request->product_id ?? null;
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+        $supplierName = $request->supplier_id ?? null;
 
-        // Call stored procedure (filters by product and date range)
-        $purchases = DB::select('CALL get_purchase_report(?, ?, ?)', [
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+
+        $purchases = DB::select('CALL get_purchase_report(?, ?, ?, ?)', [
             $productName,
+            $supplierName,
             $startDate,
             $endDate
         ]);
 
         $products = Product::orderBy('product_name')->get();
+        $suppliers = Supplier::orderBy('name')->get();
 
-        return view('reports.purchase_report', compact('purchases', 'products'));
+        return view('reports.purchase_report', compact('purchases', 'products','suppliers'));
     }
 
     public function exportPurchase(Request $request)
     {
-        $productName = $request->product_id ? Product::find($request->product_id)->product_name : null;
-        $startDate   = $request->start_date ?? null;
-        $endDate     = $request->end_date ?? null;
+        $productName = $request->product_id ?? null;
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+        $supplierName = $request->supplier_id ?? null;
+
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
 
         try {
             // Call stored procedure (filters by product and date range)
-            $purchases = DB::select('CALL get_purchase_report(?, ?, ?)', [
+            $purchases = DB::select('CALL get_purchase_report(?, ?, ?, ?)', [
                 $productName,
+                $supplierName,
                 $startDate,
                 $endDate
             ]);
@@ -1339,35 +1355,28 @@ class ReportController extends Controller
 
     public function collection_report(Request $request)
     {
-        $salesman   = $request->salesman ?? null;
         $customerId = $request->customer_id ?? null;
-        $productId  = $request->product_id ?? null;
-        $startDate  = Carbon::createFromFormat('F d, Y', $request->start_date)->toDateString() ?? null;
-        $endDate    = Carbon::createFromFormat('F d, Y', $request->end_date)->toDateString() ?? null;
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+        
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
 
-        // Call stored procedure (we'll define next)
-        $reportData = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
-            $salesman,
+        $reportData = DB::select('CALL get_collection_report(?, ?, ?)', [
             $customerId,
-            $productId,
             $startDate,
-            $endDate,
+            $endDate
         ]);
 
-        // Get filter dropdown options
-        $customers = DB::table('customers')->select('id', 'name')->orderBy('name')->get();
-        $products = DB::table('products')->select('id', 'product_name')->orderBy('product_name')->get();
+        $customers = DB::table('customers')->orderBy('name')->get();
 
-        // Get unique salesmen from invoices
-        $salesmen = DB::table('invoices')
-            ->select('salesman')
-            ->whereNotNull('salesman')
-            ->distinct()
-            ->orderBy('salesman')
-            ->get();
-
-        return view('reports.collection_report', compact('reportData', 'salesmen', 'customers', 'products', 'startDate', 'endDate'));
+        return view('reports.collection_report', compact('reportData','customers'));
     }
+
 
     public function exportCollection(Request $request)
     {
@@ -1497,6 +1506,149 @@ class ReportController extends Controller
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header("Content-Disposition: attachment; filename=\"$fileName\"");
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function sales_invoice_summary_report(Request $request)
+    {
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+
+        $customerName = $request->customer_id ?? null;
+        $salesmanName = $request->salesman_name ?? null;
+        $status      = $request->status ?? null;
+
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+        $location    = $request->input('location') ?: null;
+    
+        // Call stored procedure (customer, product, salesman, start, end)
+        $sales = DB::select('CALL sp_invoice_summary_report(?, ?, ?, ?, ?, ?)', [
+            $status,
+            $location,
+            $salesmanName,
+            $customerName,
+            $startDate,
+            $endDate
+        ]);
+
+        // For filter dropdowns
+        $customers = Customer::orderBy('name')->get();
+
+        // Dynamically get unique salesman names from invoices
+        $salesmen = DB::table('invoices')
+            ->leftJoin('salesman', 'invoices.salesman', '=', 'salesman.id')
+            ->select('invoices.salesman', 'salesman.salesman_name') 
+            ->whereNotNull('invoices.salesman')
+            ->distinct()
+            ->orderBy('salesman.salesman_name')
+            ->get();
+
+        $locations = Customer::select('location')->distinct()->orderBy('location')->get();
+        return view('reports.invoice_summary_report', compact(
+            'sales',
+            'customers',
+            'salesmen',
+            'locations',
+        ));
+    }
+
+    public function exportSalesSummary(Request $request)
+    {
+        $startDateInput = $request->start_date; 
+        $endDateInput   = $request->end_date;
+
+        $customerName = $request->customer_id ?: null;
+        $salesmanName = $request->salesman_id ?? null;
+        $status      = $request->status ?? null;
+
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+        $location    = $request->input('location') ?: null;
+
+        // Call stored procedure
+        $results = DB::select('CALL sp_invoice_summary_report(?, ?, ?, ?, ?, ?)', [
+            $status,
+            $location,
+            $salesmanName,
+            $customerName,
+            $startDate,
+            $endDate
+        ]);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Add header
+        $this->addHeader($sheet, 'Sales Invoice Summary Report');
+
+        $headerRow = 6;
+        $headers = [
+            'Invoice Number',
+            'Invoice Date',
+            'Invoice Status',
+            'Customer Name',
+            'Location',
+            'Salesman',
+            'Payment Method',
+            'Total Sales'
+        ];
+
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue("{$col}{$headerRow}", $header);
+            $sheet->getStyle("{$col}{$headerRow}")->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+            $col++;
+        }
+
+        $row = $headerRow + 1;
+        $grandTotal = 0;
+
+        foreach ($results as $record) {
+            $sheet->setCellValue("A{$row}", $record->dr_no ?? '');
+            $sheet->setCellValue("B{$row}", $record->invoice_date ?? '');
+            $sheet->setCellValue("C{$row}", $record->invoice_status ?? '');
+            $sheet->setCellValue("D{$row}", $record->customer_name ?? '');
+            $sheet->setCellValue("E{$row}", $record->location ?? '');
+            $sheet->setCellValue("F{$row}", $record->salesman_name ?? '');
+            $sheet->setCellValue("G{$row}", $record->payment_method ?? '');
+            $sheet->setCellValue("H{$row}", $record->grand_total ?? 0);
+
+            $grandTotal += $record->grand_total ?? 0;
+            $row++;
+        }
+
+        $sheet->setCellValue("G{$row}", 'GRAND TOTAL:');
+        $sheet->setCellValue("H{$row}", $grandTotal);
+        $sheet->getStyle("G{$row}:H{$row}")->getFont()->setBold(true);
+
+        $sheet->getStyle("H".($headerRow+1).":H{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
+        $sheet->getStyle("A{$headerRow}:H{$row}")->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ]);
+        $fileName = 'sales_invoice_summary_' . now()->format('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$fileName}\"");
         $writer->save('php://output');
         exit;
     }

@@ -24,13 +24,40 @@
                     <div class="container">
                         {{-- Filters --}}
                         <form method="GET" action="{{ route('reports.purchase_report') }}" class="row g-3 mb-4">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
+                                <input
+                                    type="text"
+                                    name="start_date"
+                                    id="start_date"
+                                    class="form-control form-control-sm"
+                                    value="{{ request('start_date')
+                                        ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                        : now()->format('F d, Y') }}"
+                                >
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
+                                <input
+                                    type="text"
+                                    name="end_date"
+                                    id="end_date"
+                                    class="form-control form-control-sm"
+                                    value="{{ request('end_date')
+                                        ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                        : now()->format('F d, Y') }}"
+                                >
+                            </div>
+                             <div class="col-md-4">
+                                <label for="supplier" class="form-label">Supplier</label>
+                                <select name="supplier_id" id="supplier_id" class="form-control">
+                                    <option value="">All Suppliers</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                            {{ $supplier->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label for="product_id" class="form-label">Product</label>
@@ -51,7 +78,6 @@
                             </div>
                         </form>
 
-                        {{-- Report Table --}}
                         <div class="table-responsive mt-3">
                             <table class="table table-bordered table-striped" id="purchaseTable">
                                 <thead class="table-dark">
@@ -76,13 +102,7 @@
                                             <td>{{ $purchase->qty }}</td>
                                             <td>{{ number_format($purchase->unit_price, 2) }}</td>
                                             <td>{{ number_format($purchase->total_amount, 2) }}</td>
-                                            <td>
-                                                @if(in_array(strtolower($purchase->name), ['cash', 'gcash']))
-                                                    {{ $purchase->name }}
-                                                @else
-                                                    {{ $purchase->name }} - {{ $purchase->term }} Days
-                                                @endif
-                                            </td>
+                                            <td>{{ $purchase->payment_method }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -101,14 +121,67 @@
 @endsection
 
 @push('js')
-<script src="{{ asset('/js/plugins/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('/js/plugins/dataTables.bootstrap.min.js') }}"></script>
+<script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
+<script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
+<script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $('#purchaseTable').DataTable({
-        "order": [[1, 'desc']], // Sort by Date
-        "paging": true,
-        "searching": true,
-        "info": true
+    $(document).ready(function() {
+        let purchaseTable;
+        if (!$.fn.DataTable.isDataTable('#purchaseTable')) {
+            purchaseTable = $('#purchaseTable').DataTable({
+                pageLength: 25,
+                order: [[2, 'desc']],
+                responsive: true
+            });
+        }
+        flatpickr("#start_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+        flatpickr("#end_date", {
+            dateFormat: "F d, Y",
+            altInput: true,
+            altFormat: "F d, Y",
+            allowInput: true
+        });
+        $('#product_id').select2({
+            placeholder: "Select Product",
+            allowClear: true,
+            width: '100%'
+        });
+        $('#supplier_id').select2({
+            placeholder: "Select Supplier",
+            allowClear: true,
+            width: '100%'
+        });
+        // Clear Filters Button
+        $('#clearFilters').on('click', function(e) {
+            e.preventDefault(); // prevent form submission
+
+            const form = $(this).closest('form')[0];
+
+            // Reset standard inputs
+            form.reset();
+
+            // Reset Select2 dropdowns
+            $(form).find('select').val(null).trigger('change');
+
+            // Optional: reset DataTable to first page
+            if (purchaseTable) {
+                purchaseTable.search('').columns().search('').draw();
+            }
+
+            // Reload the page without query parameters
+            window.location.href = "{{ route('reports.purchase_report') }}";
+        });
     });
 </script>
 @endpush

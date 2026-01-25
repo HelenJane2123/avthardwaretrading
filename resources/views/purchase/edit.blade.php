@@ -61,7 +61,7 @@
                             </div>
                             <div class="col-md-3 form-group">
                                 <label>Mode of Payment</label>
-                                <select name="payment_id" class="form-control form-control-sm" required>
+                                <select name="payment_id" class="form-control form-control-sm" id="payment_id">
                                     <option value="">-- Select Payment Mode --</option>
                                     @foreach($paymentModes as $mode)
                                         <option value="{{ $mode->id }}" {{ $mode->id == $purchase->payment_id ? 'selected' : '' }}>
@@ -167,6 +167,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
@@ -187,10 +188,18 @@ $(document).ready(function () {
     $('#purchase_date_display').datepicker({
         dateFormat: 'MM dd, yy',
         onSelect: function(dateText) {
-            $('#purchase_date').val(toYMD(dateText));
+            $('#purchase_date').val(formatToYMD(dateText));
         }
     });
 
+    function formatToYMD(dateText) {
+        const date = new Date(dateText);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
 
     function addRow(supplierItems = [], existingItem = null) {
 
@@ -357,7 +366,99 @@ $(document).ready(function () {
         calculateTotals
     );
 
-            
+    $('form').on('submit', function (e) {
+        e.preventDefault();
+
+        if (!$('#supplier_id').val()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Supplier',
+                text: 'Please select a supplier.',
+                confirmButtonColor: '#ff9f43'
+            });
+            return;
+        }
+
+        if (!$('#payment_id').val()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Missing Mode of Payment',
+                text: 'Please select a mode of payment.',
+                confirmButtonColor: '#ff9f43'
+            });
+            return;
+        }
+
+        let hasValidRow = false;
+        let rowError = '';
+
+        $('#po-body tr').each(function (index) {
+            const product = $(this).find('.purchaseproduct').val();
+            const qty     = $(this).find('.qty').val();
+            const unit    = $(this).find('#unit_id').val();
+
+            if (!product && !qty && !unit) return;
+
+            if (!product) {
+                rowError = `Row ${index + 1}: Product is required.`;
+                return false;
+            }
+
+            if (!qty || qty <= 0) {
+                rowError = `Row ${index + 1}: Quantity must be greater than 0.`;
+                return false;
+            }
+
+            if (!unit) {
+                rowError = `Row ${index + 1}: Unit is required.`;
+                return false;
+            }
+
+            hasValidRow = true;
+        });
+
+        if (rowError) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Item',
+                text: rowError,
+                confirmButtonColor: '#ff9f43'
+            });
+            return;
+        }
+
+        if (!hasValidRow) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Products Added',
+                text: 'Please add at least one valid product row.',
+                confirmButtonColor: '#ff9f43'
+            });
+            return;
+        }
+
+        const form = this;
+
+        Swal.fire({
+            title: 'Confirm Purchase',
+            text: 'Are you sure you want to submit this purchase order?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, submit',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#d33',
+        }).then((result) => {
+            if (result.value === true) {
+                $('#hidden_subtotal').val($('#subtotal').val() || 0);
+                $('#hidden_shipping').val($('#shipping').val() || 0);
+                $('#hidden_other').val($('#other').val() || 0);
+                $('#hidden_grand_total').val($('#grand_total').val() || 0);
+
+                form.submit();
+            }
+        });
+    });
 
     function calculateTotals() {
         let subtotal = 0;

@@ -57,6 +57,11 @@ Route::get('/keep-alive', function () {
     return response()->json(['status' => 'ok']);
 })->middleware('auth')->name('keep-alive');
 
+Route::get(
+    '/supplier-items/check-description',
+    [SupplierItemController::class, 'checkDescription']
+)->name('supplier.supplier-products');
+
 Route::resource('tax', TaxController::class);
 Route::resource('category', CategoryController::class);
 Route::resource('unit', UnitController::class);
@@ -101,6 +106,7 @@ Route::post('/import-supplier', [ImportController::class, 'import'])->name('impo
 Route::get('/supplier-items/{id}/edit', [SupplierItemController::class, 'edit'])->name('supplier-item.edit');
 Route::put('/supplier-items/{id}', [SupplierItemController::class, 'update'])
     ->name('supplier-item.update');
+Route::delete('/supplier-items/{id}', [SupplierItemController::class, 'destroy'])->name('supplier-items.destroy');
 Route::get('/supplier/{id}/last-item-code', [SupplierItemController::class, 'getLastItemCode']);
 Route::post('/supplier-items', [SupplierItemController::class, 'store'])->name('supplier-items.store');
 
@@ -124,7 +130,7 @@ Route::get('/invoice/{id}', [InvoiceController::class, 'show'])->name('invoice.s
 Route::put('/invoice/{id}', [InvoiceController::class, 'update'])->name('invoice.update');
 Route::post('/validate-admin-password', [InvoiceController::class, 'validateAdminPassword'])->name('validate.admin.password');
 Route::post('/invoices/{id}/mark-as-printed', [InvoiceController::class, 'markAsPrinted'])->name('invoices.markAsPrinted');
-
+Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
 
 //collection details
 Route::get('/collection/{id}/details', [CollectionController::class, 'showDetails'])
@@ -182,6 +188,12 @@ Route::prefix('reports')->group(function () {
     // Optional: Export to Excel
     Route::get('reports/estimated-income/export', [ReportController::class, 'exportEstimatedIncome'])
         ->name('reports.estimated_income_export');
+
+    //Sales Invoice Summary Report
+    Route::get('sales_invoice_summary_report', [ReportController::class, 'sales_invoice_summary_report'])->name('reports.sales_invoice_summary_report');
+    // Export to Excel
+    Route::get('/reports/sales-invoice-summary/export', [ReportController::class, 'exportSalesSummary'])
+        ->name('reports.sales_invoice_summary_report_export');
     
     Route::get('/reports/purchase-report', [ReportController::class, 'purchase_report'])->name('reports.purchase_report');
     Route::get('reports/purchase_report/export', [ReportController::class, 'exportPurchase'])

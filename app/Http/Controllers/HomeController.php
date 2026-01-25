@@ -9,6 +9,7 @@ use App\Models\Supplier;
 use App\Models\Invoice;
 use App\Models\Collection;
 use App\Models\Customer;
+use App\Models\Purchase;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,9 +45,10 @@ class HomeController extends Controller
         $totalProducts  = Product::count();
         $totalSuppliers = Supplier::count();
         $totalInvoices  = Invoice::count();
-        $totalCollections = Collection::count();
+        $totalCollections = Collection::sum('amount_paid');
         $totalCustomer = Customer::count();
         $totalSales = Invoice::sum('grand_total');
+        $totalPurchases = Purchase::sum('grand_total');
         $latestSales = Invoice::with('customer')
                 ->orderBy('created_at', 'desc')
                 ->take(5)
@@ -167,6 +169,7 @@ class HomeController extends Controller
             'recentCollections' => $recentCollections,
             'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
             'topStores'         => $topStores,
+            'totalPurchases'    => $totalPurchases,
         ]);
     }
 

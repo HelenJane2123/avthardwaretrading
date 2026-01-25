@@ -229,6 +229,7 @@
                 <li><a class="treeview-item" href="{{ route('reports.collection_report') }}"><i class="icon fa fa-circle-o"></i> Collection Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.purchase_report') }}"><i class="icon fa fa-circle-o"></i> Purchase Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
+                <li><a class="treeview-item" href="{{ route('reports.sales_invoice_summary_report') }}"><i class="icon fa fa-circle-o"></i> Sales Invoice Summary Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
                 <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
                 @if(auth()->user()->user_role === 'super_admin')

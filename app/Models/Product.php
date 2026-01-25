@@ -52,10 +52,10 @@ class Product extends Model
         return $this->hasMany(ProductSupplier::class);
     }
 
-    public function sales()
-    {
-        return $this->hasMany(InvoiceSales::class, 'product_id');
-    }
+    // public function sales()
+    // {
+    //     return $this->hasMany(InvoiceSales::class, 'product_id');
+    // }
 
     public function invoice(){
         return $this->belongsToMany(Invoice::class);
@@ -88,5 +88,10 @@ class Product extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'supplier_product_code');
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(InvoiceSales::class); 
     }
 }
