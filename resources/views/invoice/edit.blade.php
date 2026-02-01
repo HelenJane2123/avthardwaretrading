@@ -576,6 +576,8 @@
                 }
 
                 let effectiveMultiplier = 1;
+                let netDiscount = (1 - effectiveMultiplier) * 100;
+
 
                 if (discountType === 'less') {
                     [d1, d2, d3].forEach(d => {
@@ -586,9 +588,6 @@
                 } else if (discountType === 'add') {
                     netDiscount = 0;
                 }
-
-                // Clamp between 0–100
-                const netDiscount = (1 - effectiveMultiplier) * 100;
 
                 // Determine FREE via discount
                 const isFullyDiscounted = netDiscount >= 99.999;
