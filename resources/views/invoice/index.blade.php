@@ -68,11 +68,8 @@
                                     <th>Location</th>
                                     <th>Invoice Date</th>
                                     <th>Due Date</th>
-                                    <th>Subtotal</th>
                                     <th>Grand Total</th>
-                                    <th>Outstanding</th>
                                     <th>Status</th>
-                                    <th>Payment</th>
                                     <th>Created By</th>
                                     <th>Date Created</th>
                                     <th>Updated By</th>
@@ -85,78 +82,68 @@
                             <tbody>
                                 @foreach($nonPrintedInvoices as $invoice)
                                      <tr>
-                                            <td>
-                                                @if($invoice->invoice_status != 'approved' && $invoice->invoice_status != 'canceled')
-                                                    <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
-                                                @endif
-                                            </td>
-                                            <td><span class="badge bg-info px-1 py-1 fs-4">
-                                                    {{ $invoice->invoice_number }}
-                                                </span></td>
-                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
-                                            <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->location }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
-                                            <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
-                                            <td>{{ number_format($invoice->subtotal, 2) }}</td>
-                                            <td>{{ number_format($invoice->grand_total, 2) }}</td>
-                                            <td>{{ number_format($invoice->outstanding_balance, 2) }}</td>
-                                            <td>
-                                                <span class="badge 
-                                                    @if($invoice->invoice_status == 'approved') bg-success badge-lg
-                                                    @elseif($invoice->invoice_status == 'pending') bg-warning badge-lg
-                                                    @elseif($invoice->invoice_status == 'canceled') bg-danger badge-lg
-                                                    @elseif($invoice->invoice_status == 'printed') bg-info badge-lg
-                                                    @endif px-1 py-1">
-                                                    {{ ucfirst($invoice->invoice_status) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge 
-                                                    @if($invoice->payment_status == 'paid') bg-success
-                                                    @elseif($invoice->payment_status == 'pending') bg-warning
-                                                    @elseif($invoice->payment_status == 'overdue') bg-danger
-                                                    @elseif($invoice->payment_status == 'partial') bg-info
-                                                    @endif px-1 py-1">
-                                                    {{ ucfirst($invoice->payment_status) }}
-                                                </span>
-                                            </td>
-                                            <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->created_at 
-                                                ? \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') 
-                                                : '-' 
-                                            }}</td>
-                                            <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
-                                            <td>{{ $invoice->updated_at 
-                                                ? \Carbon\Carbon::parse($invoice->updated_at)->format('M d, Y') 
-                                                : '-' 
-                                            }}</td>
-                                            <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
-                                            <td>@if($invoice->approver && $invoice->approved_at)
-                                                    {{ $invoice->approved_at->format('M d, Y') }}
-                                                @endif</td>                                            
-                                            <td class="text-nowrap">
-                                                <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
-                                                    <i class="fa fa-eye fa-xs"></i>
-                                                </button>
+                                        <td>
+                                            @if($invoice->invoice_status != 'approved' && $invoice->invoice_status != 'canceled')
+                                                <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
+                                            @endif
+                                        </td>
+                                        <td><span class="text-danger px-1 py-1 fs-4" style="white-space: nowrap;font-weight: bold;">
+                                                {{ $invoice->invoice_number }}
+                                            </span>
+                                        </td>
+                                        <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
+                                        <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->location }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
+                                        <td>{{ number_format($invoice->grand_total, 2) }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                @if($invoice->invoice_status == 'approved') bg-success badge-lg
+                                                @elseif($invoice->invoice_status == 'pending') bg-warning badge-lg
+                                                @elseif($invoice->invoice_status == 'canceled') bg-danger badge-lg
+                                                @elseif($invoice->invoice_status == 'printed') bg-info badge-lg
+                                                @endif px-1 py-1">
+                                                {{ ucfirst($invoice->invoice_status) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ optional($invoice->user)->f_name ? optional($invoice->user)->f_name.' '.optional($invoice->user)->l_name : 'N/A' }}</td>
+                                        <td>{{ $invoice->created_at 
+                                            ? \Carbon\Carbon::parse($invoice->created_at)->format('M d, Y') 
+                                            : '-' 
+                                        }}</td>
+                                        <td>{{ optional($invoice->updater)->f_name ? optional($invoice->updater)->f_name.' '.optional($invoice->updater)->l_name : 'N/A' }}</td>
+                                        <td>
+                                            @if($invoice->updater && $invoice->updated_at)
+                                                {{ $invoice->updated_at->format('M d, Y') }}
+                                            @endif
+                                        </td>
+                                        <td>{{ optional($invoice->approver)->f_name ? optional($invoice->approver)->f_name.' '.optional($invoice->approver)->l_name : 'N/A' }}</td>
+                                        <td>@if($invoice->approver && $invoice->approved_at)
+                                                {{ $invoice->approved_at->format('M d, Y') }}
+                                            @endif</td>                                            
+                                        <td class="text-nowrap">
+                                            <button class="btn btn-primary btn-sm p-1 view-invoice" data-id="{{ $invoice->id }}">
+                                                <i class="fa fa-eye fa-xs"></i>
+                                            </button>
 
-                                                @if($invoice->invoice_status == 'approved')
-                                                    <a class="btn btn-secondary btn-sm p-1" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
-                                                        <i class="fa fa-print fa-xs"></i>
-                                                    </a>
-                                                @elseif($invoice->invoice_status == 'canceled')
-                                                    <span class="badge bg-danger text-light px-1 py-1">Canceled</span>
-                                                @else
-                                                    <a class="btn btn-info btn-sm p-1" href="{{ route('invoice.edit', $invoice->id) }}">
-                                                        <i class="fa fa-edit fa-xs"></i>
-                                                    </a>
-                                                    @if(auth()->user()->user_role === 'super_admin')
-                                                        <button class="btn btn-success btn-sm p-1" onclick="approveInvoice({{ $invoice->id }})">
-                                                            <i class="fa fa-check fa-xs"></i>
-                                                        </button>
-                                                    @endif
+                                            @if($invoice->invoice_status == 'approved')
+                                                <a class="btn btn-secondary btn-sm p-1" href="{{ route('invoice.print', $invoice->id) }}" target="_blank">
+                                                    <i class="fa fa-print fa-xs"></i>
+                                                </a>
+                                            @elseif($invoice->invoice_status == 'canceled')
+                                                <span class="badge bg-danger text-light px-1 py-1">Canceled</span>
+                                            @else
+                                                <a class="btn btn-info btn-sm p-1" href="{{ route('invoice.edit', $invoice->id) }}">
+                                                    <i class="fa fa-edit fa-xs"></i>
+                                                </a>
+                                                @if(auth()->user()->user_role === 'super_admin')
+                                                    <button class="btn btn-success btn-sm p-1" onclick="approveInvoice({{ $invoice->id }})">
+                                                        <i class="fa fa-check fa-xs"></i>
+                                                    </button>
                                                 @endif
-                                            </td>
-                                        </tr>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -200,7 +187,7 @@
                                                     <input type="checkbox" class="invoice-checkbox" value="{{ $invoice->id }}">
                                                 @endif
                                             </td>
-                                            <td><span class="badge bg-info px-1 py-1 fs-4">
+                                            <td><span class="text-danger px-1 py-1 fs-4" style="white-space: nowrap;font-weight: bold;">
                                                     {{ $invoice->invoice_number }}
                                                 </span></td>
                                             <td class="text-truncate" style="max-width:120px;">{{ $invoice->customer->name }}</td>
