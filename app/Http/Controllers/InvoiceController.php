@@ -64,29 +64,42 @@ class InvoiceController extends Controller
     public function create()
     {
         $categories = Category::with(['products' => function($q) {
-            $q->select('id','product_name','product_code','sales_price','remaining_stock','category_id','supplier_product_code')
-            ->with(['supplierItems:id,item_code,item_price']); 
+            $q->select(
+                'id',
+                'product_name',
+                'product_code',
+                'sales_price',
+                'remaining_stock',
+                'category_id',
+                'supplier_product_code'
+            )->with(['supplierItems:id,item_code,item_price']); 
         }])->get();
 
-        $today = date('Y-m-d');
-        // Get the last invoice number for today
-        $lastInvoice = Invoice::whereDate('invoice_date', $today)
-                        ->orderBy('id', 'desc')
-                        ->first();
+        $monthYear = strtoupper(date('My')); // e.g., 0226 for Feb 2026
 
-        if ($lastInvoice) {
-            // Extract series from last invoice number (e.g. DR-20251224-001)
-            $parts = explode('-', $lastInvoice->invoice_number);
-            $lastSeries = intval(end($parts));
-            $newSeries = str_pad($lastSeries + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $newSeries = '001'; // first invoice today
-        }
+        // Start a transaction to safely generate the next invoice number
+        $invoiceNumber = DB::transaction(function () use ($monthYear) {
+            // Get the last invoice for this month
+            $lastInvoice = Invoice::where('invoice_number', 'like', "{$monthYear}-%")
+                            ->orderBy('id', 'desc')
+                            ->lockForUpdate()
+                            ->first();
 
-        $invoiceNumber = 'DR-' . date('Ymd') . '-' . $newSeries;
+            if ($lastInvoice) {
+                // Extract series
+                $parts = explode('-', $lastInvoice->invoice_number);
+                $lastSeries = intval(end($parts));
+                $newSeries = str_pad($lastSeries + 1, 3, '0', STR_PAD_LEFT);
+            } else {
+                $newSeries = '001'; // first invoice this month
+            }
+
+            return "{$monthYear}-{$newSeries}";
+        });
 
         // Load products with base price
-        $products = Product::select('id',
+        $products = Product::select(
+                'id',
                 'product_name',
                 'product_code',
                 'sales_price',
@@ -98,25 +111,27 @@ class InvoiceController extends Controller
                 'discount_1',
                 'discount_2',
                 'discount_3',
-                'status')
-             ->with([
-                    'supplierItems:id,item_code,item_price,supplier_id',
-                    'supplierItems.supplier:id,name',
-                    'unit:id,name'
-                ])
+                'status'
+            )
+            ->with([
+                'supplierItems:id,item_code,item_price,supplier_id',
+                'supplierItems.supplier:id,name',
+                'unit:id,name'
+            ])
             ->get();
-            
+
         $customers = Customer::where('status', 1)->get();
-        $units = Unit::where('status',1)->get();
-        $taxes = Tax::where('status',1)->get();
+        $units = Unit::where('status', 1)->get();
+        $taxes = Tax::where('status', 1)->get();
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
-        $salesman = Salesman::where('status',1)->get();
-        $suppliers = Supplier::where('status',1)->get();
+        $salesman = Salesman::where('status', 1)->get();
+        $suppliers = Supplier::where('status', 1)->get();
 
         return view('invoice.create', compact(
-            'customers','products','paymentModes','units','taxes','salesman','suppliers','invoiceNumber'
+            'customers', 'products', 'paymentModes', 'units', 'taxes', 'salesman', 'suppliers', 'invoiceNumber'
         ));
     }
+
 
     public function getCustomerInformation($id)
     {
@@ -141,30 +156,21 @@ class InvoiceController extends Controller
 
         try {
             \Log::info('Invoice request data', $request->all());
-
-            // $request->validate([
-            //     'customer_id'  => 'required',
-            //     'invoice_date' => 'required|date',
-            //     'product_id'   => 'required|array',
-            //     'salesman'     => 'required'
-            // ]);
-
-            $invoiceDate = Carbon::parse($request->invoice_date)->format('Ymd');
-
-            // LOCKED query (safe now)
-            $lastInvoice = Invoice::where('invoice_number', 'like', "DR-{$invoiceDate}-%")
-                ->orderBy('invoice_number', 'desc')
+            $invoiceDate = Carbon::parse($request->invoice_date);
+            $prefix = strtoupper($invoiceDate->format('M')) . $invoiceDate->format('y');
+            $lastInvoice = Invoice::where('invoice_number', 'like', "{$prefix}-%")
+                ->orderBy('id', 'desc')
                 ->lockForUpdate()
                 ->first();
 
             if ($lastInvoice) {
-                $lastSeries = (int) substr($lastInvoice->invoice_number, -4);
-                $nextSeries = str_pad($lastSeries + 1, 4, '0', STR_PAD_LEFT);
+                $lastSeries = (int) substr($lastInvoice->invoice_number, -3);
+                $nextSeries = str_pad($lastSeries + 1, 3, '0', STR_PAD_LEFT);
             } else {
-                $nextSeries = '0001';
+                $nextSeries = '001';
             }
 
-            $invoiceNumber = "DR-{$invoiceDate}-{$nextSeries}";
+            $invoiceNumber = "{$prefix}-{$nextSeries}";
 
             // Save invoice
             $invoice = new Invoice();

@@ -71,7 +71,7 @@
                                                 $status = 'paid';
                                             }
                                         @endphp
-                                        <td><span class="badge badge-info">{{ $purchase->po_number }}</span></td>
+                                        <td><span class="text-danger px-1 py-1 fs-4" style="white-space: nowrap;font-weight: bold;">{{ $purchase->po_number }}</span></td>
                                         <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
                                         <td>{{ $purchase->salesman->salesman_name ?? '-' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
@@ -282,7 +282,7 @@
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
     $('#sampleTable').DataTable({
-        "order": [[3, "desc"]] 
+        "order": [[0, "desc"]] 
     });
 
     function deleteTag(id) {

@@ -37,7 +37,7 @@ class PurchaseController extends Controller
     {
         $paymentModes = ModeofPayment::all();
         $purchases = Purchase::with('supplier','salesman')
-                ->orderBy('created_at', 'desc')
+                ->orderBy('po_number', 'desc')
                 ->get();
         return view('purchase.index', compact('purchases','paymentModes'));
     }
@@ -269,9 +269,6 @@ class PurchaseController extends Controller
 
                 $purchase = Purchase::findOrFail($id);
 
-                // ===============================
-                // Update purchase header
-                // ===============================
                 $purchase->update([
                     'supplier_id'      => $request->supplier_id,
                     'po_number'        => $request->po_number,
@@ -288,9 +285,6 @@ class PurchaseController extends Controller
                     'remarks'          => $request->remarks,
                 ]);
 
-                // ===============================
-                // Reset items
-                // ===============================
                 $purchase->items()->delete();
 
                 $productIds = $request->product_id ?? [];
@@ -380,19 +374,23 @@ class PurchaseController extends Controller
     {
         $purchase = Purchase::with('items_purchase')->findOrFail($id);
 
-        // Find the super admin
-        $user = User::where('user_role', 'super_admin')->first();
-
-        if (!$user) {
-            return response()->json(['error' => 'Super Admin account not found.'], 404);
-        }
-
         $request->validate([
             'password' => 'required|string',
         ]);
 
-        if (!\Hash::check($request->password, $user->password)) {
-            return response()->json(['error' => 'Incorrect password.'], 403);
+        // Find all super admins
+        $admins = User::where('user_role', 'super_admin')->get();
+
+        $matchedAdmin = null;
+        foreach ($admins as $admin) {
+            if (\Hash::check($request->password, $admin->password)) {
+                $matchedAdmin = $admin;
+                break;
+            }
+        }
+
+        if (!$matchedAdmin) {
+            return response()->json(['error' => 'Incorrect super admin password.'], 403);
         }
 
         // Approve purchase
