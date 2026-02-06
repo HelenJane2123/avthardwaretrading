@@ -47,8 +47,14 @@ class HomeController extends Controller
         $totalInvoices  = Invoice::count();
         $totalCollections = Collection::sum('amount_paid');
         $totalCustomer = Customer::count();
-        $totalSales = Invoice::sum('grand_total');
-        $totalPurchases = Purchase::sum('grand_total');
+        $totalSales = Invoice::whereIn('invoice_status', [
+                    'pending',
+                    'approved',
+                    'printed'
+                ])->sum('grand_total');
+        $totalPurchases = Purchase::where('is_completed', 1)
+                    ->where('is_approved', 1)
+                    ->sum('grand_total');
         $latestSales = Invoice::with('customer')
                 ->orderBy('created_at', 'desc')
                 ->take(5)
@@ -56,6 +62,7 @@ class HomeController extends Controller
         $recentProducts = Product::latest()
                 ->take(5)
                 ->get();
+        $estimatedIncome = $totalSales - $totalPurchases;
 
         // Monthly sales from invoices
         $monthlySales = Invoice::selectRaw('SUM(grand_total) as total_amount, MONTH(created_at) as month')
@@ -170,6 +177,7 @@ class HomeController extends Controller
             'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
             'topStores'         => $topStores,
             'totalPurchases'    => $totalPurchases,
+            'estimatedIncome'   => $estimatedIncome
         ]);
     }
 

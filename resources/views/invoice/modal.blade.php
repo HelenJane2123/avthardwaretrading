@@ -130,6 +130,7 @@
     
     <form id="statusForm" class="mt-3">
         @csrf
+         <input type="hidden" name="invoice_status" id="hiddenInvoiceStatus">
         <div class="mb-3">
             <label class="fw-bold">Status</label>
             <input type="hidden" name="invoice_status" id="hiddenInvoiceStatus" value="{{ $invoice->invoice_status }}">
@@ -181,7 +182,7 @@ $('.update-status').on('click', function () {
     const id = $(this).data('id');
     const selectedStatus = $('select[name="invoice_status"]').val();
 
-    // Always sync hidden input
+    // Sync hidden input (this is critical)
     $('#hiddenInvoiceStatus').val(selectedStatus);
 
     // APPROVE FLOW
@@ -220,7 +221,7 @@ $('.update-status').on('click', function () {
         });
 
     } else {
-        // PENDING / CANCELED FLOW
+        // ✅ PENDING / CANCELED FLOW (NOW WORKS)
         $.ajax({
             url: "{{ url('invoice') }}/" + id + "/status",
             type: "PATCH",
@@ -229,4 +230,5 @@ $('.update-status').on('click', function () {
         });
     }
 });
+
 </script>

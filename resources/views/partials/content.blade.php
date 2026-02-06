@@ -1,8 +1,4 @@
 <style>
-.app-content {
-    padding: 25px;
-}
-
 /* Page Title */
 .app-title h1 {
     font-weight: 700;
@@ -174,43 +170,56 @@
   </div>
 
   {{-- Widgets --}}
-    <div class="row mb-4">
-        <div class="col-md-2">
+    <div class="row row-cols-1 row-cols-md-7 mb-4">
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-cubes fa-2x text-warning mb-2"></i>
                 <h6>Products</h6>
                 <h4>{{ $totalProducts ?? 0 }}</h4>
             </div>
         </div>
-        <div class="col-md-2">
+
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-users fa-2x text-success mb-2"></i>
                 <h6>Customers</h6>
                 <h4>{{ $totalCustomer ?? 0 }}</h4>
             </div>
         </div>
-        <div class="col-md-2">
+
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-truck fa-2x text-danger mb-2"></i>
                 <h6>Suppliers</h6>
                 <h4>{{ $totalSuppliers ?? 0 }}</h4>
             </div>
         </div>
-        <div class="col-md-2">
+
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-line-chart fa-2x text-primary mb-2"></i>
                 <h6>Total Sales</h6>
                 <h4>₱{{ number_format($totalSales ?? 0, 2) }}</h4>
             </div>
         </div>
-        <div class="col-md-2">
+
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-shopping-cart fa-2x text-primary mb-2"></i>
                 <h6>Total Purchases</h6>
                 <h4>₱{{ number_format($totalPurchases ?? 0, 2) }}</h4>
             </div>
         </div>
-        <div class="col-md-2">
+
+        <div class="col">
+            <div class="card dashboard-card text-center p-3">
+                <i class="fa fa-dollar fa-2x text-warning mb-2"></i>
+                <h6>Estimated Income</h6>
+                <h4>₱{{ number_format($estimatedIncome ?? 0, 2) }}</h4>
+            </div>
+        </div>
+
+        <div class="col">
             <div class="card dashboard-card text-center p-3">
                 <i class="fa fa-money fa-2x text-info mb-2"></i>
                 <h6>Total Collections</h6>
@@ -218,8 +227,9 @@
             </div>
         </div>
     </div>
+
   
-  <div class="row mt-4">
+    <div class="row mt-4">
       <div class="col-lg-6 fade-in">
           <div class="section-container">
             <div class="section-header"><i class="fa fa-th"></i> Highest Selling Products</div>

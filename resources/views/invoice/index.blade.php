@@ -321,16 +321,36 @@
 
             swal({
                 title: 'Confirm Bulk Approval',
-                text: 'Only Admin can approve invoices.',
-                input: 'password',
-                inputPlaceholder: 'Enter Admin password',
+                html: `
+                    <div style="position:relative;">
+                        <input
+                            type="password"
+                            id="adminPassword"
+                            class="swal2-input"
+                            placeholder="Enter Admin password"
+                            style="padding-right:40px;"
+                        >
+                        <i class="fa fa-eye" id="togglePassword"
+                        style="
+                                position:absolute;
+                                right:14px;
+                                top:50%;
+                                transform:translateY(-50%);
+                                cursor:pointer;
+                                color:#6c757d;
+                        ">
+                        </i>
+                    </div>
+                `,
                 showCancelButton: true,
                 confirmButtonText: 'Approve',
                 confirmButtonColor: '#28a745',
                 cancelButtonText: 'Cancel',
-                preConfirm: function (password) {
+                preConfirm: function () {
                     return new Promise(function (resolve, reject) {
-                        if (!password || password === '') {
+                        const password = $('#adminPassword').val();
+
+                        if (!password) {
                             reject('Please enter your password');
                             return;
                         }
@@ -348,17 +368,20 @@
                             processData: false,
                             contentType: false,
                             success: function (response) {
-                                if (response.error) {
-                                    reject(response.error);
-                                } else {
-                                    resolve(response);
-                                }
+                                response.error ? reject(response.error) : resolve(response);
                             },
                             error: function (xhr) {
-                                console.error(xhr);
                                 reject(xhr.responseJSON?.error || 'Bulk approval failed.');
                             }
                         });
+                    });
+                },
+                onOpen: function () {
+                    $('#togglePassword').on('click', function () {
+                        const input = $('#adminPassword');
+                        const type = input.attr('type') === 'password' ? 'text' : 'password';
+                        input.attr('type', type);
+                        $(this).toggleClass('fa-eye fa-eye-slash');
                     });
                 }
             }).then(function (result) {
@@ -376,6 +399,7 @@
                 swal('Error', error, 'error');
             });
         });
+
         function deleteTag(id) {
             swal({
                 title: 'Are you sure?',
@@ -416,57 +440,80 @@
         });
 
         function approveInvoice(id) {
-            swal({
-                title: 'Confirm Approval',
-                text: 'Only Admin can approve invoices.',
-                input: 'password',
-                inputPlaceholder: 'Enter Admin password',
-                showCancelButton: true,
-                confirmButtonText: 'Approve',
-                confirmButtonColor: '#28a745',
-                cancelButtonText: 'Cancel',
-                preConfirm: function (password) {
-                    return new Promise(function (resolve, reject) {
-                        if (!password) {
-                            reject('Please enter your password');
-                            return;
-                        }
+                swal({
+                    title: 'Invoice Approval',
+                    html: `
+                        <div style="position:relative;">
+                            <input 
+                                type="password" 
+                                id="adminPassword" 
+                                class="swal2-input" 
+                                placeholder="Enter Admin password"
+                                style="padding-right:40px;"
+                            >
+                            <i class="fa fa-eye" id="togglePassword"
+                            style="
+                                    position:absolute;
+                                    right:14px;
+                                    top:50%;
+                                    transform:translateY(-50%);
+                                    cursor:pointer;
+                                    color:#6c757d;
+                            ">
+                            </i>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Approve',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonText: 'Cancel',
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            let password = $('#adminPassword').val();
 
-                        $.ajax({
-                            url: `/invoice/${id}/approve`,
-                            type: 'PUT',
-                            data: {
-                                _token: '{{ csrf_token() }}',
-                                password: password
-                            },
-                            success: function (response) {
-                                console.log("test response",response);
-                                if (response.error) {
-                                    reject(response.error);
-                                } else {
-                                    resolve(response);
-                                }
-                            },
-                            error: function () {
-                                reject('An error occurred during approval.');
+                            if (!password) {
+                                reject('Please enter your password');
+                                return;
                             }
+
+                            $.ajax({
+                                url: `/invoice/${id}/approve`,
+                                type: 'PUT',
+                                data: {
+                                    _token: '{{ csrf_token() }}',
+                                    password: password
+                                },
+                                success: function (response) {
+                                    response.error ? reject(response.error) : resolve(response);
+                                },
+                                error: function () {
+                                    reject('An error occurred during approval.');
+                                }
+                            });
                         });
-                    });
-                }
-            }).then(function (result) {
-                if (result && result.value && result.value.success) {
-                    swal({
-                        type: 'success',
-                        title: 'Invoice has been approved!',
-                        text: result.value.success,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    setTimeout(() => location.reload(), 1500);
-                }
-            }).catch(function (error) {
-                swal.showInputError ? swal.showInputError(error) : swal('Error', error, 'error');
-            });
-        }
+                    },
+                    onOpen: function () {
+                        $('#togglePassword').on('click', function () {
+                            const input = $('#adminPassword');
+                            const type = input.attr('type') === 'password' ? 'text' : 'password';
+                            input.attr('type', type);
+                            $(this).toggleClass('fa-eye fa-eye-slash');
+                        });
+                    }
+                }).then(function (result) {
+                    if (result && result.value && result.value.success) {
+                        swal({
+                            type: 'success',
+                            title: 'Invoice Approved!',
+                            text: result.value.success,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => location.reload(), 1500);
+                    }
+                }).catch(function (error) {
+                    swal('Error', error, 'error');
+                });
+            }
     </script>
 @endpush
