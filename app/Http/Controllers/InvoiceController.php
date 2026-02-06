@@ -464,48 +464,69 @@ class InvoiceController extends Controller
         DB::transaction(function () use ($invoice, $oldStatus, $newStatus) {
 
             /**
-             * APPROVE → deduct stock
+             * PENDING → APPROVED
+             * deduct stock
              */
             if ($oldStatus !== 'approved' && $newStatus === 'approved') {
                 foreach ($invoice->items as $item) {
                     $product = $item->product()->lockForUpdate()->first();
 
-                    $newStock = $product->remaining_stock - $item->qty;
-                    if ($newStock < 0) {
+                    if ($product->remaining_stock < $item->qty) {
                         throw new \Exception("Insufficient stock for {$product->product_name}");
                     }
 
-                    $product->update([
-                        'remaining_stock' => $newStock
-                    ]);
+                    $product->decrement('remaining_stock', $item->qty);
                 }
+
+                $invoice->forceFill([
+                    'approved_at' => now(),
+                    'approved_by' => auth()->id(),
+                ]);
             }
 
             /**
-             * APPROVED → PENDING / CANCELED
-             * (printed or not, always restore)
+             * APPROVED / PRINTED → PENDING or CANCELED
+             * restore stock
              */
-            if (in_array($oldStatus, ['approved', 'printed']) && in_array($newStatus, ['pending', 'canceled'])) {
+            if (
+                in_array($oldStatus, ['approved', 'printed']) &&
+                in_array($newStatus, ['pending', 'canceled'])
+            ) {
                 foreach ($invoice->items as $item) {
                     $product = $item->product()->lockForUpdate()->first();
                     $product->increment('remaining_stock', $item->qty);
                 }
 
-                // Reset print state
                 $invoice->forceFill([
-                    'is_printed' => false,
-                    'printed_at' => null,
-                ])->save();
+                    'approved_at' => null,
+                    'approved_by' => null,
+                    'is_printed'  => false,
+                    'printed_at'  => null,
+                ]);
             }
 
-            // Update status LAST
+            /**
+             * PENDING → CANCELED
+             * no stock changes
+             */
+            if ($oldStatus === 'pending' && $newStatus === 'canceled') {
+                $invoice->forceFill([
+                    'approved_at' => null,
+                    'approved_by' => null,
+                    'is_printed'  => false,
+                    'printed_at'  => null,
+                ]);
+            }
+
+            // update status LAST
             $invoice->update([
-                'invoice_status' => $newStatus
+                'invoice_status' => $newStatus,
             ]);
         });
 
         return response()->json(['success' => true]);
     }
+
 
 
     public function print($id)
