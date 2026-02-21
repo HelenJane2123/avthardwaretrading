@@ -45,7 +45,6 @@
                                 <tr>
                                     <th>PO Number</th>
                                     <th>Supplier</th>
-                                    <th>Salesman</th>
                                     <th>Date Purchased</th>
                                     <th>Discount Type</th>
                                     <th>Total Purchased</th>
@@ -73,7 +72,6 @@
                                         @endphp
                                         <td><span class="text-danger px-1 py-1 fs-4" style="white-space: nowrap;font-weight: bold;">{{ $purchase->po_number }}</span></td>
                                         <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
-                                        <td>{{ $purchase->salesman->salesman_name ?? '-' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
                                         <td>
                                             @if ($purchase->discount_type === 'per_item')
