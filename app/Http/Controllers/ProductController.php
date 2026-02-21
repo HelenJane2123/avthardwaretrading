@@ -451,11 +451,16 @@ class ProductController extends Controller
     public function suppliers(Request $request)
     {
         $itemCode = $request->get('item_code');
-        $suppliers = SupplierItem::where('item_code', $itemCode)
+        \Log::info("Item code received: " . $itemCode);
+        $suppliers =  SupplierItem::whereRaw(
+            'TRIM(LOWER(item_code)) = ?',
+            [strtolower($itemCode)]
+        )
             ->join('suppliers', 'supplier_items.supplier_id', '=', 'suppliers.id')
             ->get([
                 'suppliers.id',
                 'suppliers.name',
+                'supplier_items.item_code', 
                 'supplier_items.item_price',
                 'supplier_items.net_price',
                 'supplier_items.discount_less_add',
@@ -463,7 +468,7 @@ class ProductController extends Controller
                 'supplier_items.discount_2',
                 'supplier_items.discount_3'
             ]);
-
+        \Log::info("Suppliers found:", $suppliers->toArray());
         return response()->json($suppliers);
     }
 
@@ -507,18 +512,14 @@ class ProductController extends Controller
 
     private function generateProductCode() {
         $prefix = "AVT";
-
         $lastProduct = Product::orderBy('id', 'desc')->first();
-
         if (!$lastProduct) {
             $nextNumber = 1;
         } else {
             $lastNumber = (int) str_replace($prefix, '', $lastProduct->product_code);
             $nextNumber = $lastNumber + 1;
         }
-
         $paddedNumber = str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
-
         return $prefix . $paddedNumber;
     }
 }

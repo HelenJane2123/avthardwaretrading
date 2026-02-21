@@ -36,7 +36,7 @@
                                     class="form-control form-control-sm"
                                     value="{{ request('start_date')
                                         ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
+                                        : \Carbon\Carbon::now()->startOfYear()->format('F d, Y') }}"
                                 >
                             </div>
                             <div class="col-md-2">
@@ -48,7 +48,7 @@
                                     class="form-control form-control-sm"
                                     value="{{ request('end_date')
                                         ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
+                                        : \Carbon\Carbon::now()->format('F d, Y') }}"
                                 >
                             </div>
                             <div class="col-md-4">
@@ -127,7 +127,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($sales as $sale)
+                                    @foreach($sales as $sale)
                                         <tr>
                                             <td>{{ $sale->invoice_number }}</td>
                                             <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
@@ -140,14 +140,15 @@
                                                 {{ $sale->discount_display }}
                                             </td>
                                             <td>{{ number_format($sale->total_amount, 2) }}</td>
-                                            <td>{{ $sale->payment_method }}</td>
+                                            <td>
+                                                {{ $sale->payment_method }}
+                                                @if(!in_array(strtolower($sale->payment_method), ['Gcash', 'Cash']))
+                                                    - {{ $sale->payment_term }}
+                                                @endif
+                                            </td>
                                             <td>{{ $sale->salesman_name }}</td>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="10" class="text-center">No sales found.</td>
-                                        </tr>
-                                    @endforelse
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -172,13 +173,38 @@
 <script>
     $(document).ready(function() {
         let salesProductTable;
-        if (!$.fn.DataTable.isDataTable('#salesProductTable')) {
-            salesProductTable = $('#salesProductTable').DataTable({
-                pageLength: 25,
-                order: [[2, 'desc']],
-                responsive: true
-            });
-        }
+        $('#salesProductTable').DataTable({
+            pageLength: 25,
+            order: [[2, 'asc']],
+            responsive: true,
+            rowGroup: {
+                dataSrc: 2,
+                endRender: function (rows, group) {
+                    if (rows.count() === 0) {
+                        return null;
+                    }
+                    let total = rows
+                        .data()
+                        .pluck(8)
+                        .reduce(function (a, b) {
+                            return parseFloat(a) + parseFloat(b.replace(/,/g, ''));
+                        }, 0);
+
+                    return $('<tr class="subtotal-row"/>')
+                        .append('<td colspan="8" class="text-end fw-bold">Subtotal for ' + group + '</td>')
+                        .append('<td class="fw-bold text-primary">' + 
+                            total.toLocaleString(undefined, {minimumFractionDigits: 2}) + 
+                        '</td>')
+                        .append('<td colspan="2"></td>');
+                }
+            },
+            drawCallback: function(settings) {
+                var api = this.api();
+                if (api.rows({ page: 'current' }).count() === 0) {
+                    $('.subtotal-row').remove();
+                }
+            }
+        });
         flatpickr("#start_date", {
             dateFormat: "F d, Y",
             altInput: true,
@@ -194,7 +220,7 @@
         $('#customer_id').select2({
             placeholder: "Select Customer",
             allowClear: true,
-            width: '100%'  // match container
+            width: '100%' 
         });
         $('#product_id').select2({
             placeholder: "Select Product",
@@ -213,22 +239,7 @@
         });
         // Clear Filters Button
         $('#clearFilters').on('click', function(e) {
-            e.preventDefault(); // prevent form submission
-
-            const form = $(this).closest('form')[0];
-
-            // Reset standard inputs
-            form.reset();
-
-            // Reset Select2 dropdowns
-            $(form).find('select').val(null).trigger('change');
-
-            // Optional: reset DataTable to first page
-            if (salesProductTable) {
-                salesProductTable.search('').columns().search('').draw();
-            }
-
-            // Reload the page without query parameters
+            e.preventDefault();
             window.location.href = "{{ route('reports.sales_report') }}";
         });
     });

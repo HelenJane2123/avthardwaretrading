@@ -23,6 +23,31 @@
                         <div class="container">
                             {{-- Filters --}}
                             <form method="GET" action="{{ route('reports.sales_invoice_summary_report') }}" class="row g-4 mb-4">
+                                <div class="col-md-2">
+                                    <label class="form-label">End Date</label>    
+                                    <!-- Start Date -->
+                                    <input
+                                        type="text"
+                                        name="start_date"
+                                        id="start_date"
+                                        class="form-control form-control-sm"
+                                        value="{{ now()->startOfYear()->format('F d, Y') }}"
+                                        readonly
+                                    >
+                                </div>
+                                <!-- End Date -->
+                                <div class="col-md-2">
+                                    <label class="form-label">End Date</label>
+                                    <input
+                                        type="text"
+                                        name="end_date"
+                                        id="end_date"
+                                        class="form-control form-control-sm"
+                                        value="{{ request('end_date')
+                                            ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                            : now()->format('F d, Y') }}"
+                                    >
+                                </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Invoice Status</label>
                                     <select name="status" id="statusSelect" class="form-control">
@@ -57,34 +82,6 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <!-- Start Date -->
-                                <div class="col-md-2">
-                                    <label class="form-label">Start Date</label>
-                                    <input
-                                        type="text"
-                                        name="start_date"
-                                        id="start_date"
-                                        class="form-control form-control-sm"
-                                        value="{{ request('start_date')
-                                            ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                            : now()->startOfMonth()->format('F d, Y') }}"
-                                    >
-
-                                </div>
-
-                                <!-- End Date -->
-                                <div class="col-md-2">
-                                    <label class="form-label">End Date</label>
-                                    <input
-                                        type="text"
-                                        name="end_date"
-                                        id="end_date"
-                                        class="form-control form-control-sm"
-                                        value="{{ request('end_date')
-                                            ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                            : now()->format('F d, Y') }}"
-                                    >
-                                </div>
                                 <!-- Customer -->
                                 <div class="col-md-3">
                                     <label class="form-label">Customer</label>
@@ -115,9 +112,10 @@
                                     <thead class="table-dark">
                                         <tr>
                                             <th>Invoice Number</th>
-                                            <th>Invoice Date</th>
-                                            <th>Invoice Status</th>
                                             <th>Customer Name</th>
+                                            <th>Invoice Date</th>
+                                            <th>Invoice Due Date</th>
+                                            <th>Invoice Status</th>
                                             <th>Location</th>
                                             <th>Salesman Name</th>
                                             <th>Payment Method</th>
@@ -125,10 +123,12 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($sales as $invoice)
+                                        @foreach($sales as $invoice)
                                             <tr>
                                                 <td>{{ $invoice->dr_no }}</td>
+                                                <td>{{ $invoice->customer_name }}</td>
                                                 <td>{{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }}</td>
                                                 <td>
                                                     <span 
                                                         class="badge 
@@ -141,17 +141,17 @@
                                                         {{ $invoice->invoice_status }}
                                                     </span>
                                                 </td>
-                                                <td>{{ $invoice->customer_name }}</td>
                                                 <td>{{ $invoice->location }}</td>
                                                 <td>{{ $invoice->salesman_name }}</td>
-                                                <td>{{ $invoice->payment_method }}</td>
-                                                <td>{{ $invoice->grand_total }}</td>
+                                                <td>
+                                                    {{ $invoice->payment_method }}
+                                                    @if(!in_array(strtolower($invoice->payment_method), ['Gcash', 'Cash']))
+                                                        - {{ $invoice->payment_term }}
+                                                    @endif
+                                                </td>
+                                                <td>{{ number_format($invoice->grand_total, 2) }}</td>
                                             </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="8" class="text-center">No Invoices found.</td>
-                                            </tr>
-                                        @endforelse
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>
@@ -164,8 +164,11 @@
 @endsection
 
 @push('js')
-<script src="{{ asset('/js/plugins/jquery.dataTables.min.js') }}"></script>
-<script src="{{ asset('/js/plugins/dataTables.bootstrap.min.js') }}"></script>
+<script src="{{ asset('/') }}js/plugins/jquery.dataTables.min.js"></script>
+<script src="{{ asset('/') }}js/plugins/dataTables.bootstrap.min.js"></script>
+<script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/rowgroup/1.3.1/css/rowGroup.dataTables.min.css">
+<script src="https://cdn.datatables.net/rowgroup/1.3.1/js/dataTables.rowGroup.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -173,15 +176,37 @@
 <script>
     $(document).ready(function() {
         // Initialize DataTable safely
-        let salesSummaryReport;
-        if (!$.fn.DataTable.isDataTable('#summaryinvoiceReportTable')) {
-            salesSummaryReport = $('#summaryinvoiceReportTable').DataTable({
-                pageLength: 25,
-                order: [[2, 'desc']],
-                responsive: true
-            });
-        }
+        $('#summaryinvoiceReportTable').DataTable({
+            pageLength: 25,
+            order: [[1, 'asc']],
+            responsive: true,
+            rowGroup: {
+                dataSrc: 1,
+                endRender: function (rows, group) {
+                    if (rows.count() === 0) {
+                        return null;
+                    }
+                    let total = rows
+                        .data()
+                        .pluck(8)
+                        .reduce(function (a, b) {
+                            return parseFloat(a) + parseFloat(b.replace(/,/g, ''));
+                        }, 0);
 
+                   return $('<tr class="subtotal-row"/>')
+                    .append('<td colspan="8" class="text-end fw-bold">Subtotal for ' + group + '</td>')
+                    .append('<td class="fw-bold text-primary">' + 
+                        total.toLocaleString(undefined, {minimumFractionDigits: 2}) + 
+                    '</td>');
+                }
+            },
+            drawCallback: function(settings) {
+                var api = this.api();
+                if (api.rows({ page: 'current' }).count() === 0) {
+                    $('.subtotal-row').remove();
+                }
+            }
+        });
         // Initialize Flatpickr
         flatpickr("#start_date", {
             dateFormat: "F d, Y",
@@ -204,23 +229,8 @@
         });
 
         // Clear Filters Button
-        $('#clearFilters').on('click', function(e) {
-            e.preventDefault(); // prevent form submission
-
-            const form = $(this).closest('form')[0];
-
-            // Reset standard inputs
-            form.reset();
-
-            // Reset Select2 dropdowns
-            $(form).find('select').val(null).trigger('change');
-
-            // Optional: reset DataTable to first page
-            if (salesSummaryReport) {
-                salesSummaryReport.search('').columns().search('').draw();
-            }
-
-            // Reload the page without query parameters
+       $('#clearFilters').on('click', function(e) {
+            e.preventDefault();
             window.location.href = "{{ route('reports.sales_invoice_summary_report') }}";
         });
     });

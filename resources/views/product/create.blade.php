@@ -1,5 +1,4 @@
 @extends('layouts.master')
-
 @section('title', 'Add Product | ')
 @section('content')
     @include('partials.header')
@@ -442,13 +441,14 @@
                         console.log("Products loaded:", data);
                         let tbody = '';
                         data.forEach(function(item) {
+                            let itemData = JSON.stringify(item).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                             tbody += `
                                 <tr>
                                     <td>${item.item_code}</td>
                                     <td>${item.item_description}</td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-primary select-product"
-                                            data-item='${JSON.stringify(item)}'>Select</button>
+                                            data-item='${itemData}'>Select</button>
                                     </td>
                                 </tr>`;
                         });
@@ -472,6 +472,14 @@
             // Handle selecting a product from the modal
             $(document).on('click', '.select-product', function() {
                 let item = $(this).data('item');
+                console.log("Clicked item:", item);
+                console.log("Item code being sent:", item.item_code);
+            
+                if (!item || !item.item_code) {
+                    console.error("Item or item_code is missing!");
+                    alert("Item code is missing.");
+                    return;
+                }
                 $('#product_name').val(item.item_description);
                 //$('#product_code').val(item.item_code);
                 $('#supplier_product_code').val(item.item_code); // optional
@@ -612,13 +620,7 @@
                 updateRowNewQty($(this));
             });
         }
-
         // Initialize table values
         updateAllNewQty();
-        
     </script>
-
 @endpush
-
-
-

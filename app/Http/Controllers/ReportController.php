@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Supplier;
 use Carbon\Carbon;
+use App\Models\Invoice;
 
 class ReportController extends Controller
 {
@@ -540,11 +542,12 @@ class ReportController extends Controller
         $productName  = $request->product_id ?? null;
         $salesmanName = $request->salesman_name ?? null;
         $startDate = $startDateInput
-            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
-            : now()->startOfMonth()->toDateString();
+            ? Carbon::parse($startDateInput)->toDateString()
+            : Carbon::now()->startOfYear()->toDateString(); 
+
         $endDate = $endDateInput
-            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
-            : now()->endOfMonth()->toDateString();
+            ? Carbon::parse($endDateInput)->toDateString()
+            : Carbon::now()->toDateString();
         $location    = $request->input('location') ?: null;
     
         // Call stored procedure (customer, product, salesman, start, end)
@@ -580,139 +583,173 @@ class ReportController extends Controller
         ));
     }
 
+    /**
+     * Export sales report to Excel.
+     */
     public function exportSales(Request $request)
-    {
-        $customerName = $request->input('customer_id') 
-            ? Customer::find($request->input('customer_id'))->name 
-            : null;
+{
+    $customerId = $request->input('customer_id');
+    $productId  = $request->input('product_id');
+    $salesmanId = $request->input('salesman_name');
+    $location   = $request->input('location');
 
-        $productName = $request->input('product_id') 
-            ? Product::find($request->input('product_id'))->product_name 
-            : null;
+    $startDate = $request->filled('start_date')
+        ? Carbon::parse($request->start_date)->toDateString()
+        : now()->startOfYear()->toDateString();
 
-        $salesmanName = $request->input('salesman_name') ?? null;
-        $startDateInput = $request->input('start_date') ?: null;
-        $endDateInput = $request->input('end_date') ?: null;
-         $startDate = $startDateInput
-            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
-            : now()->startOfMonth()->toDateString();
-        $endDate = $endDateInput
-            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
-            : now()->endOfMonth()->toDateString();
-        $location    = $request->input('location') ?: null;
+    $endDate = $request->filled('end_date')
+        ? Carbon::parse($request->end_date)->toDateString()
+        : now()->toDateString();
 
-        // Call stored procedure
-        $results = DB::select('CALL get_sales_report(?, ?, ?, ?, ?, ?)', [
-            $customerName,
-            $productName,
-            $salesmanName,
-            $startDate,
-            $endDate,
-            $location
-        ]);
+    $sales = DB::select('CALL get_sales_report(?, ?, ?, ?, ?, ?)', [
+        $customerId,
+        $productId,
+        $salesmanId,
+        $startDate,
+        $endDate,
+        $location
+    ]);
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+    $customerName = $customerId
+        ? DB::table('customers')->where('id', $customerId)->value('name')
+        : 'All Customers';
 
-        // Add header
-        $this->addHeader($sheet, 'Sales Report');
+    $productName = $productId
+        ? DB::table('products')->where('id', $productId)->value('product_name')
+        : 'All Products';
 
-        $headerRow = 6;
-        $headers = [
-            'Invoice #',
-            'Date',
-            'Customer',
-            'Product',
-            'Quantity',
-            'Price',
-            'Total',
-            'Payment Method',
-            'Discounts'
-        ];
+    $salesmanName = $salesmanId
+        ? DB::table('salesman')->where('id', $salesmanId)->value('salesman_name')
+        : 'All Salesmen';
 
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col.$headerRow, $header);
-            $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-            $col++;
-        }
+    $locationName = $location ?: 'All Locations';
 
-        $row = $headerRow + 1;
-        $currentInvoice = null;
-        $invoiceSubtotal = 0;
-        $grandTotal = 0;
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Sales Report');
 
-        foreach ($results as $record) {
-            // Subtotal per invoice
-            if ($currentInvoice !== null && $record->invoice_number !== $currentInvoice) {
-                $sheet->setCellValue("F{$row}", "Subtotal:");
-                $sheet->setCellValue("G{$row}", $invoiceSubtotal);
-                $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
-                $row++;
-                $invoiceSubtotal = 0;
-            }
+    // Header Section
+    $sheet->mergeCells('A1:O1');
+    $sheet->setCellValue('A1', "AVT Hardware Trading - Sales Report");
+    $sheet->getStyle('A1:O1')->applyFromArray([
+        'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => 'FFFFFFFF']],
+        'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
+    ]);
+    $sheet->getRowDimension(1)->setRowHeight(28);
 
-            // Write row data
-            $sheet->setCellValue("A{$row}", $record->invoice_number ?? '');
-            $sheet->setCellValue("B{$row}", $record->sale_date 
-                ? \Carbon\Carbon::parse($record->sale_date)->format('M d, Y') 
-                : '');
-            $sheet->setCellValue("C{$row}", $record->customer_name ?? '');
-            $sheet->setCellValue("D{$row}", $record->product_name ?? '');
-            $sheet->setCellValue("E{$row}", $record->quantity ?? 0);
-            $sheet->setCellValue("F{$row}", $record->price ?? 0);
-            $sheet->setCellValue("G{$row}", $record->total_amount ?? 0);
-            $sheet->setCellValue("H{$row}", $record->payment_method ?? '');
-            $sheet->setCellValue("I{$row}", $record->discount_display ?? '');
-            $row++;
+    $sheet->fromArray([
+        ['Date From:', Carbon::parse($startDate)->format('F j, Y')],
+        ['Date To:', Carbon::parse($endDate)->format('F j, Y')],
+        ['Customer:', $customerName],
+        ['Product:', $productName],
+        ['Salesman:', $salesmanName],
+        ['Location:', $locationName],
+    ], null, 'A3');
 
-            $invoiceSubtotal += $record->total_amount ?? 0;
-            $grandTotal += $record->total_amount ?? 0;
-            $currentInvoice = $record->invoice_number;
-        }
+    $sheet->getStyle('A3:A8')->applyFromArray([
+        'font' => ['bold' => true],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE5E7EB']],
+    ]);
 
-        // Add final subtotal + grand total
-        if ($currentInvoice !== null) {
-            $sheet->setCellValue("F{$row}", "Subtotal:");
-            $sheet->setCellValue("G{$row}", $invoiceSubtotal);
-            $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
-            $row++;
-        }
+    $sheet->getStyle('A3:B8')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        $sheet->setCellValue("F{$row}", "Grand Total:");
-        $sheet->setCellValue("G{$row}", $grandTotal);
-        $sheet->getStyle("F{$row}:G{$row}")->getFont()->setBold(true);
-
-        $lastRow = $row;
-
-        // Number formatting
-        foreach (['F','G'] as $col) {
-            $sheet->getStyle("{$col}".($headerRow+1).":{$col}{$lastRow}")
-                ->getNumberFormat()
-                ->setFormatCode('#,##0.00');
-        }
-
-        // Borders
-        $sheet->getStyle("A{$headerRow}:I{$lastRow}")->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'],
-                ],
-            ],
-        ]);
-
-        // Export file
-        $fileName = 'sales_report_'.now()->format('Ymd_His').'.xlsx';
-        $writer = new Xlsx($spreadsheet);
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment; filename=\"$fileName\"");
-        $writer->save('php://output');
-        exit;
+    foreach (range('A', 'B') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
+    // Table Header
+    $headerRow = 10;
+    $headers = [
+        'Invoice #','Customer','Payment Method','Invoice Date','Due Date','Salesman','Location','Description',
+        'Qty','Price','Total','Discount %','Discount Amount','Sub Total','Grand Total'
+    ];
+    $sheet->fromArray($headers, null, "A{$headerRow}");
+    $sheet->getStyle("A{$headerRow}:O{$headerRow}")->applyFromArray([
+        'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
+        'alignment' => ['horizontal' => 'center'],
+    ]);
+    $sheet->freezePane("A" . ($headerRow + 1));
+
+    $row = $headerRow + 1;
+
+    foreach ($sales as $record) {
+
+        $qty   = (float) ($record->quantity ?? 0);
+        $price = (float) ($record->price ?? 0);
+
+        $invoiceDate = $record->sale_date ? Carbon::parse($record->sale_date)->format('F j, Y') : '';
+        $dueDate = $record->due_date ? Carbon::parse($record->due_date)->format('F j, Y') : '';
+
+        $discountType = $record->discount_less_add ?? 'less';
+
+        $discountPercent = collect([
+            $record->discount_1 ?? 0,
+            $record->discount_2 ?? 0,
+            $record->discount_3 ?? 0,
+        ])->filter(fn($d) => !is_null($d) && $d != 0);
+
+        $discountDisplay = $discountPercent->map(fn($d) => (floor($d) == $d ? number_format($d,0) : number_format($d,2)) . "%")->implode(', ');
+
+        $paymentMethod = trim(($record->payment_method ?? '') . ($record->payment_term ? '-' . $record->payment_term : ''));
+
+        // Write row with formulas
+        $sheet->fromArray([
+            $record->invoice_number ?? '',
+            $record->customer_name ?? '',
+            $paymentMethod,
+            $invoiceDate,
+            $dueDate,
+            $record->salesman_name ?? '',
+            $record->location ?? '',
+            $record->product_name ?? '',
+            $qty,
+            $price,
+            null, // Total formula
+            $discountDisplay,
+            null, // Discount Amount formula
+            null, // Sub Total formula
+            null  // Grand Total formula
+        ], null, "A{$row}");
+
+        // Formulas
+        $sheet->setCellValue("K{$row}", "=I{$row}*J{$row}"); // Total
+        $sheet->setCellValue("M{$row}", "=K{$row}*" . $discountPercent->sum() . "/100"); // Discount Amount
+
+        if ($discountType === 'add') {
+            $sheet->setCellValue("N{$row}", "=K{$row}+M{$row}"); // Sub Total
+        } else {
+            $sheet->setCellValue("N{$row}", "=K{$row}-M{$row}"); // Sub Total
+        }
+
+        $sheet->setCellValue("O{$row}", "=N{$row}"); // Grand Total per row
+
+        // Number formatting
+        $sheet->getStyle("I{$row}:O{$row}")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+
+        $row++;
+    }
+
+    // Overall Grand Total
+    $sheet->setCellValue("N{$row}", "GRAND TOTAL:");
+    $sheet->setCellValue("O{$row}", "=SUM(O" . ($headerRow+1) . ":O" . ($row-1) . ")");
+    $sheet->getStyle("N{$row}:O{$row}")->getFont()->setBold(true);
+    $sheet->getStyle("O{$row}")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+    $sheet->getStyle("N{$row}:O{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFF99');
+
+    // Borders and autosize
+    $sheet->getStyle("A{$headerRow}:O{$row}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+    foreach (range('A','O') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    $fileName = 'sales_report_' . now()->format('Ymd_His') . '.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), 'sales_export_') . '.xlsx';
+    (new Xlsx($spreadsheet))->save($tempFile);
+
+    return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+}
     public function customer_report(Request $request)
     {
         $status = $request->status ?? null;
@@ -1377,7 +1414,6 @@ class ReportController extends Controller
         return view('reports.collection_report', compact('reportData','customers'));
     }
 
-
     public function exportCollection(Request $request)
     {
         $salesman   = $request->input('salesman') ?? null;
@@ -1514,136 +1550,342 @@ class ReportController extends Controller
     {
         $startDateInput = $request->start_date; 
         $endDateInput   = $request->end_date;
-
-        $customerName = $request->customer_id ?? null;
-        $salesmanName = $request->salesman_name ?? null;
-        $status      = $request->status ?? null;
-
-        $startDate = $startDateInput
-            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
-            : now()->startOfMonth()->toDateString();
+        $startDate = Carbon::now()->startOfYear()->toDateString();
         $endDate = $endDateInput
-            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
-            : now()->endOfMonth()->toDateString();
-        $location    = $request->input('location') ?: null;
-    
-        // Call stored procedure (customer, product, salesman, start, end)
+            ? Carbon::parse($endDateInput)->toDateString()
+            : Carbon::now()->toDateString();
+        $status       = $request->status ?: null;
+        $location     = $request->location ?: null;
+        $salesmanId   = $request->salesman ?: null;
+        $customerId   = $request->customer_id ?: null;
+
         $sales = DB::select('CALL sp_invoice_summary_report(?, ?, ?, ?, ?, ?)', [
             $status,
             $location,
-            $salesmanName,
-            $customerName,
+            $salesmanId,
+            $customerId,
             $startDate,
             $endDate
         ]);
 
-        // For filter dropdowns
         $customers = Customer::orderBy('name')->get();
-
-        // Dynamically get unique salesman names from invoices
         $salesmen = DB::table('invoices')
             ->leftJoin('salesman', 'invoices.salesman', '=', 'salesman.id')
-            ->select('invoices.salesman', 'salesman.salesman_name') 
+            ->select('invoices.salesman', 'salesman.salesman_name')
             ->whereNotNull('invoices.salesman')
             ->distinct()
             ->orderBy('salesman.salesman_name')
             ->get();
 
-        $locations = Customer::select('location')->distinct()->orderBy('location')->get();
+        $locations = Customer::select('location')
+            ->distinct()
+            ->orderBy('location')
+            ->get();
+
         return view('reports.invoice_summary_report', compact(
             'sales',
             'customers',
             'salesmen',
-            'locations',
+            'locations'
         ));
     }
 
     public function exportSalesSummary(Request $request)
     {
-        $startDateInput = $request->start_date; 
-        $endDateInput   = $request->end_date;
+        $startDate = $request->start_date
+            ? Carbon::createFromFormat('F d, Y', $request->start_date)->toDateString()
+            : now()->startOfYear()->toDateString();
 
-        $customerName = $request->customer_id ?: null;
-        $salesmanName = $request->salesman_id ?? null;
-        $status      = $request->status ?? null;
+        $endDate = $request->end_date
+            ? Carbon::createFromFormat('F d, Y', $request->end_date)->toDateString()
+            : now()->toDateString();
 
-        $startDate = $startDateInput
-            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
-            : now()->startOfMonth()->toDateString();
-        $endDate = $endDateInput
-            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
-            : now()->endOfMonth()->toDateString();
-        $location    = $request->input('location') ?: null;
+        $status     = $request->status ?: null;
+        $location   = $request->location ?: null;
+        $salesmanId = $request->salesman ?: null;
+        $customerId = $request->customer_id ?: null;
 
-        // Call stored procedure
         $results = DB::select('CALL sp_invoice_summary_report(?, ?, ?, ?, ?, ?)', [
             $status,
             $location,
-            $salesmanName,
-            $customerName,
+            $salesmanId,
+            $customerId,
             $startDate,
             $endDate
         ]);
 
+        $customerName = $customerId
+            ? DB::table('customers')->where('id', $customerId)->value('name')
+            : 'All Customers';
+
+        $salesmanName = $salesmanId
+            ? DB::table('salesman')->where('id', $salesmanId)->value('salesman_name')
+            : 'All Salesmen';
+
+        $locationName = $location ?: 'All Locations';
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Add header
-        $this->addHeader($sheet, 'Sales Invoice Summary Report');
+        /*
+        |--------------------------------------------------------------------------
+        | SALES SUMMARY SHEET
+        |--------------------------------------------------------------------------
+        */
 
-        $headerRow = 6;
+        $sheet->mergeCells('A1:H1');
+        $sheet->setCellValue('A1', "AVT Hardware Trading - Sales Invoice Summary Report");
+        $sheet->getStyle('A1:H1')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => 'FFFFFFFF']],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
+        ]);
+        $sheet->getRowDimension(1)->setRowHeight(28);
+
+        $sheet->fromArray([
+            ['Date From:', Carbon::parse($startDate)->format('F j, Y')],
+            ['Date To:', Carbon::parse($endDate)->format('F j, Y')],
+            ['Customer:', $customerName],
+            ['Salesman:', $salesmanName],
+            ['Location:', $locationName],
+        ], null, 'A3');
+
+        $sheet->getStyle('A3:A7')->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE5E7EB']],
+        ]);
+
+        $sheet->getStyle('A3:B7')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        $sheet->insertNewRowBefore(8, 1);
+
+        $headerRow = 9;
         $headers = [
             'Invoice Number',
             'Invoice Date',
-            'Invoice Status',
+            'Invoice Due Date',
             'Customer Name',
+            'Payment Method',
             'Location',
             'Salesman',
-            'Payment Method',
             'Total Sales'
         ];
 
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue("{$col}{$headerRow}", $header);
-            $sheet->getStyle("{$col}{$headerRow}")->getFont()->setBold(true);
+        $sheet->fromArray($headers, null, "A{$headerRow}");
+
+        $sheet->getStyle("A{$headerRow}:H{$headerRow}")->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
+            'alignment' => ['horizontal' => 'center'],
+        ]);
+
+        foreach (range('A','H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
-            $col++;
         }
+
+        $sheet->freezePane("A" . ($headerRow + 1));
 
         $row = $headerRow + 1;
         $grandTotal = 0;
+        $currentCustomer = null;
+        $subtotal = 0;
 
         foreach ($results as $record) {
+
+            if ($currentCustomer && $currentCustomer !== $record->customer_name) {
+                $sheet->setCellValue("G{$row}", "Subtotal for {$currentCustomer}");
+                $sheet->setCellValue("H{$row}", $subtotal);
+                $sheet->getStyle("G{$row}:H{$row}")->applyFromArray([
+                    'font' => ['bold' => true],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFDE68A']],
+                ]);
+                $row++;
+                $subtotal = 0;
+            }
+
+            $currentCustomer = $record->customer_name;
+
+            $paymentMethod = trim(
+                ($record->payment_method ?? '') .
+                ($record->payment_term ? '-' . $record->payment_term : '')
+            );
+
+            $invoiceDate = $record->invoice_date ? Carbon::parse($record->invoice_date)->format('F j, Y') : '';
+            $dueDate     = $record->due_date ? Carbon::parse($record->due_date)->format('F j, Y') : '';
+
             $sheet->setCellValue("A{$row}", $record->dr_no ?? '');
-            $sheet->setCellValue("B{$row}", $record->invoice_date ?? '');
-            $sheet->setCellValue("C{$row}", $record->invoice_status ?? '');
+            $sheet->setCellValue("B{$row}", $invoiceDate);
+            $sheet->setCellValue("C{$row}", $dueDate);
             $sheet->setCellValue("D{$row}", $record->customer_name ?? '');
-            $sheet->setCellValue("E{$row}", $record->location ?? '');
-            $sheet->setCellValue("F{$row}", $record->salesman_name ?? '');
-            $sheet->setCellValue("G{$row}", $record->payment_method ?? '');
+            $sheet->setCellValue("E{$row}", $paymentMethod);
+            $sheet->setCellValue("F{$row}", $record->location ?? '');
+            $sheet->setCellValue("G{$row}", $record->salesman_name ?? '');
             $sheet->setCellValue("H{$row}", $record->grand_total ?? 0);
 
+            $subtotal += $record->grand_total ?? 0;
             $grandTotal += $record->grand_total ?? 0;
+            $row++;
+        }
+
+        if ($currentCustomer) {
+            $sheet->setCellValue("G{$row}", "Subtotal for {$currentCustomer}");
+            $sheet->setCellValue("H{$row}", $subtotal);
+            $sheet->getStyle("G{$row}:H{$row}")->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFDE68A']],
+            ]);
             $row++;
         }
 
         $sheet->setCellValue("G{$row}", 'GRAND TOTAL:');
         $sheet->setCellValue("H{$row}", $grandTotal);
-        $sheet->getStyle("G{$row}:H{$row}")->getFont()->setBold(true);
+        $sheet->getStyle("G{$row}:H{$row}")->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFFBBF24']],
+        ]);
 
-        $sheet->getStyle("H".($headerRow+1).":H{$row}")
+        $sheet->getStyle("H" . ($headerRow + 1) . ":H{$row}")
             ->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
         $sheet->getStyle("A{$headerRow}:H{$row}")->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'],
-                ],
-            ],
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
+
+         /*
+        |--------------------------------------------------------------------------
+        | COUNTER RECEIPT SHEET
+        |--------------------------------------------------------------------------
+        */
+
+        $counterSheet = $spreadsheet->createSheet();
+        $counterSheet->setTitle('Counter Receipt');
+
+        // ===== COMPANY HEADER =====
+        $counterSheet->mergeCells('A1:G1');
+        $counterSheet->setCellValue('A1', 'AVT Hardware Trading');
+        $counterSheet->getStyle('A1:G1')->getFont()->setBold(true)->setSize(14);
+        $counterSheet->getStyle('A1:G1')->getAlignment()->setHorizontal('center');
+
+        $counterSheet->mergeCells('A2:G2');
+        $counterSheet->setCellValue('A2', 'Wholesale of hardware, electricals, & plumbing supply etc.');
+        $counterSheet->getStyle('A2:G2')->getAlignment()->setHorizontal('center');
+
+        // ===== TITLE =====
+        $counterSheet->mergeCells('A4:G4');
+        $counterSheet->setCellValue('A4', 'COUNTER RECEIPT');
+        $counterSheet->getStyle('A4:G4')->getFont()->setBold(true)->setSize(16);
+        $counterSheet->getStyle('A4:G4')->getAlignment()->setHorizontal('center');
+
+        // ===== FILTER INFO =====
+        $counterSheet->fromArray([
+            ['Customer:', $customerName],
+            ['Date From:', Carbon::parse($startDate)->format('F j, Y')],
+            ['Date To:', Carbon::parse($endDate)->format('F j, Y')],
+        ], null, 'A6');
+
+        $counterSheet->getStyle('A6:A8')->getFont()->setBold(true);
+
+        // ===== TABLE HEADER =====
+        $headerRow = 10;
+
+        $headers = [
+            'Invoice No',
+            'Invoice Date',
+            'Due Date',
+            'Customer',
+            'Payment Term',
+            'Amount',
+            'Remarks'
+        ];
+
+        $counterSheet->fromArray($headers, null, "A{$headerRow}");
+
+        $counterSheet->getStyle("A{$headerRow}:G{$headerRow}")
+            ->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFE5E7EB']
+                ],
+                'alignment' => ['horizontal' => 'center'],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN]
+                ]
+            ]);
+
+        foreach (range('A','G') as $col) {
+            $counterSheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // ===== DATA =====
+        $row = $headerRow + 1;
+        $totalAmount = 0;
+        $count = 0;
+
+        foreach ($results as $record) {
+
+            $invoiceDate = $record->invoice_date
+                ? Carbon::parse($record->invoice_date)->format('F j, Y')
+                : '';
+
+            $dueDate = $record->due_date
+                ? Carbon::parse($record->due_date)->format('F j, Y')
+                : '';
+
+            // If payment method is Cash → mark as Paid
+            $remarks = '';
+            if (strtolower($record->payment_method ?? '') === 'cash') {
+                $remarks = 'Paid';
+            }
+
+            $counterSheet->setCellValue("A{$row}", $record->dr_no ?? '');
+            $counterSheet->setCellValue("B{$row}", $invoiceDate);
+            $counterSheet->setCellValue("C{$row}", $dueDate);
+            $counterSheet->setCellValue("D{$row}", $record->customer_name ?? '');
+            $counterSheet->setCellValue("E{$row}", $record->payment_term ?? '');
+            $counterSheet->setCellValue("F{$row}", $record->grand_total ?? 0);
+            $counterSheet->setCellValue("G{$row}", $remarks);
+
+            $totalAmount += $record->grand_total ?? 0;
+            $count++;
+            $row++;
+        }
+
+        // ===== TOTAL ROW =====
+        $counterSheet->setCellValue("D{$row}", "Total Transactions:");
+        $counterSheet->setCellValue("E{$row}", $count);
+        $counterSheet->setCellValue("F{$row}", $totalAmount);
+
+        $counterSheet->getStyle("D{$row}:F{$row}")
+            ->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFFDE68A']
+                ],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN]
+                ]
+            ]);
+
+        // Format Amount Column
+        $counterSheet->getStyle("F" . ($headerRow + 1) . ":F{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
+        // Add borders to whole table
+        $counterSheet->getStyle("A{$headerRow}:G{$row}")
+            ->getBorders()
+            ->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOWNLOAD
+        |--------------------------------------------------------------------------
+        */
+
         $fileName = 'sales_invoice_summary_' . now()->format('Ymd_His') . '.xlsx';
         $writer = new Xlsx($spreadsheet);
 

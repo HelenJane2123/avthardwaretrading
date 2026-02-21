@@ -15502,3 +15502,14 @@ be a descendant of the grid when it is being dragged.
 .font-size-17 {
   font-size: 17px !important;
 }
+
+.subtotal-row {
+  background-color: #fff3cd !important;   /* light yellow */
+  font-size: 14px;
+  border-top: 2px solid #ffc107;
+}
+
+.subtotal-row td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
