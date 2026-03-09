@@ -175,6 +175,7 @@
 const units = @json($units);
 const taxes = @json($taxesArray);
 const purchaseItems = @json($purchaseItemsArray);
+console.log(purchaseItems);
 const supplierItems = @json($supplierItems);
 
 $(document).ready(function () {
@@ -222,7 +223,7 @@ $(document).ready(function () {
         });
 
         const unitOptions = units.map(u => `
-            <option value="${u.id}" ${existingItem && existingItem.unit_id == u.id ? 'selected' : ''}>
+            <option value="${u.id}" ${existingItem && existingItem.unit == u.id ? 'selected' : ''}>
                 ${u.name}
             </option>
         `).join('');
@@ -250,7 +251,7 @@ $(document).ready(function () {
             </td>
 
             <td>
-                <select name="unit[]" id="unit_id" class="form-control form-control-sm">
+               <select name="unit[]" id="unit_id" class="form-control form-control-sm unit">
                     ${unitOptions}
                 </select>
             </td>
@@ -305,7 +306,7 @@ $(document).ready(function () {
             width: '300px'
         });
 
-        $('#po-body tr:last #unit_id').select2({
+        $('#po-body tr:last .unit').select2({
             placeholder: 'Select Unit',
             width: '80px'
         });

@@ -24,7 +24,7 @@
                     <div class="container">
                         {{-- Filters --}}
                         <form method="GET" action="{{ route('reports.purchase_report') }}" class="row g-3 mb-4">
-                            <div class="col-md-2">
+                            <div class="col-md-6">
                                 <label for="start_date" class="form-label">Start Date</label>
                                 <input
                                     type="text"
@@ -33,10 +33,10 @@
                                     class="form-control form-control-sm"
                                     value="{{ request('start_date')
                                         ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
+                                        : \Carbon\Carbon::now()->startOfYear()->format('F d, Y') }}"
                                 >
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-6">
                                 <label for="end_date" class="form-label">End Date</label>
                                 <input
                                     type="text"
@@ -75,6 +75,7 @@
                                 <a href="{{ route('reports.purchase_report_export', request()->all()) }}" class="btn btn-success">
                                     <i class="fa fa-file-excel-o"></i> Export
                                 </a>
+                                <button id="clearFilters" class="btn btn-secondary ms-2">Clear Filters</button>
                             </div>
                         </form>
 
