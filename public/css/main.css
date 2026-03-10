@@ -13776,6 +13776,8 @@ be a descendant of the grid when it is being dragged.
   line-height: 1.2;
 }
 
+
+
 .app-sidebar {
   position: fixed;
   top: 0;
@@ -13852,6 +13854,10 @@ be a descendant of the grid when it is being dragged.
   -o-text-overflow: ellipsis;
      text-overflow: ellipsis;
   margin-bottom: 0;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: white !important;
 }
 
 .app-menu {

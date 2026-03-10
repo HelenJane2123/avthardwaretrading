@@ -145,13 +145,13 @@ class PurchaseController extends Controller
                 $purchase->items()->create([
                     'supplier_item_id'     => $supplierItemId,
                     'product_code'         => $request->product_code[$index],
+                    'unit'                 => $request->unit[$index],
                     'qty'                  => $request->qty[$index],
                     'unit_price'           => $request->price[$index],
                     'discount_less_add'    => $request->discount_less_add[$index],
                     'discount_1'           => $request->dis1[$index] ?? 0,
                     'discount_2'           => $request->dis2[$index] ?? 0,
                     'discount_3'           => $request->dis3[$index] ?? 0,
-                    'unit'                 => $request->unit[$index],
                     'total'                => $request->amount[$index],
                 ]);
             }
@@ -225,7 +225,7 @@ class PurchaseController extends Controller
                 'product_id' => $i->supplier_item_id,
                 'product_code' => $i->supplierItem->item_code,
                 'product_name' => $i->supplierItem->item_description,
-                'unit_id' => $i->unit_id,
+                'unit' => $i->unit,
                 'qty' => $i->qty,
                 'price' => $i->price,
                 'discount_less_add' => $i->discount_less_add,
@@ -299,13 +299,13 @@ class PurchaseController extends Controller
                     $purchase->items()->create([
                         'supplier_item_id'   => $supplierItemId,
                         'product_code'       => $request->product_code[$index] ?? null,
+                        'unit'               => $request->unit[$index] ?? null,
                         'qty'                => $request->qty[$index] ?? 0,
                         'unit_price'         => $request->price[$index] ?? 0,
                         'discount_less_add'  => $request->discount_less_add[$index] ?? 'less',
                         'discount_1'         => $request->dis1[$index] ?? 0,
                         'discount_2'         => $request->dis2[$index] ?? 0,
                         'discount_3'         => $request->dis3[$index] ?? 0,
-                        'unit'               => $request->unit[$index] ?? null,
                         'total'              => $request->amount[$index] ?? 0,
                     ]);
                 }

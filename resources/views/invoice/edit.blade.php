@@ -832,7 +832,7 @@
                     </div>
                     <div class="text-muted small selected-product-info mt-1">${productName}</div>
                 </td>
-                <td><select name="unit[]" class="form-control form-control-sm">${unitOptions}</select></td>
+                <td><select name="unit[]" class="form-control form-control-sm unit">${unitOptions}</select></td>
                 <td>
                     <input type="number" name="qty[]" class="form-control qty" value="${qty}" ${productName ? '' : 'readonly'} data-original-stock="${stock}">
                     <small class="text-muted available-stock">Available: ${stock}</small>

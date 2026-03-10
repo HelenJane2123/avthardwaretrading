@@ -10,6 +10,7 @@ class InvoiceSales extends Model
     protected $fillable = [
         'invoice_id',
         'product_id',
+        'unit_id',
         'qty',
         'price',
         'discount_less_add',

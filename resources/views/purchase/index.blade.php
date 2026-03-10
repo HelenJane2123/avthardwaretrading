@@ -46,7 +46,7 @@
                                     <th>PO Number</th>
                                     <th>Supplier</th>
                                     <th>Date Purchased</th>
-                                    <th>Discount Type</th>
+                                    <!-- <th>Discount Type</th> -->
                                     <th>Total Purchased</th>
                                     <th>Payment Status</th>
                                     <th>Purchase Status</th>
@@ -73,7 +73,7 @@
                                         <td><span class="text-danger px-1 py-1 fs-4" style="white-space: nowrap;font-weight: bold;">{{ $purchase->po_number }}</span></td>
                                         <td>{{ $purchase->supplier->name ?? 'N/A' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($purchase->date)->format('M d, Y') }}</td>
-                                        <td>
+                                        <!-- <td>
                                             @if ($purchase->discount_type === 'per_item')
                                                 <span class="badge bg-success">Per Item</span>
                                             @elseif ($purchase->discount_type === 'overall')
@@ -81,7 +81,7 @@
                                             @else
                                                 <span class="badge bg-secondary">N/A</span>
                                             @endif
-                                        </td>
+                                        </td> -->
                                         <td>₱ {{ number_format($purchase->grand_total, 2) }}</td>
                                         <td>
                                             @if($status === 'paid')

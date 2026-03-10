@@ -31,7 +31,6 @@ class InvoiceController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-
     public function __construct()
     {
         $this->middleware('auth');
@@ -132,15 +131,12 @@ class InvoiceController extends Controller
         ));
     }
 
-
     public function getCustomerInformation($id)
     {
         $customer = Customer::find($id);
-
         if (!$customer) {
             return response()->json(['customer' => null]);
         }
-
         return response()->json(['customer' => $customer]);
     }
 
@@ -196,6 +192,7 @@ class InvoiceController extends Controller
                 InvoiceSales::create([
                     'invoice_id'         => $invoice->id,
                     'product_id'         => $productId,
+                    'unit_id'            => $request->unit[$index] ?? null,
                     'qty'                => $request->qty[$index] ?? 0,
                     'price'              => $request->price[$index] ?? 0,
                     'discount_less_add'  => $request->discount_less_add[$index] ?? 'less',
@@ -290,6 +287,7 @@ class InvoiceController extends Controller
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
+                'unit_id' => $item->unit_id,
                 'qty' => $item->qty,
                 'price' => $item->price,
                 'amount' => $item->amount,
