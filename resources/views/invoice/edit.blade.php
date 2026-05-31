@@ -1,10 +1,8 @@
 @extends('layouts.master')
-
 @section('title', 'Edit Invoice | ')
 @section('content')
 @include('partials.header')
 @include('partials.sidebar')
-
 <main class="app-content">
     <div class="app-title d-flex justify-content-between align-items-center">
         <div>
@@ -36,12 +34,11 @@
                 <form method="POST" action="{{ route('invoice.update', $invoice->id) }}">
                     @csrf
                     @method('PUT')
-
                     {{-- Customer Details --}}
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label">Customer <span class="text-danger">*</span></label>
-                            <select id="customerSelect" name="customer_id" class="form-control form-control-sm" disabled>
+                            <select id="customerSelect" name="customer_id" class="form-control form-control-sm">
                                 <option value="">Select Customer</option>
                                 @foreach($customers as $customer)
                                     <option value="{{ $customer->id }}" 
@@ -51,8 +48,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <input type="hidden" name="customer_id" value="{{ $invoice->customer_id }}">
-
+                        <input type="hidden" name="customer_invoice_id" value="{{ $invoice->customer_id }}">
                         <div class="col-md-3">
                             <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
                             <!-- Display -->

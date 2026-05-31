@@ -89,6 +89,7 @@
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th>Price</th>
+                                        <th>Discounts</th>
                                         <th>Total</th>
                                         <th>Payment Term</th>
                                     </tr>
@@ -102,6 +103,9 @@
                                             <td>{{ $purchase->product_name }}</td>
                                             <td>{{ $purchase->qty }}</td>
                                             <td>{{ number_format($purchase->unit_price, 2) }}</td>
+                                            <td>
+                                                {{ $purchase->discount_display }}
+                                            </td>
                                             <td>{{ number_format($purchase->total_amount, 2) }}</td>
                                             <td>{{ $purchase->payment_method }}</td>
                                         </tr>
@@ -134,13 +138,45 @@
 <script>
     $(document).ready(function() {
         let purchaseTable;
-        if (!$.fn.DataTable.isDataTable('#purchaseTable')) {
-            purchaseTable = $('#purchaseTable').DataTable({
-                pageLength: 25,
-                order: [[2, 'desc']],
-                responsive: true
-            });
-        }
+        $('#purchaseTable').DataTable({
+            pageLength: 25,
+            order: [[2, 'asc']],
+            responsive: true,
+            rowGroup: {
+                dataSrc: 2,
+                endRender: function (rows, group) {
+                    if (rows.count() === 0) {
+                        return null;
+                    }
+                    let total = rows
+                        .data()
+                        .pluck(7)
+                        .reduce(function (a, b) {
+                            return parseFloat(a) + parseFloat(b.replace(/,/g, ''));
+                        }, 0);
+
+                    return $('<tr class="subtotal-row"/>')
+                        .append('<td colspan="8" class="text-end fw-bold">Subtotal for ' + group + '</td>')
+                        .append('<td class="fw-bold text-primary">' + 
+                            total.toLocaleString(undefined, {minimumFractionDigits: 2}) + 
+                        '</td>')
+                        .append('<td colspan="2"></td>');
+                }
+            },
+            drawCallback: function(settings) {
+                var api = this.api();
+                if (api.rows({ page: 'current' }).count() === 0) {
+                    $('.subtotal-row').remove();
+                }
+            }
+        });
+        // if (!$.fn.DataTable.isDataTable('#purchaseTable')) {
+        //     purchaseTable = $('#purchaseTable').DataTable({
+        //         pageLength: 25,
+        //         order: [[2, 'desc']],
+        //         responsive: true
+        //     });
+        // }
         flatpickr("#start_date", {
             dateFormat: "F d, Y",
             altInput: true,

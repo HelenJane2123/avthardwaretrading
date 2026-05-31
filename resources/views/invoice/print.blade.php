@@ -61,6 +61,15 @@
                 border: none;
                 padding: 0 10px;
             }
+            .fix-dr-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                /* width: 100%;
+                background-color: #f0f0f0;
+                text-align: center;
+                padding: 10px 0; */
+            }
         }
 
         .table {
@@ -131,143 +140,145 @@
         .text-center {
             text-align: center !important;
         }
+
     </style>
 </head>
 <body>
-<div class="invoice-box">
-    <!-- Header -->
-    <div class="header text-center">
-        <h4>AVT HARDWARE TRADING</h4>
-        <p class="header-contact">
-            Wholesale of hardware, electricals, & plumbing supply etc.<br>
-            Contact: 0936-8834-275 / 0999-3669-539
-        </p>
-    </div>
-    <hr>
-
-    <!-- Invoice Info -->
-    <div class="d-flex justify-content-between">
-        <div>
-            <h6><strong>DELIVERY RECEIPT</strong></h6>
-            <p>
-                CUSTOMER: {{ $invoice->customer->name ?? 'N/A' }} <br>
-                ADDRESS: {{ $invoice->customer->address ?? 'N/A' }} <br>
-                CONTACT NO: {{ $invoice->customer->phone ?? 'N/A' }}
-            </p> 
-        </div>
-        <div class="text-end" style="margin-right:20px;">
-            <p>
-                DR #: {{ $invoice->invoice_number }} <br>
-                DR Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }} <br>
-                Due: {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }} <br>
-                Terms: {{ $invoice->paymentMode->name ?? 'N/A' }} ({{ $invoice->paymentMode->term ?? 'N/A' }} Days) <br>
-                Salesman: {{ optional($invoice->salesman_relation)->salesman_name ?? 'N/A' }}
+    <div class="invoice-box">
+        <!-- Header -->
+        <div class="header text-center">
+            <h4>AVT HARDWARE TRADING</h4>
+            <p class="header-contact">
+                Wholesale of hardware, electricals, & plumbing supply etc.<br>
+                Contact: 0936-8834-275 / 0999-3669-539
             </p>
         </div>
-    </div>
-    <hr>
+        <hr>
 
-    <!-- Remarks -->
-    @if(!empty($invoice->remarks))
-        <p style="margin:0 0 5px 0;">Remarks: {{ $invoice->remarks }}</p>
-    @endif
-
-    <!-- Products Table -->
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>QTY</th>
-                <th>UNIT</th>
-                <th>PRODUCT DESCRIPTION</th>
-                <th>UNIT PRICE</th>
-                <th>DISCOUNT</th>
-                <th>AMOUNT</th>
-            </tr>
-        </thead>
-        <tbody>
-        @forelse($invoice->sales as $item)
-            <tr>
-                <td>{{ $item->qty }}</td>
-                <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
-                <td>{{ $item->product->product_name ?? 'N/A' }}</td>
-                <td class="text-center">{{ number_format($item->price, 2) }}</td>
-                <td class="text-center" style="font-size:14px;"> 
-                    @php
-                        $discounts = [];
-
-                        foreach ([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
-                            if ($discount > 0) {
-                                $formatted = fmod($discount, 1) == 0
-                                    ? (int)$discount      
-                                    : rtrim(rtrim($discount, '0'), '.'); // decimal
-
-                                $discounts[] = $formatted . '%';
-                            }
-                        }
-                    @endphp
-
-                    @if(count($discounts))
-                        {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
-                    @else
-                        -
-                    @endif
-                </td>
-                <td class="text-center">{{ number_format($item->amount, 2) }}</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="6" class="text-center">No products found.</td>
-            </tr>
-        @endforelse
-        </tbody>
-    </table>
-
-    <!-- Totals Table -->
-    <table class="table" style="margin-top:0;">
-        @if($invoice->discount_type === 'overall' && $invoice->discount_value > 0)
-        <tr>
-            <td class="no-border text-end" style="width:80%;"><strong>Overall Discount:</strong></td>
-            <td class="text-center" style="width:20%;">{{ $invoice->discount_value }}%</td>
-        </tr>
-        @endif
-        @if($invoice->shipping_fee > 0)
-        <tr>
-            <td class="no-border text-end" style="width:80%;"><strong>Shipping Fee:</strong></td>
-            <td class="text-center" style="width:20%;">{{ number_format($invoice->shipping_fee, 2) }}</td>
-        </tr>
-        @endif
-        @if($invoice->other_charges > 0)
-        <tr>
-            <td class="no-border text-end" style="width:80%;"><strong>Other Charges:</strong></td>
-            <td class="text-center" style="width:20%;">{{ number_format($invoice->other_charges, 2) }}</td>
-        </tr>
-        @endif
-        <tr>
-            <td class="no-border text-end" style="width:90%;"><strong>Total Amount Due:</strong></td>
-            <td class="text-center" style="width:30%;"><strong>{{ number_format($invoice->grand_total, 2) }}</strong></td>
-        </tr>
-    </table>
-
-    <p class="check-note">PLEASE MAKE ALL CHECKS PAYABLE TO: <b>AVT HARDWARE TRADING</b></p>
-
-    <!-- Signature boxes -->
-    <div class="wrapper">
-        <div class="item-box">
-            <div class="item1">Prepared by:</div>
-        </div>
-        <div class="item-box">
-            <div class="item2">Checked by:</div>
-        </div>
-        <div class="item-box received-box">
-            <div class="item3">
-                <p>Received the above articles in good order and conditions.</p>
-                <p class="signature-line">By: ____________________________</p>
-                <p class="signature-label">(Authorized Signature over Printed Name)</p>
+        <!-- Invoice Info -->
+        <div class="d-flex justify-content-between">
+            <div>
+                <h6><strong>DELIVERY RECEIPT</strong></h6>
+                <p>
+                    CUSTOMER: {{ $invoice->customer->name ?? 'N/A' }} <br>
+                    ADDRESS: {{ $invoice->customer->address ?? 'N/A' }} <br>
+                    CONTACT NO: {{ $invoice->customer->phone ?? 'N/A' }}
+                </p> 
+            </div>
+            <div class="text-end" style="margin-right:20px;">
+                <p>
+                    DR #: {{ $invoice->invoice_number }} <br>
+                    DR Date: {{ \Carbon\Carbon::parse($invoice->invoice_date)->format('M d, Y') }} <br>
+                    Due: {{ \Carbon\Carbon::parse($invoice->due_date)->format('M d, Y') }} <br>
+                    Terms: {{ $invoice->paymentMode->name ?? 'N/A' }} ({{ $invoice->paymentMode->term ?? 'N/A' }} Days) <br>
+                    Salesman: {{ optional($invoice->salesman_relation)->salesman_name ?? 'N/A' }}
+                </p>
             </div>
         </div>
+        <hr>
+
+        <!-- Remarks -->
+        @if(!empty($invoice->remarks))
+            <p style="margin:0 0 5px 0;">Remarks: {{ $invoice->remarks }}</p>
+        @endif
+
+        <!-- Products Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>QTY</th>
+                    <th>UNIT</th>
+                    <th>PRODUCT DESCRIPTION</th>
+                    <th>UNIT PRICE</th>
+                    <th>DISCOUNT</th>
+                    <th>AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($invoice->sales as $item)
+                <tr>
+                    <td>{{ $item->qty }}</td>
+                    <td>{{ $item->product->unit->name ?? 'pcs' }}</td>
+                    <td>{{ $item->product->product_name ?? 'N/A' }}</td>
+                    <td class="text-center">{{ number_format($item->price, 2) }}</td>
+                    <td class="text-center" style="font-size:14px;"> 
+                        @php
+                            $discounts = [];
+
+                            foreach ([$item->discount_1, $item->discount_2, $item->discount_3] as $discount) {
+                                if ($discount > 0) {
+                                    $formatted = fmod($discount, 1) == 0
+                                        ? (int)$discount      
+                                        : rtrim(rtrim($discount, '0'), '.'); // decimal
+
+                                    $discounts[] = $formatted . '%';
+                                }
+                            }
+                        @endphp
+
+                        @if(count($discounts))
+                            {{ ucfirst($item->discount_less_add) }} {{ implode(' ', $discounts) }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="text-center">{{ number_format($item->amount, 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center">No products found.</td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+
+        <!-- Totals Table -->
+        <table class="table" style="margin-top:0;">
+            @if($invoice->discount_type === 'overall' && $invoice->discount_value > 0)
+            <tr>
+                <td class="no-border text-end" style="width:80%;"><strong>Overall Discount:</strong></td>
+                <td class="text-center" style="width:20%;">{{ $invoice->discount_value }}%</td>
+            </tr>
+            @endif
+            @if($invoice->shipping_fee > 0)
+            <tr>
+                <td class="no-border text-end" style="width:80%;"><strong>Shipping Fee:</strong></td>
+                <td class="text-center" style="width:20%;">{{ number_format($invoice->shipping_fee, 2) }}</td>
+            </tr>
+            @endif
+            @if($invoice->other_charges > 0)
+            <tr>
+                <td class="no-border text-end" style="width:80%;"><strong>Other Charges:</strong></td>
+                <td class="text-center" style="width:20%;">{{ number_format($invoice->other_charges, 2) }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td class="no-border text-end" style="width:90%;"><strong>Total Amount Due:</strong></td>
+                <td class="text-center" style="width:30%;"><strong>{{ number_format($invoice->grand_total, 2) }}</strong></td>
+            </tr>
+        </table>
     </div>
-     <div class="warning-text" style="margin-bottom: 20px; font-weight: bold; color: black; font-size:14px; text-transform: uppercase;">
-        Strictly no cash advances, any cash or stock given to designated agent will not be deducted from your account.
+    <div class="fix-dr-footer">
+        <p class="check-note">PLEASE MAKE ALL CHECKS PAYABLE TO: <b>AVT HARDWARE TRADING</b></p>
+        <!-- Signature boxes -->
+        <div class="wrapper">
+            <div class="item-box">
+                <div class="item1">Prepared by:</div>
+            </div>
+            <div class="item-box">
+                <div class="item2">Checked by:</div>
+            </div>
+            <div class="item-box received-box">
+                <div class="item3">
+                    <p>Received the above articles in good order and conditions.</p>
+                    <p class="signature-line">By: ____________________________</p>
+                    <p class="signature-label">(Authorized Signature over Printed Name)</p>
+                </div>
+            </div>
+        </div>
+        <div class="warning-text" style="margin-bottom: 20px; font-weight: bold; color: black; font-size:14px; text-transform: uppercase;">
+            Strictly no cash advances, any cash or stock given to designated agent will not be deducted from your account.
+        </div>
     </div>
     <br>
     @if($invoice->is_printed)
@@ -281,8 +292,6 @@
             </button>
         </div>
     @endif
-
-</div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
