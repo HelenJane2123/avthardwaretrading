@@ -122,7 +122,7 @@
                                         <th>Price</th>
                                         <th>Discounts</th>
                                         <th>Total</th>
-                                        <th>Payment Method</th>
+                                        <th>Payment Term</th>
                                         <th>Salesman</th>
                                     </tr>
                                 </thead>

@@ -48,8 +48,6 @@ class HomeController extends Controller
         $totalCollections = Collection::sum('amount_paid');
         $totalCustomer = Customer::count();
         $totalSales = Invoice::whereIn('invoice_status', [
-                    'pending',
-                    'approved',
                     'printed'
                 ])->sum('grand_total');
         $totalPurchases = Purchase::where('is_completed', 1)

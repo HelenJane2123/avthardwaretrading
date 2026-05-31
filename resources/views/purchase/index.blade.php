@@ -134,13 +134,18 @@
                                                         </button>
                                                     @endif
                                                 @endif
+                                                <a class="btn btn-primary btn-sm" 
+                                                    href="{{ route('purchase.edit', $purchase->id) }}" 
+                                                    title="Edit">
+                                                        <i class="fa fa-edit"></i>
+                                                </a>
                                                 {{-- Edit --}}
                                                 @if ($purchase->is_approved !== 1)
-                                                    <a class="btn btn-primary btn-sm" 
+                                                    <!-- <a class="btn btn-primary btn-sm" 
                                                         href="{{ route('purchase.edit', $purchase->id) }}" 
                                                         title="Edit">
                                                             <i class="fa fa-edit"></i>
-                                                    </a>
+                                                    </a> -->
                                                     @if(auth()->user()->user_role === 'super_admin')
                                                         <button class="btn btn-success btn-sm" onclick="approvePurchase({{ $purchase->id }})">
                                                             <i class="fa fa-check"></i> Approve

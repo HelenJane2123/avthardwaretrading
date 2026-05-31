@@ -586,7 +586,7 @@ class ReportController extends Controller
     /**
      * Export sales report to Excel.
      */
-    public function exportSales(Request $request)
+    public function exportSales(Request $request) 
     {
         $customerId = $request->input('customer_id');
         $productId  = $request->input('product_id');
@@ -628,14 +628,15 @@ class ReportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Sales Report');
 
-        // Header Section
-        $sheet->mergeCells('A1:O1');
+        $sheet->mergeCells('A1:S1');
         $sheet->setCellValue('A1', "AVT Hardware Trading - Sales Report");
-        $sheet->getStyle('A1:O1')->applyFromArray([
+
+        $sheet->getStyle('A1:S1')->applyFromArray([
             'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => 'FFFFFFFF']],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
         ]);
+
         $sheet->getRowDimension(1)->setRowHeight(28);
 
         $sheet->fromArray([
@@ -658,23 +659,51 @@ class ReportController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Table Header
+        // Header
         $headerRow = 10;
+
         $headers = [
             'Invoice #','Customer','Payment Method','Invoice Date','Due Date','Salesman','Location','Description',
-            'Qty','Price','Total','Discount 1', 'Discount 2','Discount 3', 'Discount Type','Discount %','Discount Amount','Sub Total','Grand Total'
+            'Qty','Price','Total','Discount 1','Discount 2','Discount 3','Discount Type','Discount %','Discount Amount','Sub Total', 'Grand Total'
         ];
+
         $sheet->fromArray($headers, null, "A{$headerRow}");
+
         $sheet->getStyle("A{$headerRow}:S{$headerRow}")->applyFromArray([
             'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
             'alignment' => ['horizontal' => 'center'],
         ]);
+
         $sheet->freezePane("A" . ($headerRow + 1));
 
         $row = $headerRow + 1;
+        $invoiceTotals = [];
+        $currentInvoice = null;
+        $invoiceStartRow = $row;
 
         foreach ($sales as $record) {
+            if ($currentInvoice !== null && $currentInvoice != $record->invoice_number) {
+                // Add per-invoice total
+                $sheet->setCellValue("R{$row}", "Grand Total:");
+                $sheet->setCellValue("S{$row}", "=SUM(R{$invoiceStartRow}:R".($row-1).")");
+
+                $sheet->getStyle("S{$row}")
+                    ->getNumberFormat()
+                    ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                $sheet->getStyle("R{$row}:S{$row}")->getFont()->setBold(true);
+                $sheet->getStyle("R{$row}:S{$row}")
+                    ->getFill()->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFEFEFEF');
+
+                // Save this invoice total for final GRAND TOTAL
+                $invoiceTotals[] = "S{$row}";
+
+                $row++;
+                $invoiceStartRow = $row;
+            }
+            $currentInvoice = $record->invoice_number;
+
             $qty   = (float) $record->quantity;
             $price = (float) $record->price;
 
@@ -683,18 +712,6 @@ class ReportController extends Controller
             $discount3 = (float) ($record->discount_3 ?? 0);
 
             $discountType = $record->discount_less_add ?? 'less';
-
-            $discountPercent = collect([
-                $discount1,
-                $discount2,
-                $discount3,
-            ])->filter(fn($d) => $d > 0);
-
-            $discountDisplay = $discountPercent
-                ->map(fn($d) => (floor($d) == $d ? number_format($d,0) : number_format($d,2)) . "%")
-                ->implode(', ');
-
-            $originalAmount = (float) ($record->amount ?? 0);
 
             $sheet->fromArray([
                 $record->invoice_number,
@@ -705,41 +722,27 @@ class ReportController extends Controller
                 $record->salesman_name,
                 $record->location,
                 $record->product_name,
-                $qty,                   // I
-                $price,                 // J
-                '',                     // K (formula)
-                $discount1,             // L
-                $discount2,             // M
-                $discount3,             // N
-                $discountType,          // O
-                $discountDisplay,       // P
-                '',                     // Q (formula)
-                '',                     // R (formula)
-                $originalAmount         // S (initial DB value)
+                $qty,
+                $price,
+                '',
+                $discount1,
+                $discount2,
+                $discount3,
+                $discountType,
+                '',
+                '',
+                '' // R column
             ], null, "A{$row}");
 
-            // Total
             $sheet->setCellValue("K{$row}", "=I{$row}*J{$row}");
 
-            // Sequential Discount Amount
             $sheet->setCellValue(
                 "Q{$row}",
                 "=K{$row}-(K{$row}*(1-L{$row}/100)*(1-M{$row}/100)*(1-N{$row}/100))"
             );
 
-            // Computed Subtotal
-            $sheet->setCellValue(
-                "R{$row}",
-                "=K{$row}-Q{$row}"
-            );
-
-            // Grand Total:
-            // If computed subtotal equals original DB amount → keep DB amount
-            // Else → use computed subtotal
-            $sheet->setCellValue(
-                "S{$row}",
-                "=IF(ROUND(R{$row},2)=" . round($originalAmount,2) . "," . round($originalAmount,2) . ",R{$row})"
-            );
+            // Sub Total becomes Grand Total
+            $sheet->setCellValue("R{$row}", "=K{$row}-Q{$row}");
 
             $sheet->setCellValue(
                 "P{$row}",
@@ -747,27 +750,49 @@ class ReportController extends Controller
                 ."&IF(M{$row}>0,IF(L{$row}>0,\", \",\"\")&M{$row}&\"%\",\"\")"
                 ."&IF(N{$row}>0,IF(OR(L{$row}>0,M{$row}>0),\", \",\"\")&N{$row}&\"%\",\"\")"
             );
-            
-            // Number formatting
-            $sheet->getStyle("I{$row}:S{$row}")
+
+            // Highlight Grand Total Column
+            $sheet->getStyle("R{$row}")
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFFFF99');
+
+            $sheet->getStyle("I{$row}:R{$row}")
                 ->getNumberFormat()
                 ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
 
             $row++;
         }
 
-        // Overall Grand Total
-        $sheet->setCellValue("R{$row}", "GRAND TOTAL:");
-        $sheet->setCellValue("S{$row}", "=SUM(S" . ($headerRow+1) . ":S" . ($row-1) . ")");
-        $sheet->getStyle("R{$row}:S{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("S{$row}")
-            ->getNumberFormat()
-            ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-        $sheet->getStyle("R{$row}:S{$row}")
-            ->getFill()->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFFF99');
+        if ($currentInvoice !== null) {
+            $sheet->setCellValue("R{$row}", "Grand Total:");
+            $sheet->setCellValue("S{$row}", "=SUM(R{$invoiceStartRow}:R".($row-1).")");
+            $sheet->getStyle("S{$row}")
+                ->getNumberFormat()
+                ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            $sheet->getStyle("R{$row}:S{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("R{$row}:S{$row}")
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFEFEFEF');
 
-        $sheet->getStyle("A{$headerRow}:S{$row}")
+            $invoiceTotals[] = "S{$row}";
+            $row++;
+        }
+
+        // FINAL GRAND TOTAL: sum only per-invoice totals
+        if (count($invoiceTotals) > 0) {
+            $sumFormula = implode(",", $invoiceTotals);
+            $sheet->setCellValue("R{$row}", "GRAND TOTAL:");
+            $sheet->setCellValue("S{$row}", "=SUM({$sumFormula})");
+            $sheet->getStyle("S{$row}")
+                ->getNumberFormat()
+                ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            $sheet->getStyle("S{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("S{$row}")
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFFCC00');
+        }
+
+        $sheet->getStyle("A{$headerRow}:R{$row}")
             ->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
@@ -1347,7 +1372,6 @@ class ReportController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Purchase Report');
 
-        // ===== Header Section =====
         $sheet->mergeCells('A1:O1');
         $sheet->setCellValue('A1', "AVT Hardware Trading - Purchase Report");
         $sheet->getStyle('A1:O1')->applyFromArray([
@@ -1377,7 +1401,7 @@ class ReportController extends Controller
         $headerRow = 8;
         $headers = [
             'Purchase #','Purchase Date','Supplier','Product','Quantity','Unit Price','Total Amount',
-            'Discount Type','Discount 1','Discount 2','Discount 3','Discount Amount','Grand Total','Payment Term','Remarks'
+            'Discount Type','Discount 1','Discount 2','Discount 3','Discount Amount','Sub Total','Payment Term','Grand Total'
         ];
         $sheet->fromArray($headers, null, "A{$headerRow}");
         $sheet->getStyle("A{$headerRow}:O{$headerRow}")->applyFromArray([
@@ -1389,9 +1413,33 @@ class ReportController extends Controller
 
         // ===== Table Data =====
         $row = $headerRow + 1;
+        $purchaseTotals = [];
+        $currentPurchase = null;
+        $purchaseStartRow = $row;
 
         foreach ($purchases as $record) {
-            $qty = $record->qty ?? 0;
+            if ($currentPurchase !== null && $currentPurchase != $record->po_number) {
+                // Add per-purchase total
+                $sheet->setCellValue("N{$row}", "Grand Total:");
+                $sheet->setCellValue("O{$row}", "=SUM(M{$purchaseStartRow}:M{$row})");
+
+                $sheet->getStyle("O{$row}")
+                    ->getNumberFormat()
+                    ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+                $sheet->getStyle("N{$row}:O{$row}")->getFont()->setBold(true);
+                $sheet->getStyle("N{$row}:O{$row}")
+                    ->getFill()->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFEFEFEF');
+
+                // Save this purchase total for final GRAND TOTAL
+                $purchaseTotals[] = "O{$row}";
+
+                $row++;
+                $purchaseStartRow = $row;
+            }
+            $currentPurchase = $record->po_number;
+
+            $qty = $record->qty ?? 0;   
             $unitPrice = $record->unit_price ?? 0;
 
             // Base cells
@@ -1419,9 +1467,8 @@ class ReportController extends Controller
                 $record->discount_2 ?? 0,
                 $record->discount_3 ?? 0,
                 '', // Discount Amount
-                '', // Grand Total
+                '', // Sub Total
                 $record->payment_method ?? '',
-                $record->remarks ?? ''
             ], null, "A{$row}");
 
             // Discount Amount = difference caused by sequential discounts
@@ -1445,21 +1492,50 @@ class ReportController extends Controller
             $row++;
         }
 
-        // ===== Grand Total Row =====
-        $sheet->setCellValue("L{$row}", "GRAND TOTAL:");
-        $sheet->setCellValue("M{$row}", "=SUM(M" . ($headerRow+1) . ":M" . ($row-1) . ")");
-        $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
-        $sheet->getStyle("L{$row}:M{$row}")
-            ->getFill()->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFFF99');
+        if ($currentPurchase !== null) {
+            $sheet->setCellValue("N{$row}", "Grand Total:");
+            $sheet->setCellValue("O{$row}", "=SUM(M{$purchaseStartRow}:M{$row})");
+            $sheet->getStyle("O{$row}")
+                ->getNumberFormat()
+                ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+            $sheet->getStyle("L{$row}:O{$row}")->getFont()->setBold(true);
+            $sheet->getStyle("L{$row}:O{$row}")
+                ->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFEFEFEF');
 
-        // ===== Borders =====
+            $purchaseTotals[] = "O{$row}";
+            $row++;
+        }
+
+        // FINAL GRAND TOTAL: sum only per-invoice totals
+        if (!empty($purchaseTotals)) {
+            $sumFormula = implode(',', $purchaseTotals);
+
+            $sheet->setCellValue("N{$row}", "GRAND TOTAL:");
+            $sheet->setCellValue("O{$row}", "=SUM($sumFormula)");
+
+            $sheet->getStyle("O{$row}")
+                ->getNumberFormat()
+                ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+
+            $sheet->getStyle("O{$row}")->getFont()->setBold(true);
+
+            $sheet->getStyle("O{$row}")
+                ->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()
+                ->setARGB('FFFFCC00');
+        }
+
         $sheet->getStyle("A{$headerRow}:O{$row}")
             ->getBorders()->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
-        foreach (range('A','O') as $col) { $sheet->getColumnDimension($col)->setAutoSize(true); }
+        foreach (range('A','O') as $col) { 
+            $sheet->getColumnDimension($col)->setAutoSize(true); 
+        }
 
+        // Write the spreadsheet to a file and return as download
         $writer = new Xlsx($spreadsheet);
         $fileName = 'Purchase_Report_' . now()->format('Ymd_His') . '.xlsx';
 
@@ -1467,6 +1543,7 @@ class ReportController extends Controller
             $writer->save('php://output');
         }, $fileName);
     }
+
     public function collection_report(Request $request)
     {
         $customerId = $request->customer_id ?? null;

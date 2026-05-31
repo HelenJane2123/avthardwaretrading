@@ -528,7 +528,7 @@ class ExportController extends Controller
             'items.supplierItem',
             'payments',
             'paymentMode'
-        ])->orderByRaw('CAST(po_number AS UNSIGNED) ASC')->get();
+        ])->orderBy('created_at', 'asc')->get();
 
         $spreadsheet = new Spreadsheet();
 
@@ -536,53 +536,118 @@ class ExportController extends Controller
         $summarySheet = $spreadsheet->getActiveSheet();
         $summarySheet->setTitle('Summary Purchases');
 
-        $summaryHeaders = ['PO Number', 'Date', 'Supplier', 'Payment Method', 'Grand Total'];
-        $summarySheet->fromArray($summaryHeaders, null, "A1");
-        $summarySheet->getStyle("A1:E1")->getFont()->setBold(true);
+        // Header for total purchases (overall grand total)
+        $summarySheet->setCellValue("D1", "Total Purchases");
+        $summarySheet->getStyle("D1")->getFont()->setBold(true);
 
-        $summaryRow = 2;
-        $totalPurchases = 0;
+        $summaryHeaders = ['PO Number', 'Date', 'Supplier', 'Terms', 'Sub Total'];
 
-        foreach ($purchases->sortBy('po_number') as $purchase) {
-            $poNumber = $purchase->po_number;
-            $date = $purchase->created_at ? \Carbon\Carbon::parse($purchase->created_at)->format('F j, Y') : '';
-            $supplier = $purchase->supplier->name ?? 'N/A';
-            $paymentMethod = $purchase->paymentMode->name ?? 'N/A';
-            $grandTotal = $purchase->grand_total ?? 0;
+        $summarySheet->fromArray($summaryHeaders, null, "A2");
+        $summarySheet->getStyle("A2:E2")->getFont()->setBold(true);
 
-            $summarySheet->setCellValue("A{$summaryRow}", $poNumber);
-            $summarySheet->setCellValue("B{$summaryRow}", $date);
-            $summarySheet->setCellValue("C{$summaryRow}", $supplier);
-            $summarySheet->setCellValue("D{$summaryRow}", $paymentMethod);
-            $summarySheet->setCellValue("E{$summaryRow}", $grandTotal);
+        $summaryRow = 3;
 
-            $summarySheet->getStyle("E{$summaryRow}")
+        // Group by supplier
+        $purchasesBySupplier = $purchases->groupBy(fn($p) => $p->supplier->name ?? 'N/A');
+
+        foreach ($purchasesBySupplier as $supplierName => $supplierPurchases) {
+            // Supplier header
+            $summarySheet->setCellValue("A{$summaryRow}", "SUPPLIER: {$supplierName}");
+            $summarySheet->mergeCells("A{$summaryRow}:E{$summaryRow}");
+            $summarySheet->getStyle("A{$summaryRow}")->getFont()->setBold(true)->setSize(12);
+
+            // Highlight supplier header row (yellow fill)
+            $summarySheet->getStyle("A{$summaryRow}:F{$summaryRow}")
+                ->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFFF99');
+
+            $summaryRow++;
+
+            // Group by month within supplier
+            $purchasesByMonth = $supplierPurchases->groupBy(function ($p) {
+                return \Carbon\Carbon::parse($p->created_at)->format('F Y');
+            });
+
+            foreach ($purchasesByMonth as $month => $monthPurchases) {
+                $monthStartRow = $summaryRow;
+
+                foreach ($monthPurchases->sortBy('created_at') as $purchase) {
+                    $poNumber = $purchase->po_number;
+                    $date = $purchase->created_at
+                        ? \Carbon\Carbon::parse($purchase->created_at)->format('F j, Y')
+                        : '';
+                    $paymentMethod = $purchase->paymentMode->name ?? 'N/A';
+                    $grandTotal = $purchase->grand_total ?? 0;
+
+                    $summarySheet->setCellValue("A{$summaryRow}", $poNumber);
+                    $summarySheet->setCellValue("B{$summaryRow}", $date);
+                    $summarySheet->setCellValue("C{$summaryRow}", $supplierName);
+                    $summarySheet->setCellValue("D{$summaryRow}", $paymentMethod);
+                    $summarySheet->setCellValue("E{$summaryRow}", $grandTotal);
+
+                    $summarySheet->getStyle("E{$summaryRow}")
+                        ->getNumberFormat()
+                        ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+
+                    $summaryRow++;
+                }
+
+                // Monthly Grand Total row for supplier (columns E label, F value)
+                $endRow = $summaryRow - 1;
+                $summarySheet->setCellValue("E{$summaryRow}", "Grand Total ({$month})");
+                $summarySheet->setCellValue("F{$summaryRow}", "=SUM(E{$monthStartRow}:E{$endRow})");
+
+                $summarySheet->getStyle("E{$summaryRow}:F{$summaryRow}")->getFont()->setBold(true);
+                $summarySheet->getStyle("E{$summaryRow}:F{$summaryRow}")
+                    ->getFill()
+                    ->setFillType(Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFCCFFCC'); // light green for totals
+
+                $summarySheet->getStyle("F{$summaryRow}")
+                    ->getNumberFormat()
+                    ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+
+                $summaryRow++;
+            }
+
+            // Supplier overall Grand Total row (columns E label, F value)
+            $supplierStartRow = $summaryRow - count($supplierPurchases);
+            // $summarySheet->setCellValue("F{$summaryRow}", "Grand Total");
+            $summarySheet->setCellValue("G{$summaryRow}", "=SUM(F" . ($summaryRow - count($supplierPurchases) - count($purchasesByMonth)) . ":F" . ($summaryRow - 1) . ")");
+
+            $summarySheet->getStyle("G{$summaryRow}")->getFont()->setBold(true);
+            $summarySheet->getStyle("G{$summaryRow}")
+                ->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFCCFFCC'); // light green
+
+            $summarySheet->getStyle("G{$summaryRow}")
                 ->getNumberFormat()
                 ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
 
-            $totalPurchases += $grandTotal;
-            $summaryRow++;
+            $summaryRow += 2;  // space before next supplier
         }
 
-        // Total Purchases at top
-        $summarySheet->setCellValue("D1", "Total Purchases");
-        $summarySheet->setCellValue("E1", $totalPurchases);
-        $summarySheet->getStyle("D1:E1")->getFont()->setBold(true);
-        $summarySheet->getStyle("E1")
-            ->getNumberFormat()
-            ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-        $summarySheet->getStyle("D1:E1")
+        // Overall grand total for all suppliers combined (cell F1) - formula
+        $summarySheet->setCellValue("E1", "Grand Total");
+        $summarySheet->setCellValue("F1", "=SUM(G3:G" . ($summaryRow - 1) . ")");
+        $summarySheet->getStyle("E1:F1")->getFont()->setBold(true);
+        $summarySheet->getStyle("E1:F1")
             ->getFill()
             ->setFillType(Fill::FILL_SOLID)
-            ->getStartColor()->setARGB('FFFF99');
+            ->getStartColor()->setARGB('FFCCFFCC'); // light green
 
-        foreach (range('A', 'E') as $col) {
+        $summarySheet->getStyle("F1")
+            ->getNumberFormat()
+            ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+
+        // Autofit columns A-F
+        foreach (range('A', 'F') as $col) {
             $summarySheet->getColumnDimension($col)->setAutoSize(true);
         }
 
         // ===== SUPPLIER SHEETS =====
-        $purchasesBySupplier = $purchases->groupBy(fn($p) => $p->supplier->name ?? 'N/A');
-
         foreach ($purchasesBySupplier as $supplierName => $supplierPurchases) {
             $safeSupplier = substr(preg_replace('/[:\\\\\/\?\*\[\]]/', '', $supplierName), 0, 31);
             if (empty($safeSupplier)) $safeSupplier = 'Unknown';
@@ -594,19 +659,20 @@ class ExportController extends Controller
             $supplierPurchases = $supplierPurchases->sortBy('po_number');
             $supplierGrandTotal = $supplierPurchases->sum('grand_total');
 
-            // --- COMPANY NAME ---
+            // COMPANY NAME
             $sheet->setCellValue("A{$row}", $companyName);
             $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(16);
             $row++;
 
-            // --- REPORT TITLE ---
+            // TITLE
             $sheet->setCellValue("A{$row}", "Purchases Report for Supplier: {$supplierName}");
             $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(14);
             $row += 2;
 
-            // --- Total Grand Total for Supplier ---
+            // TOTAL GRAND TOTAL
             $sheet->setCellValue("K{$row}", "TOTAL GRAND TOTAL:");
             $sheet->setCellValue("L{$row}", $supplierGrandTotal);
+
             $sheet->getStyle("K{$row}:L{$row}")->getFont()->setBold(true);
             $sheet->getStyle("L{$row}")
                 ->getNumberFormat()
@@ -615,25 +681,30 @@ class ExportController extends Controller
                 ->getFill()
                 ->setFillType(Fill::FILL_SOLID)
                 ->getStartColor()->setARGB('FFFF99');
+
             $row += 2;
 
-            // --- HEADERS ---
+            // HEADERS
             $headers = [
-                'Date', 'PO Number', 'Supplier', 'Payment Method', 'Description', 'Qty', 'Unit Price', 'Total', 'Discount %', 'Discount Amount', 'Sub Total', 'Grand Total'
+                'Date', 'PO Number', 'Supplier', 'Payment Method', 'Description',
+                'Qty', 'Unit Price', 'Total', 'Discount %', 'Discount Amount',
+                'Sub Total', 'Grand Total'
             ];
+
             $sheet->fromArray($headers, null, "A{$row}");
             $sheet->getStyle("A{$row}:L{$row}")->getFont()->setBold(true);
             $sheet->freezePane("A" . ($row + 1));
-            $row++;
 
+            $row++;
             $startDataRow = $row;
 
             foreach ($supplierPurchases as $purchase) {
                 $poNumber = $purchase->po_number;
-                $date = $purchase->created_at ? \Carbon\Carbon::parse($purchase->created_at)->format('F j, Y') : '';
+                $date = $purchase->created_at
+                    ? \Carbon\Carbon::parse($purchase->created_at)->format('F j, Y')
+                    : '';
                 $paymentMethod = $purchase->paymentMode->name ?? 'N/A';
                 $grandTotal = $purchase->grand_total ?? 0;
-
                 $firstRowOfPurchase = true;
 
                 foreach ($purchase->items as $item) {
@@ -642,7 +713,11 @@ class ExportController extends Controller
                     $unitPrice = $item->unit_price ?? 0;
                     $gross = $qty * $unitPrice;
 
-                    $discounts = array_filter([$item->discount_1 ?? 0, $item->discount_2 ?? 0, $item->discount_3 ?? 0], fn($d) => $d != 0);
+                    $discounts = array_filter([
+                        $item->discount_1 ?? 0,
+                        $item->discount_2 ?? 0,
+                        $item->discount_3 ?? 0
+                    ], fn($d) => $d != 0);
                     $discountType = $item->discount_type ?? 'less';
                     $net = $item->total ?? $gross;
                     $discountAmount = $gross - $net;
@@ -650,12 +725,13 @@ class ExportController extends Controller
                     $discountDisplay = '';
                     if (!empty($discounts)) {
                         $discountDisplay = implode(' + ', array_map(function ($d) use ($discountType) {
-                            $percent = floor($d) == $d ? number_format($d, 0) : number_format($d, 2);
+                            $percent = floor($d) == $d
+                                ? number_format($d, 0)
+                                : number_format($d, 2);
                             return $percent . '% (' . ucfirst($discountType) . ')';
                         }, $discounts));
                     }
 
-                    // Only fill Date, PO Number, Supplier, Payment Method on first row of items
                     if ($firstRowOfPurchase) {
                         $sheet->setCellValue("A{$row}", $date);
                         $sheet->setCellValue("B{$row}", $poNumber);
@@ -671,8 +747,6 @@ class ExportController extends Controller
                     $sheet->setCellValue("I{$row}", $discountDisplay);
                     $sheet->setCellValue("J{$row}", $discountAmount);
                     $sheet->setCellValue("K{$row}", $net);
-
-                    // Leave Grand Total column empty until the end
                     $sheet->setCellValue("L{$row}", '');
 
                     $sheet->getStyle("F{$row}:K{$row}")
@@ -682,9 +756,10 @@ class ExportController extends Controller
                     $row++;
                 }
 
-                // --- GRAND TOTAL ROW per purchase ---
+                // GRAND TOTAL per purchase
                 $sheet->setCellValue("K{$row}", "GRAND TOTAL:");
                 $sheet->setCellValue("L{$row}", $grandTotal);
+
                 $sheet->getStyle("K{$row}:L{$row}")->getFont()->setBold(true);
                 $sheet->getStyle("L{$row}")
                     ->getNumberFormat()
@@ -692,13 +767,11 @@ class ExportController extends Controller
                 $sheet->getStyle("K{$row}:L{$row}")
                     ->getFill()
                     ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFFF99');
+                    ->getStartColor()->setARGB('FFCCFFCC'); // light green
 
                 $row += 2;
             }
 
-
-            // --- BORDERS ---
             $sheet->getStyle("A{$startDataRow}:L{$row}")
                 ->getBorders()
                 ->getAllBorders()
@@ -709,7 +782,6 @@ class ExportController extends Controller
             }
         }
 
-        // Remove default empty sheet if exists
         if ($spreadsheet->getSheetCount() > 1 && $spreadsheet->getSheet(0)->getTitle() === 'Worksheet') {
             $spreadsheet->removeSheetByIndex(0);
         }
@@ -721,7 +793,6 @@ class ExportController extends Controller
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
-
 
     /**
      * Export payment collections.
