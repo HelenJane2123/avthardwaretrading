@@ -79,7 +79,7 @@
                                     <option value="">All Salesmen</option>
                                     @foreach($salesmen as $salesman)
                                         <option value="{{ $salesman->salesman }}" 
-                                            {{ request('salesman_name') == $salesman->salesman ? 'selected' : '' }}>
+                                            {{ request('salesman_id') == $salesman->salesman ? 'selected' : '' }}>
                                             {{ $salesman->salesman_name }}
                                         </option>
                                     @endforeach

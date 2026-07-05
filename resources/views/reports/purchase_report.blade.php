@@ -111,7 +111,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No purchases found.</td>
+                                            <td colspan="9" class="text-center">No purchases found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -170,13 +170,6 @@
                 }
             }
         });
-        // if (!$.fn.DataTable.isDataTable('#purchaseTable')) {
-        //     purchaseTable = $('#purchaseTable').DataTable({
-        //         pageLength: 25,
-        //         order: [[2, 'desc']],
-        //         responsive: true
-        //     });
-        // }
         flatpickr("#start_date", {
             dateFormat: "F d, Y",
             altInput: true,

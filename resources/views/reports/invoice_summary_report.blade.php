@@ -31,8 +31,10 @@
                                         name="start_date"
                                         id="start_date"
                                         class="form-control form-control-sm"
-                                        value="{{ now()->startOfYear()->format('F d, Y') }}"
-                                        readonly
+                                        value="{{ request('start_date')
+                                            ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                            : now()->startOfYear()->format('F d, Y') }}"
+                                    >
                                     >
                                 </div>
                                 <!-- End Date -->
