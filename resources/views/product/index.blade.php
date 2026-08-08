@@ -20,11 +20,11 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <a class="btn btn-sm btn-primary" href="{{route('product.create')}}">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <a class="btn btn-sm btn-primary shadow-sm" href="{{route('product.create')}}">
                 <i class="fa fa-plus"></i> Add Product
             </a>
-            <a href="{{ route('export.products') }}" class="btn btn-sm btn-success">
+            <a href="{{ route('export.products') }}" class="btn btn-sm btn-success shadow-sm">
                 <i class="fa fa-file-excel-o"></i> Export to Excel
             </a>
         </div>
@@ -51,17 +51,15 @@
                     <h3 class="tile-title mb-3"><i class="fa fa-table"></i> Inventory List Records</h3>
                     <div class="tile-body">
                         <div class="d-flex justify-content-end align-items-center mb-3 flex-wrap gap-2">
-                            <!-- Filter by Supplier -->
-                            <div class="mr-2">
-                                <label for="filterSupplier" class="me-2 mb-0">Filter by Supplier:</label>
+                            <div class="bg-light px-3 py-2 rounded">
+                                <label for="filterSupplier" class="me-2 mb-0 small fw-bold">Supplier:</label>
                                 <select id="filterSupplier" class="form-control form-control-sm d-inline-block w-auto">
                                     <option value="">All Suppliers</option>
                                 </select>
                             </div>
 
-                            <!-- Filter by Product Status -->
-                            <div class="mr-2">
-                                <label for="filterProdStatus" class="me-2 mb-0">Filter by Product Status:</label>
+                            <div class="bg-light px-3 py-2 rounded">
+                                <label for="filterProdStatus" class="me-2 mb-0 small fw-bold">Status:</label>
                                 <select id="filterProdStatus" class="form-control form-control-sm d-inline-block w-auto">
                                     <option value="">All Status</option>
                                 </select>
@@ -97,14 +95,22 @@
                                             <td>{{ $add->supplier->name }}</td>
                                             <td>{{ $add->product->threshold }}</td>
                                             <td>
-                                                @if ($add->product->status === 'In Stock' && $add->product->remaining_stock > 0)
-                                                    <span class="badge badge-success">{{ $add->product->status }}</span>
-                                                @elseif ($add->product->status === 'Low Stock')
-                                                    <span class="badge badge-warning">{{ $add->product->status }}</span>
-                                                @elseif ($add->product->remaining_stock <= 0 || $add->product->remaining_stock === null)
-                                                    <span class="badge badge-danger">{{ $add->product->status }}</span>
+                                                @if ($add->product->is_active == 1)
+                                                    <span class="badge badge-secondary">Deactivated</span>
                                                 @else
-                                                    <span class="badge badge-secondary">{{ $add->product->status }}</span>
+                                                    <span class="badge badge-success">Active</span>
+                                                @endif
+
+                                                @if ($add->product->is_active == 0)
+                                                    @if ($add->product->status === 'In Stock' && $add->product->remaining_stock > 0)
+                                                        <span class="badge badge-success">{{ $add->product->status }}</span>
+                                                    @elseif ($add->product->status === 'Low Stock')
+                                                        <span class="badge badge-warning">{{ $add->product->status }}</span>
+                                                    @elseif ($add->product->remaining_stock <= 0 || $add->product->remaining_stock === null)
+                                                        <span class="badge badge-danger">{{ $add->product->status }}</span>
+                                                    @else
+                                                        <span class="badge badge-secondary">{{ $add->product->status }}</span>
+                                                    @endif
                                                 @endif
                                             </td>                                            
                                             <td>{{ $add->product->created_at->format('F d, Y') }}</td>
@@ -119,12 +125,22 @@
                                                         <i class="fa fa-eye"></i>
                                                     </button>
 
-                                                    <!-- Edit -->
                                                     <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
                                                         <i class="fa fa-edit"></i>
                                                     </a>
 
-                                                    <!-- Delete -->
+                                                    @if($add->product->is_active == 0)
+                                                        <button class="btn btn-warning btn-sm" type="button"
+                                                                onclick="toggleProductStatus('{{ $add->product->id }}', 'deactivate')">
+                                                            <i class="fa fa-ban"></i>
+                                                        </button>
+                                                    @else
+                                                        <button class="btn btn-success btn-sm" type="button"
+                                                                onclick="toggleProductStatus('{{ $add->product->id }}', 'activate')">
+                                                            <i class="fa fa-check"></i>
+                                                        </button>
+                                                    @endif
+
                                                     <button class="btn btn-danger btn-sm" type="button" 
                                                             onclick="deleteTag('{{ $add->product->id }}', '{{ $add->product->product_name }}')">
                                                         <i class="fa fa-trash"></i>
@@ -209,6 +225,45 @@
                 .draw();
         });
 
+
+        function toggleProductStatus(productId, action) {
+            const actionText = action === 'deactivate' ? 'Deactivate' : 'Activate';
+            Swal.fire({
+                title: `${actionText} this product?`,
+                text: `Are you sure you want to ${actionText.toLowerCase()} this product?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: `Yes, ${actionText}`
+            }).then(function(result) {
+                if (result.value) {
+                    fetch(`{{ url('/product') }}/${productId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: new URLSearchParams({
+                            _method: 'PATCH'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Success', `Product ${actionText.toLowerCase()}d.`, 'success')
+                                .then(() => window.location.reload());
+                        } else {
+                            Swal.fire('Error', 'Unable to update the product status.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'Unable to update the product status.', 'error');
+                    });
+                }
+            });
+        }
 
         function deleteTag(productId, productName) {
             Swal.fire({

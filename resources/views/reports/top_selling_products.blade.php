@@ -13,79 +13,94 @@
         </div>
     </div>
     <div class="tile shadow-sm">
-        <form method="GET"
-              action="{{ route('reports.top_selling_products') }}"
-              class="d-flex flex-column align-items-center gap-4 mb-4">
-
-            <div class="d-flex flex-wrap justify-content-center gap-4 w-100">
-                <div class="col-md-2">
-                    <label>Year</label>
-                    <select name="year" class="form-control form-control-sm">
-                        @for ($i = date('Y'); $i >= 2020; $i--)
-                            <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
-                                {{ $i }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label>Month</label>
-                    <select name="month" class="form-control form-control-sm">
-                        <option value="">All</option>
-                        @for ($i=1; $i<=12; $i++)
-                            <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
-                                {{ date('F', mktime(0,0,0,$i,1)) }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label>Quarter</label>
-                    <select name="quarter" class="form-control form-control-sm">
-                        <option value="">All</option>
-                        @for ($i=1; $i<=4; $i++)
-                            <option value="{{ $i }}" {{ request('quarter') == $i ? 'selected' : '' }}>
-                                Q{{ $i }}
-                            </option>
-                        @endfor
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label>Location</label>
-                    <select name="location" class="form-control form-control-sm">
-                        <option value="">All</option>
-                        @foreach($locations as $loc)
-                            <option value="{{ $loc->location }}" {{ request('location') == $loc->location ? 'selected' : '' }}>
-                                {{ $loc->location }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label>Salesman</label>
-                    <select name="salesman" id="salesman" class="form-control form-control-sm">
-                        <option value="">All Salesmen</option>
-                        @foreach($salesman as $s)
-                            <option value="{{ $s->id }}"
-                                {{ request('salesman') == $s->id ? 'selected' : '' }}>
-                                {{ $s->salesman_name }}
-                            </option>
-                        @endforeach
-                    </select>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                        <small class="text-muted">Use the filters below to narrow top selling product results.</small>
+                    </div>
+                    <a href="{{ route('reports.top_selling_products') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa fa-times"></i> Clear Filters
+                    </a>
                 </div>
             </div>
-            <div class="d-flex gap-2 mt-2">
-                <button class="btn btn-primary">Filter</button>
-                <a href="{{ route('reports.top_selling_products') }}"
-                   class="btn btn-secondary">Reset</a>
-                <a href="{{ route('reports.top_selling_products_export', request()->all()) }}"
-                   class="btn btn-success">Export Excel</a>
+            <div class="card-body">
+                <form method="GET"
+                      action="{{ route('reports.top_selling_products') }}"
+                      class="d-flex flex-column align-items-center gap-4 mb-4">
+
+                    <div class="d-flex flex-wrap justify-content-center gap-4 w-100">
+                        <div class="col-md-2">
+                            <label>Year</label>
+                            <select name="year" class="form-control form-control-sm">
+                                @for ($i = date('Y'); $i >= 2020; $i--)
+                                    <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
+                                        {{ $i }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label>Month</label>
+                            <select name="month" class="form-control form-control-sm">
+                                <option value="">All</option>
+                                @for ($i=1; $i<=12; $i++)
+                                    <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                        {{ date('F', mktime(0,0,0,$i,1)) }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label>Quarter</label>
+                            <select name="quarter" class="form-control form-control-sm">
+                                <option value="">All</option>
+                                @for ($i=1; $i<=4; $i++)
+                                    <option value="{{ $i }}" {{ request('quarter') == $i ? 'selected' : '' }}>
+                                        Q{{ $i }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label>Location</label>
+                            <select name="location" class="form-control form-control-sm">
+                                <option value="">All</option>
+                                @foreach($locations as $loc)
+                                    <option value="{{ $loc->location }}" {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                        {{ $loc->location }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label>Salesman</label>
+                            <select name="salesman" id="salesman" class="form-control form-control-sm">
+                                <option value="">All Salesmen</option>
+                                @foreach($salesman as $s)
+                                    <option value="{{ $s->id }}"
+                                        {{ request('salesman') == $s->id ? 'selected' : '' }}>
+                                        {{ $s->salesman_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <button class="btn btn-primary">Filter</button>
+                        <a href="{{ route('reports.top_selling_products') }}"
+                           class="btn btn-secondary">Reset</a>
+                        <a href="{{ route('reports.top_selling_products_export', request()->all()) }}"
+                           class="btn btn-success">Export Excel</a>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
 
         {{-- TABLE --}}
         <div class="table-responsive mt-3">

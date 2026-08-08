@@ -69,6 +69,7 @@ Route::resource('supplier', SupplierController::class);
 Route::resource('supplier-items', SupplierItemController::class);
 Route::resource('customer', CustomerController::class);
 Route::resource('product', ProductController::class);
+Route::match(['get', 'patch', 'post'], '/product/{id}/toggle-status', [ProductController::class, 'toggleStatus'])->name('product.toggleStatus');
 Route::resource('invoice', InvoiceController::class)->except([
     'update', 'show', 'destroy'
 ]);

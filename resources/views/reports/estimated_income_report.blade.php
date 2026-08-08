@@ -23,102 +23,116 @@
                     <div class="tile-body">
                         <div class="container">
                             {{-- Filters --}}
-                            <form method="GET" action="{{ route('reports.estimated_income_report') }}">
-                                <div class="row align-items-end g-2">
-                                    <!-- Filter Type -->
-                                    <div class="col-md-2">
-                                        <label class="form-label">Filter Type</label>
-                                        <select name="filter_type" class="form-control form-control-sm">
-                                            <option value="weekly" {{ request('filter_type')=='weekly'?'selected':'' }}>Weekly</option>
-                                            <option value="monthly" {{ request('filter_type')=='monthly'?'selected':'' }}>Monthly</option>
-                                            <option value="quarterly" {{ request('filter_type')=='quarterly'?'selected':'' }}>Quarterly</option>
-                                            <option value="custom" {{ request('filter_type')=='custom'?'selected':'' }}>Custom</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Start Date -->
-                                    <div class="col-md-2">
-                                        <label class="form-label">Start Date</label>
-                                        <input
-                                            type="text"
-                                            name="start_date"
-                                            id="start_date"
-                                            class="form-control form-control-sm"
-                                            value="{{ request('start_date')
-                                                ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                                : now()->startOfMonth()->format('F d, Y') }}"
-                                        >
-
-                                    </div>
-
-                                    <!-- End Date -->
-                                    <div class="col-md-2">
-                                        <label class="form-label">End Date</label>
-                                        <input
-                                            type="text"
-                                            name="end_date"
-                                            id="end_date"
-                                            class="form-control form-control-sm"
-                                            value="{{ request('end_date')
-                                                ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                                : now()->format('F d, Y') }}"
-                                        >
-                                    </div>
-
-                                    <!-- Customer -->
-                                    <div class="col-md-3">
-                                        <label class="form-label">Customer</label>
-                                        <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
-                                            <option value="">-- All Customers --</option>
-                                            @foreach($customers as $customer)
-                                                <option value="{{ $customer->id }}"
-                                                    {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                                                    {{ $customer->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <!-- Product -->
-                                    <div class="col-md-3">
-                                        <label class="form-label">Product</label>
-                                        <select name="product_id" id="productSelect" class="form-control form-control-sm">
-                                            <option value="">-- All Products --</option>
-                                            @foreach($products as $product)
-                                                <option value="{{ $product->id }}"
-                                                    {{ request('product_id') == $product->id ? 'selected' : '' }}>
-                                                    {{ $product->product_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <!-- Location -->
-                                    <div class="col-md-3">
-                                        <label class="form-label">Location</label>
-                                        <select name="location" id="locationSelect" class="form-control form-control-sm">
-                                            <option value="">-- All Locations --</option>
-                                            @foreach($locations as $loc)
-                                                <option value="{{ $loc->location }}"
-                                                    {{ request('location') == $loc->location ? 'selected' : '' }}>
-                                                    {{ $loc->location }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <!-- Buttons -->
-                                    <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
-                                        <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filter</button>
-                                        <a href="{{ route('reports.estimated_income_export', request()->all()) }}" class="btn btn-success">
-                                            <i class="fa fa-file-excel-o"></i> Export
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                            <small class="text-muted">Use the filters below to narrow estimated income results.</small>
+                                        </div>
+                                        <a href="{{ route('reports.estimated_income_report') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-times"></i> Clear Filters
                                         </a>
-                                        <button type="button" id="clearFilters" class="btn btn-secondary">
-                                            <i class="fa fa-eraser"></i> Clear Filters
-                                        </button>
                                     </div>
                                 </div>
-                            </form>
+                                <div class="card-body">
+                                    <form method="GET" action="{{ route('reports.estimated_income_report') }}">
+                                        <div class="row align-items-end g-2">
+                                            <!-- Filter Type -->
+                                            <div class="col-md-2">
+                                                <label class="form-label">Filter Type</label>
+                                                <select name="filter_type" class="form-control form-control-sm">
+                                                    <option value="weekly" {{ request('filter_type')=='weekly'?'selected':'' }}>Weekly</option>
+                                                    <option value="monthly" {{ request('filter_type')=='monthly'?'selected':'' }}>Monthly</option>
+                                                    <option value="quarterly" {{ request('filter_type')=='quarterly'?'selected':'' }}>Quarterly</option>
+                                                    <option value="custom" {{ request('filter_type')=='custom'?'selected':'' }}>Custom</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- Start Date -->
+                                            <div class="col-md-2">
+                                                <label class="form-label">Start Date</label>
+                                                <input
+                                                    type="text"
+                                                    name="start_date"
+                                                    id="start_date"
+                                                    class="form-control form-control-sm"
+                                                    value="{{ request('start_date')
+                                                        ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                                        : now()->startOfMonth()->format('F d, Y') }}"
+                                                >
+                                            </div>
+
+                                            <!-- End Date -->
+                                            <div class="col-md-2">
+                                                <label class="form-label">End Date</label>
+                                                <input
+                                                    type="text"
+                                                    name="end_date"
+                                                    id="end_date"
+                                                    class="form-control form-control-sm"
+                                                    value="{{ request('end_date')
+                                                        ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                                        : now()->format('F d, Y') }}"
+                                                >
+                                            </div>
+
+                                            <!-- Customer -->
+                                            <div class="col-md-3">
+                                                <label class="form-label">Customer</label>
+                                                <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
+                                                    <option value="">-- All Customers --</option>
+                                                    @foreach($customers as $customer)
+                                                        <option value="{{ $customer->id }}"
+                                                            {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                            {{ $customer->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Product -->
+                                            <div class="col-md-3">
+                                                <label class="form-label">Product</label>
+                                                <select name="product_id" id="productSelect" class="form-control form-control-sm">
+                                                    <option value="">-- All Products --</option>
+                                                    @foreach($products as $product)
+                                                        <option value="{{ $product->id }}"
+                                                            {{ request('product_id') == $product->id ? 'selected' : '' }}>
+                                                            {{ $product->product_name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Location -->
+                                            <div class="col-md-3">
+                                                <label class="form-label">Location</label>
+                                                <select name="location" id="locationSelect" class="form-control form-control-sm">
+                                                    <option value="">-- All Locations --</option>
+                                                    @foreach($locations as $loc)
+                                                        <option value="{{ $loc->location }}"
+                                                            {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                                            {{ $loc->location }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Buttons -->
+                                            <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
+                                                <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filter</button>
+                                                <a href="{{ route('reports.estimated_income_export', request()->all()) }}" class="btn btn-success">
+                                                    <i class="fa fa-file-excel-o"></i> Export
+                                                </a>
+                                                <button type="button" id="clearFilters" class="btn btn-secondary">
+                                                    <i class="fa fa-eraser"></i> Clear Filters
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
 
                             {{-- Report Table --}}
                             <div class="table-responsive mt-4">

@@ -130,6 +130,7 @@ class ProductController extends Controller
             $product->threshold = 0;
             $product->volume_less = $request->volume_less;
             $product->regular_less = $request->regular_less;
+            $product->is_active = 0;
 
             // Stock status
             if ($product->remaining_stock <= 0) {
@@ -234,6 +235,7 @@ class ProductController extends Controller
     public function getProductDetails(Request $request)
     {
         $product = Product::with(['productSuppliers.supplier', 'unit', 'category', 'tax'])
+            ->where('is_active', 0)
             ->where('product_code', $request->product_code)
             ->first();
 
@@ -405,7 +407,9 @@ class ProductController extends Controller
 
     public function getProductInfo($id)
     {
-        $product = Product::with(['tax', 'unit'])->findOrFail($id);
+        $product = Product::with(['tax', 'unit'])
+            ->where('is_active', 0)
+            ->findOrFail($id);
 
         $status = 'In Stock';
         if ($product->remaining_stock <= $product->threshold) {
@@ -425,13 +429,46 @@ class ProductController extends Controller
         ]);
     }
 
-    // Suggest items from supplier_items
+    public function toggleStatus(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->is_active == 0) {
+            $product->update([
+                'is_active' => 1,
+                'remaining_stock' => 0,
+                'quantity' => 0,
+                'status' => 'Out of Stock',
+            ]);
+        } else {
+            $product->update([
+                'is_active' => 0,
+                'status' => $product->remaining_stock > 0 ? ($product->remaining_stock <= $product->threshold ? 'Low Stock' : 'In Stock') : 'Out of Stock',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $product->is_active,
+            'status' => $product->status,
+        ]);
+    }
+
+    // Suggest items from supplier_items, excluding deactivated products.
     public function suggest(Request $request)
     {
         $query = $request->get('query');
 
-        $items = SupplierItem::where('item_description', 'LIKE', "%{$query}%")
-            ->orWhere('item_code', 'LIKE', "%{$query}%")
+        $items = SupplierItem::where(function ($q) use ($query) {
+                $q->where('item_description', 'LIKE', "%{$query}%")
+                  ->orWhere('item_code', 'LIKE', "%{$query}%");
+            })
+            ->where(function ($query) {
+                $query->whereDoesntHave('products')
+                      ->orWhereHas('products', function ($query) {
+                          $query->where('is_active', 0);
+                      });
+            })
             ->limit(10)
             ->get(['id', 'item_code', 'item_description', 'item_price', 'supplier_id']);
 
@@ -440,9 +477,14 @@ class ProductController extends Controller
 
     public function list()
     {
-        $products = SupplierItem::select('id', 'item_code', 'item_description')
-                    // ->take(10) // only get 10 records
-                    ->get();
+        $products = SupplierItem::where(function ($query) {
+                    $query->whereDoesntHave('products')
+                          ->orWhereHas('products', function ($query) {
+                              $query->where('is_active', 0);
+                          });
+                })
+                ->select('id', 'item_code', 'item_description')
+                ->get();
 
         return response()->json($products);
     }
@@ -502,8 +544,11 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $term = $request->get('term');
-        $products = Product::where('product_name', 'like', "%{$term}%")
-                    ->orWhere('product_code', 'like', "%{$term}%")
+        $products = Product::where(function($query) use ($term) {
+                        $query->where('product_name', 'like', "%{$term}%")
+                              ->orWhere('product_code', 'like', "%{$term}%");
+                    })
+                    ->where('is_active', 0)
                     ->limit(10)
                     ->get();
 

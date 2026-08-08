@@ -24,52 +24,67 @@
                 <div class="tile-body">
                     <div class="container">
                         {{-- Filters --}}
-                        <form method="GET" action="{{ route('reports.collection_report') }}" class="row g-3 mb-4">
-                            <div class="col-md-2">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input
-                                    type="text"
-                                    name="start_date"
-                                    id="start_date"
-                                    class="form-control form-control-sm"
-                                    value="{{ request('start_date')
-                                        ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
-                                >
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                        <small class="text-muted">Use the filters below to narrow collection results.</small>
+                                    </div>
+                                    <a href="{{ route('reports.collection_report') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa fa-times"></i> Clear Filters
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-2">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input
-                                    type="text"
-                                    name="end_date"
-                                    id="end_date"
-                                    class="form-control form-control-sm"
-                                    value="{{ request('end_date')
-                                        ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
-                                >
+                            <div class="card-body">
+                                <form method="GET" action="{{ route('reports.collection_report') }}" class="row g-3 align-items-end">
+                                    <div class="col-md-2">
+                                        <label for="start_date" class="form-label">Start Date</label>
+                                        <input
+                                            type="text"
+                                            name="start_date"
+                                            id="start_date"
+                                            class="form-control form-control-sm"
+                                            value="{{ request('start_date')
+                                                ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="end_date" class="form-label">End Date</label>
+                                        <input
+                                            type="text"
+                                            name="end_date"
+                                            id="end_date"
+                                            class="form-control form-control-sm"
+                                            value="{{ request('end_date')
+                                                ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Customer</label>
+                                        <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
+                                            <option value="">-- All Customers --</option>
+                                            @foreach($customers as $customer)
+                                                <option value="{{ $customer->id }}"
+                                                    {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                    {{ $customer->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5 d-flex justify-content-end gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa fa-filter"></i> Apply Filters
+                                        </button>
+                                        <a href="{{ route('reports.collection_report_export', request()->all()) }}" class="btn btn-success">
+                                            <i class="fa fa-file-excel-o"></i> Export
+                                        </a>
+                                    </div>
+                                </form>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Customer</label>
-                                <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
-                                    <option value="">-- All Customers --</option>
-                                    @foreach($customers as $customer)
-                                        <option value="{{ $customer->id }}"
-                                            {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                                            {{ $customer->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-12 d-flex justify-content-end align-items-end mt-2">
-                                <button type="submit" class="btn btn-primary me-2">
-                                    <i class="fa fa-filter"></i> Filter
-                                </button>
-                                <a href="{{ route('reports.collection_report_export', request()->all()) }}" class="btn btn-success">
-                                    <i class="fa fa-file-excel-o"></i> Export
-                                </a>
-                            </div>
-                        </form>
+                        </div>
                         <div class="table-responsive mt-3">
                             <table class="table table-bordered table-striped" id="collectionTable">
                                 <thead class="table-dark">

@@ -50,16 +50,18 @@ class PurchaseController extends Controller
     public function create()
     {
         $suppliers = Supplier::all();
-        $products = SupplierItem::all();
+        $products = SupplierItem::where(function ($query) {
+                $query->whereDoesntHave('products')
+                      ->orWhereHas('products', function ($query) {
+                          $query->where('is_active', 0);
+                      });
+            })
+            ->get();
         $units = Unit::all();
         $taxes = Tax::all();
 
         // get all active payment modes
         $paymentModes = ModeOfPayment::where('is_active', 1)->get();
-
-         // get all active payment modes
-        $paymentModes = ModeOfPayment::where('is_active', 1)->get();
-    
 
         //get salesman
         $salesman = Salesman::where('status',1)->get();
@@ -71,6 +73,12 @@ class PurchaseController extends Controller
         try {
             $supplier = Supplier::findOrFail($id);
             $items = SupplierItem::where('supplier_id', $id)
+                ->where(function ($query) {
+                    $query->whereDoesntHave('products')
+                          ->orWhereHas('products', function ($query) {
+                              $query->where('is_active', 0);
+                          });
+                })
                 ->select('id', 'item_code', 'item_description', 'item_price', 'unit_id','discount_less_add','discount_1','discount_2','discount_3')
                 ->get();
 
@@ -122,6 +130,9 @@ class PurchaseController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'remarks' => 'required|string',
+        ]);
 
         DB::transaction(function () use ($request) {
             $purchase = Purchase::create([
@@ -264,6 +275,10 @@ class PurchaseController extends Controller
     {
         try {
             \Log::info('Purchase update request', $request->all());
+
+            $request->validate([
+                'remarks' => 'required|string',
+            ]);
 
             DB::transaction(function () use ($request, $id) {
 
@@ -440,6 +455,15 @@ class PurchaseController extends Controller
                         'purchase_item_id' => $item->id,
                         'product_code' => $item->product_code,
                         'price'      => $item->unit_price
+                    ]);
+                    continue;
+                }
+
+                if ($product->is_active === 1) {
+                    \Log::info('Skipping stock update for deactivated product', [
+                        'product_id' => $product->id,
+                        'product_code' => $product->product_code,
+                        'purchase_item_id' => $item->id
                     ]);
                     continue;
                 }

@@ -25,100 +25,115 @@
     <div class="row">
         <div class="col-md-12">
             <div class="tile">
-                <form method="GET"
-                    action="{{ route('reports.customer_sales_yearly') }}"
-                    class="d-flex flex-column align-items-center gap-4 mb-4">
-
-                    {{-- FILTERS ROW --}}
-                    <div class="d-flex flex-wrap justify-content-center gap-4 w-100">
-
-                        {{-- YEAR --}}
-                        <div class="d-flex flex-column" style="min-width:140px;">
-                            <label class="form-label mb-1">Year</label>
-                            <select name="year" class="form-control form-control-sm w-100">
-                                @for ($i = date('Y'); $i >= 2020; $i--)
-                                    <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
-                                        {{ $i }}
-                                    </option>
-                                @endfor
-                            </select>
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                <small class="text-muted">Use the filters below to narrow yearly customer sales results.</small>
+                            </div>
+                            <a href="{{ route('reports.customer_sales_yearly') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa fa-times"></i> Clear Filters
+                            </a>
                         </div>
-
-                        {{-- MONTH --}}
-                        <div class="d-flex flex-column" style="min-width:160px;">
-                            <label class="form-label mb-1">Month</label>
-                            <select name="month" class="form-control form-control-sm w-100">
-                                <option value="">All Months</option>
-                                @for ($i = 1; $i <= 12; $i++)
-                                    <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
-                                        {{ date('F', mktime(0,0,0,$i,1)) }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-
-                        {{-- QUARTER --}}
-                        <div class="d-flex flex-column" style="min-width:160px;">
-                            <label class="form-label mb-1">Quarter</label>
-                            <select name="quarter" class="form-control form-control-sm w-100">
-                                <option value="">All Quarters</option>
-                                <option value="1" {{ request('quarter') == 1 ? 'selected' : '' }}>Q1</option>
-                                <option value="2" {{ request('quarter') == 2 ? 'selected' : '' }}>Q2</option>
-                                <option value="3" {{ request('quarter') == 3 ? 'selected' : '' }}>Q3</option>
-                                <option value="4" {{ request('quarter') == 4 ? 'selected' : '' }}>Q4</option>
-                            </select>
-                        </div>
-
-                        {{-- LOCATION --}}
-                        <div class="d-flex flex-column" style="min-width:220px;">
-                            <label class="form-label mb-1">Location</label>
-                            <select name="location" id="locationSelect" class="form-control form-control-sm w-100">
-                                <option value="">All Locations</option>
-                                @foreach($locations as $loc)
-                                    <option value="{{ $loc->location }}"
-                                        {{ request('location') == $loc->location ? 'selected' : '' }}>
-                                        {{ $loc->location }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- SALESMAN --}}
-                        <div class="d-flex flex-column" style="min-width:220px;">
-                            <label class="form-label mb-1">Salesman</label>
-                            <select name="salesman" id="salesman" class="form-control form-control-sm w-100">
-                                <option value="">All Salesmen</option>
-                                @foreach($salesman as $s)
-                                    <option value="{{ $s->salesman }}"
-                                        {{ request('salesman') == $s->salesman ? 'selected' : '' }}>
-                                        {{ $s->salesman_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
                     </div>
+                    <div class="card-body">
+                        <form method="GET"
+                            action="{{ route('reports.customer_sales_yearly') }}"
+                            class="d-flex flex-column align-items-center gap-4 mb-4">
 
-                    {{-- BUTTONS ROW --}}
-                    <div class="d-flex gap-2 mt-2">
+                            {{-- FILTERS ROW --}}
+                            <div class="d-flex flex-wrap justify-content-center gap-4 w-100">
 
-                        <button type="submit" class="btn btn-primary">
-                            Filter
-                        </button>
+                                {{-- YEAR --}}
+                                <div class="d-flex flex-column" style="min-width:140px;">
+                                    <label class="form-label mb-1">Year</label>
+                                    <select name="year" class="form-control form-control-sm w-100">
+                                        @for ($i = date('Y'); $i >= 2020; $i--)
+                                            <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
+                                                {{ $i }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
 
-                        <a href="{{ route('reports.customer_sales_yearly') }}"
-                        class="btn btn-secondary">
-                            Reset
-                        </a>
+                                {{-- MONTH --}}
+                                <div class="d-flex flex-column" style="min-width:160px;">
+                                    <label class="form-label mb-1">Month</label>
+                                    <select name="month" class="form-control form-control-sm w-100">
+                                        <option value="">All Months</option>
+                                        @for ($i = 1; $i <= 12; $i++)
+                                            <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                                {{ date('F', mktime(0,0,0,$i,1)) }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                </div>
 
-                        <a href="{{ route('reports.customer_sales_yearly_export', request()->all()) }}"
-                        class="btn btn-success">
-                            Export Excel
-                        </a>
+                                {{-- QUARTER --}}
+                                <div class="d-flex flex-column" style="min-width:160px;">
+                                    <label class="form-label mb-1">Quarter</label>
+                                    <select name="quarter" class="form-control form-control-sm w-100">
+                                        <option value="">All Quarters</option>
+                                        <option value="1" {{ request('quarter') == 1 ? 'selected' : '' }}>Q1</option>
+                                        <option value="2" {{ request('quarter') == 2 ? 'selected' : '' }}>Q2</option>
+                                        <option value="3" {{ request('quarter') == 3 ? 'selected' : '' }}>Q3</option>
+                                        <option value="4" {{ request('quarter') == 4 ? 'selected' : '' }}>Q4</option>
+                                    </select>
+                                </div>
 
+                                {{-- LOCATION --}}
+                                <div class="d-flex flex-column" style="min-width:220px;">
+                                    <label class="form-label mb-1">Location</label>
+                                    <select name="location" id="locationSelect" class="form-control form-control-sm w-100">
+                                        <option value="">All Locations</option>
+                                        @foreach($locations as $loc)
+                                            <option value="{{ $loc->location }}"
+                                                {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                                {{ $loc->location }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- SALESMAN --}}
+                                <div class="d-flex flex-column" style="min-width:220px;">
+                                    <label class="form-label mb-1">Salesman</label>
+                                    <select name="salesman" id="salesman" class="form-control form-control-sm w-100">
+                                        <option value="">All Salesmen</option>
+                                        @foreach($salesman as $s)
+                                            <option value="{{ $s->salesman }}"
+                                                {{ request('salesman') == $s->salesman ? 'selected' : '' }}>
+                                                {{ $s->salesman_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            {{-- BUTTONS ROW --}}
+                            <div class="d-flex gap-2 mt-2">
+
+                                <button type="submit" class="btn btn-primary">
+                                    Filter
+                                </button>
+
+                                <a href="{{ route('reports.customer_sales_yearly') }}"
+                                class="btn btn-secondary">
+                                    Reset
+                                </a>
+
+                                <a href="{{ route('reports.customer_sales_yearly_export', request()->all()) }}"
+                                class="btn btn-success">
+                                    Export Excel
+                                </a>
+
+                            </div>
+
+                        </form>
                     </div>
-
-                </form>
+                </div>
 
                 {{-- TABLE --}}
                 <div class="table-responsive">

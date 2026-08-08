@@ -182,9 +182,20 @@ class CollectionController extends Controller
             $totalPaid = (float) Collection::where('invoice_id', $invoice->id)->sum('amount_paid');
             $balance   = max(0, round($invoice->grand_total - $totalPaid, 2));
 
+            $paymentStatus = 'pending';
+            if ($balance <= 0) {
+                $paymentStatus = 'paid';
+            } elseif ($totalPaid > 0) {
+                $paymentStatus = 'partial';
+            }
+
+            if ($balance > 0 && now()->greaterThan($invoice->due_date)) {
+                $paymentStatus = 'overdue';
+            }
+
             $invoice->update([
                 'outstanding_balance' => $balance,
-                'payment_status'      => $request->payment_status,
+                'payment_status'      => $paymentStatus,
             ]);
         }
 
@@ -214,10 +225,14 @@ class CollectionController extends Controller
 
     public function showDetails($collectionId)
     {
-        $collection = Collection::with(['invoice.customer', 'invoice.paymentMode'])
-            ->findOrFail($collectionId);
+        $collection = Collection::with([
+            'invoice.customer',
+            'invoice.paymentMode',
+            'invoice.collections',
+            'invoice.invoice_date'
+        ])->findOrFail($collectionId);
 
-        return view('collection.partials.details', compact('collection')); 
+        return view('collection.details', compact('collection'));
     }
 
     public function printReceipt($id)

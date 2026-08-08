@@ -1352,203 +1352,372 @@ class ReportController extends Controller
         $productId  = $request->product_id ?? null;
         $supplierId = $request->supplier_id ?? null;
 
-        $startDate = $request->filled('start_date')
-            ? Carbon::parse($request->start_date)->toDateString()
-            : now()->startOfYear()->toDateString();
+        /*
+        |--------------------------------------------------------------------------
+        | Date Filter (same logic as purchase_report)
+        |--------------------------------------------------------------------------
+        */
+        $startDateInput = $request->start_date;
+        $endDateInput   = $request->end_date;
 
-        $endDate = $request->filled('end_date')
-            ? Carbon::parse($request->end_date)->toDateString()
-            : now()->toDateString();
+        $startDate = $startDateInput
+            ? Carbon::createFromFormat('F d, Y', $startDateInput)->toDateString()
+            : now()->startOfMonth()->toDateString();
 
-        $purchases = DB::select('CALL get_purchase_report(?, ?, ?, ?)', [
-            $productId,
-            $supplierId,
-            $startDate,
-            $endDate
-        ]);
+        $endDate = $endDateInput
+            ? Carbon::createFromFormat('F d, Y', $endDateInput)->toDateString()
+            : now()->endOfMonth()->toDateString();
+        /*
+        |--------------------------------------------------------------------------
+        | Get Purchase Data
+        |--------------------------------------------------------------------------
+        */
+        $purchases = DB::select(
+            'CALL get_purchase_report(?, ?, ?, ?)',
+            [
+                $productId,
+                $supplierId,
+                $startDate,
+                $endDate
+            ]
+        );
+        /*
+        |--------------------------------------------------------------------------
+        | Clear stored procedure result set
+        |--------------------------------------------------------------------------
+        */
+        DB::connection()->getPdo()->query('SELECT 1');
 
+        /*
+        |--------------------------------------------------------------------------
+        | Filter Display Names
+        |--------------------------------------------------------------------------
+        */
         $productName = $productId
-            ? DB::table('products')->where('id', $productId)->value('product_name')
+            ? DB::table('products')
+                ->where('id', $productId)
+                ->value('product_name')
             : 'All Products';
-
         $supplierName = $supplierId
-            ? DB::table('suppliers')->where('id', $supplierId)->value('name')
+            ? DB::table('suppliers')
+                ->where('id', $supplierId)
+                ->value('name')
             : 'All Suppliers';
-
+        /*
+        |--------------------------------------------------------------------------
+        | Create Spreadsheet
+        |--------------------------------------------------------------------------
+        */
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Purchase Report');
-
+        /*
+        |--------------------------------------------------------------------------
+        | Header
+        |--------------------------------------------------------------------------
+        */
         $sheet->mergeCells('A1:O1');
-        $sheet->setCellValue('A1', "AVT Hardware Trading - Purchase Report");
+        $sheet->setCellValue(
+            'A1',
+            "AVT Hardware Trading - Purchase Report"
+        );
         $sheet->getStyle('A1:O1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 16, 'color' => ['argb' => 'FFFFFFFF']],
-            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
+            'font'=>[
+                'bold'=>true,
+                'size'=>16,
+                'color'=>[
+                    'argb'=>'FFFFFFFF'
+                ]
+            ],
+            'alignment'=>[
+                'horizontal'=>'center',
+                'vertical'=>'center'
+            ],
+            'fill'=>[
+                'fillType'=>Fill::FILL_SOLID,
+                'startColor'=>[
+                    'argb'=>'FF1F2937'
+                ]
+            ]
         ]);
+
         $sheet->getRowDimension(1)->setRowHeight(28);
 
-        // Filters Info
+        /*
+        |--------------------------------------------------------------------------
+        | Filter Information
+        |--------------------------------------------------------------------------
+        */
         $sheet->fromArray([
-            ['Date From:', Carbon::parse($startDate)->format('F j, Y')],
-            ['Date To:', Carbon::parse($endDate)->format('F j, Y')],
-            ['Supplier:', $supplierName],
-            ['Product:', $productName],
+            [
+                'Date From:',
+                Carbon::parse($startDate)->format('F j, Y')
+            ],
+            [
+                'Date To:',
+                Carbon::parse($endDate)->format('F j, Y')
+            ],
+            [
+                'Supplier:',
+                $supplierName
+            ],
+            [
+                'Product:',
+                $productName
+            ]
         ], null, 'A3');
 
         $sheet->getStyle('A3:A6')->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE5E7EB']],
+            'font'=>[
+                'bold'=>true
+            ],
+            'fill'=>[
+                'fillType'=>Fill::FILL_SOLID,
+                'startColor'=>[
+                    'argb'=>'FFE5E7EB'
+                ]
+            ]
+
         ]);
-        $sheet->getStyle('A3:B6')->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
-        foreach (range('A','B') as $col) { $sheet->getColumnDimension($col)->setAutoSize(true); }
+        $sheet->getStyle('A3:B6')
+            ->getBorders()
+            ->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN);
 
-        // ===== Table Header =====
+        /*
+        |--------------------------------------------------------------------------
+        | Table Header
+        |--------------------------------------------------------------------------
+        */
         $headerRow = 8;
         $headers = [
-            'Purchase #','Purchase Date','Supplier','Product','Quantity','Unit Price','Total Amount',
-            'Discount Type','Discount 1','Discount 2','Discount 3','Discount Amount','Sub Total','Payment Term','Grand Total'
+            'Purchase #',
+            'Purchase Date',
+            'Supplier',
+            'Product',
+            'Quantity',
+            'Unit Price',
+            'Total Amount',
+            'Discount Type',
+            'Discount 1',
+            'Discount 2',
+            'Discount 3',
+            'Discount Amount',
+            'Sub Total',
+            'Payment Term',
+            'Grand Total'
         ];
-        $sheet->fromArray($headers, null, "A{$headerRow}");
-        $sheet->getStyle("A{$headerRow}:O{$headerRow}")->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1F2937']],
-            'alignment' => ['horizontal' => 'center'],
-        ]);
-        $sheet->freezePane("A" . ($headerRow + 1));
 
-        // ===== Table Data =====
+        $sheet->fromArray(
+            $headers,
+            null,
+            "A{$headerRow}"
+        );
+
+        $sheet->getStyle(
+            "A{$headerRow}:O{$headerRow}"
+        )->applyFromArray([
+            'font'=>[
+                'bold'=>true,
+                'color'=>[
+                    'argb'=>'FFFFFFFF'
+                ]
+            ],
+            'fill'=>[
+                'fillType'=>Fill::FILL_SOLID,
+                'startColor'=>[
+                    'argb'=>'FF1F2937'
+                ]
+            ],
+            'alignment'=>[
+                'horizontal'=>'center'
+            ]
+
+        ]);
+        $sheet->freezePane(
+            "A".($headerRow+1)
+        );
+        /*
+        |--------------------------------------------------------------------------
+        | Data Rows
+        |--------------------------------------------------------------------------
+        */
         $row = $headerRow + 1;
         $purchaseTotals = [];
         $currentPurchase = null;
-        $purchaseStartRow = $row;
-
-        foreach ($purchases as $record) {
-            if ($currentPurchase !== null && $currentPurchase != $record->po_number) {
-                // Add per-purchase total
-                $sheet->setCellValue("N{$row}", "Grand Total:");
-                $sheet->setCellValue("O{$row}", "=SUM(M{$purchaseStartRow}:M{$row})");
-
-                $sheet->getStyle("O{$row}")
-                    ->getNumberFormat()
-                    ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-                $sheet->getStyle("N{$row}:O{$row}")->getFont()->setBold(true);
-                $sheet->getStyle("N{$row}:O{$row}")
-                    ->getFill()->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFEFEFEF');
-
-                // Save this purchase total for final GRAND TOTAL
-                $purchaseTotals[] = "O{$row}";
-
+        $purchaseGroupTotal = 0;
+        foreach($purchases as $record)
+        {
+            $poNumber = $record->po_number;
+            if(
+                $currentPurchase !== null
+                &&
+                $currentPurchase !== $poNumber
+            )
+            {
+                $sheet->setCellValue(
+                    "N{$row}",
+                    "Grand Total:"
+                );
+                $sheet->setCellValue(
+                    "O{$row}",
+                    $purchaseGroupTotal
+                );
+                $sheet->getStyle("N{$row}:O{$row}")->applyFromArray([
+                    'font' => ['bold' => true],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['argb' => 'FFFDE68A']
+                    ]
+                ]);
+                $sheet->getStyle("O{$row}")->getNumberFormat()->setFormatCode('₱#,##0.00');
+                $purchaseTotals[] =
+                    "O{$row}";
                 $row++;
-                $purchaseStartRow = $row;
+                $purchaseGroupTotal = 0;
+
             }
-            $currentPurchase = $record->po_number;
+            $currentPurchase = $poNumber;
+            $qty =
+                (float)($record->qty ?? 0);
+            $unitPrice =
+                (float)($record->unit_price ?? 0);
+            $totalBeforeDiscount =
+                $qty * $unitPrice;
+            $discount1 =
+                (float)($record->discount_1 ?? 0);
+            $discount2 =
+                (float)($record->discount_2 ?? 0);
+            $discount3 =
+                (float)($record->discount_3 ?? 0);
+            $discountType =
+                $record->discount_less_add ?? 'less';
 
-            $qty = $record->qty ?? 0;   
-            $unitPrice = $record->unit_price ?? 0;
+            if($discountType == 'less')
+            {
+            $discountAmount =
+                $totalBeforeDiscount -
+                (
+                    $totalBeforeDiscount *
+                    (1-($discount1/100)) *
+                    (1-($discount2/100)) *
+                    (1-($discount3/100))
+                );
 
-            // Base cells
-            $qtyCell = "E{$row}";
-            $unitPriceCell = "F{$row}";
-            $totalBeforeDiscountCell = "G{$row}";
-            $typeCell = "H{$row}";
-            $d1Cell = "I{$row}";
-            $d2Cell = "J{$row}";
-            $d3Cell = "K{$row}";
-            $discountAmtCell = "L{$row}";
-            $grandTotalCell = "M{$row}";
+            }
+            else
+            {
+            $discountAmount =
+                (
+                    $totalBeforeDiscount *
+                    (1+($discount1/100)) *
+                    (1+($discount2/100)) *
+                    (1+($discount3/100))
+                )
+                -
+                $totalBeforeDiscount;
+            }
 
-            // Fill basic info
+            $grandTotal =
+                $discountType == 'less'
+                ?
+                $totalBeforeDiscount-$discountAmount
+                :
+                $totalBeforeDiscount+$discountAmount;
+
+            $purchaseGroupTotal += $grandTotal;
+
             $sheet->fromArray([
-                $record->po_number ?? '',
-                isset($record->purchase_date) ? Carbon::parse($record->purchase_date)->format('M d, Y') : '',
-                $record->supplier_name ?? '',
-                $record->product_name ?? '',
+                $record->po_number,
+                Carbon::parse($record->purchase_date)
+                    ->format('M d, Y'),
+                $record->supplier_name,
+                $record->product_name,
                 $qty,
                 $unitPrice,
-                $qty * $unitPrice, // Total Amount before discount
-                $record->discount_less_add ?? '',
-                $record->discount_1 ?? 0,
-                $record->discount_2 ?? 0,
-                $record->discount_3 ?? 0,
-                '', // Discount Amount
-                '', // Sub Total
-                $record->payment_method ?? '',
+                $totalBeforeDiscount,
+                $discountType,
+                $discount1,
+                $discount2,
+                $discount3,
+                $discountAmount,
+                $grandTotal,
+                $record->payment_method,
+                $grandTotal
             ], null, "A{$row}");
-
-            // Discount Amount = difference caused by sequential discounts
-            $sheet->setCellValue($discountAmtCell,
-                "=IF({$typeCell}=\"less\","
-                    ."{$totalBeforeDiscountCell}-({$totalBeforeDiscountCell}*(1-{$d1Cell}/100)*(1-{$d2Cell}/100)*(1-{$d3Cell}/100)),"
-                    ."({$totalBeforeDiscountCell}*(1+{$d1Cell}/100)*(1+{$d2Cell}/100)*(1+{$d3Cell}/100)) - {$totalBeforeDiscountCell}"
-                .")"
-            );
-
-            // Grand Total = Total Amount before discount ± Discount Amount
-            $sheet->setCellValue($grandTotalCell,
-                "=IF({$typeCell}=\"less\",{$totalBeforeDiscountCell}-{$discountAmtCell},{$totalBeforeDiscountCell}+{$discountAmtCell})"
-            );
-
-            // Format numbers
-            $sheet->getStyle("E{$row}:M{$row}")
-                ->getNumberFormat()
-                ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-
             $row++;
         }
-
-        if ($currentPurchase !== null) {
-            $sheet->setCellValue("N{$row}", "Grand Total:");
-            $sheet->setCellValue("O{$row}", "=SUM(M{$purchaseStartRow}:M{$row})");
-            $sheet->getStyle("O{$row}")
-                ->getNumberFormat()
-                ->setFormatCode(NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-            $sheet->getStyle("L{$row}:O{$row}")->getFont()->setBold(true);
-            $sheet->getStyle("L{$row}:O{$row}")
-                ->getFill()->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFEFEFEF');
-
-            $purchaseTotals[] = "O{$row}";
+        /*
+        |--------------------------------------------------------------------------
+        | Last Purchase Total
+        |--------------------------------------------------------------------------
+        */
+        if($currentPurchase !== null)
+        {
+            $sheet->setCellValue(
+                "N{$row}",
+                "Grand Total:"
+            );
+            $sheet->setCellValue(
+                "O{$row}",
+                $purchaseGroupTotal
+            );
+            $sheet->getStyle("N{$row}:O{$row}")->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFFDE68A']
+                ]
+            ]);
+            $sheet->getStyle("O{$row}")->getNumberFormat()->setFormatCode('₱#,##0.00');
+            $purchaseTotals[] =
+                "O{$row}";
             $row++;
         }
-
-        // FINAL GRAND TOTAL: sum only per-invoice totals
-        if (!empty($purchaseTotals)) {
-            $sumFormula = implode(',', $purchaseTotals);
-
-            $sheet->setCellValue("N{$row}", "GRAND TOTAL:");
-            $sheet->setCellValue("O{$row}", "=SUM($sumFormula)");
-
-            $sheet->getStyle("O{$row}")
-                ->getNumberFormat()
-                ->setFormatCode(\PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-
-            $sheet->getStyle("O{$row}")->getFont()->setBold(true);
-
-            $sheet->getStyle("O{$row}")
-                ->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()
-                ->setARGB('FFFFCC00');
+        /*
+        |--------------------------------------------------------------------------
+        | Overall Total
+        |--------------------------------------------------------------------------
+        */
+        if(count($purchaseTotals)>0)
+        {
+            $sheet->setCellValue(
+                "N{$row}",
+                "GRAND TOTAL:"
+            );
+            $sheet->setCellValue(
+                "O{$row}",
+                "=SUM(".implode(',',$purchaseTotals).")"
+            );
+            $sheet->getStyle("N{$row}:O{$row}")->applyFromArray([
+                'font' => ['bold' => true, 'size' => 12],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['argb' => 'FFFFD54D']
+                ]
+            ]);
+            $sheet->getStyle("O{$row}")->getNumberFormat()->setFormatCode('₱#,##0.00');
         }
-
-        $sheet->getStyle("A{$headerRow}:O{$row}")
-            ->getBorders()->getAllBorders()
-            ->setBorderStyle(Border::BORDER_THIN);
-
-        foreach (range('A','O') as $col) { 
-            $sheet->getColumnDimension($col)->setAutoSize(true); 
+        $sheet->getStyle('F'.$headerRow.':F'.$row)->getNumberFormat()->setFormatCode('₱#,##0.00');
+        $sheet->getStyle('G'.$headerRow.':G'.$row)->getNumberFormat()->setFormatCode('₱#,##0.00');
+        $sheet->getStyle('L'.$headerRow.':L'.$row)->getNumberFormat()->setFormatCode('₱#,##0.00');
+        $sheet->getStyle('M'.$headerRow.':M'.$row)->getNumberFormat()->setFormatCode('₱#,##0.00');
+        $sheet->getStyle('O'.$headerRow.':O'.$row)->getNumberFormat()->setFormatCode('₱#,##0.00');
+        foreach(range('A','O') as $column)
+        {
+            $sheet->getColumnDimension($column)
+                ->setAutoSize(true);
         }
-
-        // Write the spreadsheet to a file and return as download
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'Purchase_Report_' . now()->format('Ymd_His') . '.xlsx';
-
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, $fileName);
+        $fileName =
+            'Purchase_Report_'.now()->format('Ymd_His').'.xlsx';
+        return response()->streamDownload(
+            function() use($writer){
+                $writer->save('php://output');
+            },
+            $fileName
+        );
     }
 
     public function collection_report(Request $request)
@@ -1577,134 +1746,338 @@ class ReportController extends Controller
 
     public function exportCollection(Request $request)
     {
-        $salesman   = $request->input('salesman') ?? null;
-        $customerId = $request->input('customer_id') ?? null;
-        $productId  = $request->input('product_id') ?? null;
-        $startDate  = $request->input('start_date') ?? null;
-        $endDate    = $request->input('end_date') ?? null;
+        $customerId = $request->customer_id ?? null;
 
-        // Call stored procedure
-        $collections = DB::select('CALL get_collection_report(?, ?, ?, ?, ?)', [
-            $salesman,
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)->toDateString()
+            : now()->startOfMonth()->toDateString();
+
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)->toDateString()
+            : now()->endOfMonth()->toDateString();
+
+
+        $collections = DB::select('CALL get_collection_report(?, ?, ?)', [
             $customerId,
-            $productId,
             $startDate,
             $endDate
         ]);
 
-        // Create Excel sheet
+        $customerName = $customerId
+            ? DB::table('customers')
+                ->where('id',$customerId)
+                ->value('name')
+            : 'All Customers';
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Collection Report');
 
-        // Header info
-        $sheet->setCellValue('A1', 'AVT Hardware Trading');
-        $sheet->setCellValue('A2', 'Collection Report with Adjustments');
-        $sheet->setCellValue('A3', 'Date Generated: ' . now()->format('M d, Y'));
-        $sheet->getStyle('A1:A3')->getFont()->setBold(true);
-        $sheet->getStyle('A1')->getFont()->setSize(14);
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER
+        |--------------------------------------------------------------------------
+        */
 
-        // Table headers
+        $sheet->mergeCells('A1:Q1');
+        $sheet->setCellValue(
+            'A1',
+            'AVT HARDWARE TRADING'
+        );
+
+        $sheet->mergeCells('A2:Q2');
+        $sheet->setCellValue(
+            'A2',
+            'Collection Report with Adjustments'
+        );
+
+        $sheet->mergeCells('A3:Q3');
+        $sheet->setCellValue(
+            'A3',
+            'Generated Date: '.now()->format('M d, Y')
+        );
+
+        $sheet->getStyle('A1:Q3')->applyFromArray([
+            'alignment'=>[
+                'horizontal'=>'center',
+                'vertical'=>'center'
+            ],
+
+            'font'=>[
+                'bold'=>true
+            ]
+
+        ]);
+
+        $sheet->getStyle('A1')->getFont()->setSize(18);
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER INFORMATION
+        |--------------------------------------------------------------------------
+        */
+        $sheet->setCellValue('A5','Customer');
+        $sheet->setCellValue('B5',$customerName);
+        $sheet->setCellValue('A6','Date From');
+        $sheet->setCellValue(
+            'B6',
+            Carbon::parse($startDate)->format('M d, Y')
+        );
+        $sheet->setCellValue('A7','Date To');
+        $sheet->setCellValue(
+            'B7',
+            Carbon::parse($endDate)->format('M d, Y')
+        );
+        $sheet->getStyle('A5:A7')->getFont()->setBold(true);
+        /*
+        |--------------------------------------------------------------------------
+        | TABLE HEADER
+        |--------------------------------------------------------------------------
+        */
+        $headerRow = 9;
         $headers = [
-            'Invoice #',
             'Collection #',
             'Collection Date',
-            'Salesman',
+            'Invoice #',
             'Customer',
-            'Product',
+            'Amount Collected',
             'Payment Mode',
             'Check Number',
             'Mobile Number',
-            'Payment Status',
-            'Remarks',
+            'Grand Total',
             'Outstanding Balance',
-            'Amount Collected (₱)',
+            'Payment Status',
             'Adjustment Type',
-            'Adjustment Amount (₱)',
+            'Adjustment Name',
+            'Adjustment Amount',
             'Adjustment Date',
-            'Adjustment Remarks'
+            'Adjustment Remarks',
+            'Collection Remarks'
+
         ];
 
-        $col = 'A';
-        $headerRow = 5;
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col.$headerRow, $header);
-            $sheet->getStyle($col.$headerRow)->getFont()->setBold(true);
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-            $col++;
-        }
+        $sheet->fromArray(
+            $headers,
+            null,
+            "A{$headerRow}"
+        );
 
-        // Group data by invoice
-        $groupedData = collect($collections)->groupBy('invoice_number');
-        $row = $headerRow + 1;
-        $grandTotal = 0;
+        $sheet->getStyle(
+            "A{$headerRow}:Q{$headerRow}"
+        )->applyFromArray([
 
-        foreach ($groupedData as $invoiceNumber => $records) {
-            $sheet->setCellValue("A{$row}", "Invoice: " . $invoiceNumber);
-            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
-            $row++;
-
-            $invoiceTotal = 0;
-
-            foreach ($records as $record) {
-                $sheet->setCellValue("A{$row}", $record->invoice_number ?? '');
-                $sheet->setCellValue("B{$row}", $record->collection_number ?? '');
-                $sheet->setCellValue("C{$row}", \Carbon\Carbon::parse($record->collection_date)->format('M d, Y'));
-                $sheet->setCellValue("D{$row}", $record->salesman ?? '');
-                $sheet->setCellValue("E{$row}", $record->customer_name ?? '');
-                $sheet->setCellValue("F{$row}", $record->product_name ?? '');
-                $sheet->setCellValue("G{$row}", $record->payment_mode ?? '');
-                $sheet->setCellValue("H{$row}", $record->check_number ?? '-');
-                $sheet->setCellValue("I{$row}", $record->mobile_number ?? '-');
-                $sheet->setCellValue("J{$row}", ucfirst($record->payment_status ?? '-'));
-                $sheet->setCellValue("K{$row}", $record->remarks ?? '-');
-                $sheet->setCellValue("L{$row}", number_format($record->outstanding_balance ?? 0, 2));
-                $sheet->setCellValue("M{$row}", number_format($record->amount_collected ?? 0, 2));
-
-                // New Adjustment Fields
-                $sheet->setCellValue("N{$row}", $record->adjustment_type ?? '-');
-                $sheet->setCellValue("O{$row}", number_format($record->adjustment_amount ?? 0, 2));
-                $sheet->setCellValue("P{$row}", $record->adjustment_date ? \Carbon\Carbon::parse($record->adjustment_date)->format('M d, Y') : '-');
-                $sheet->setCellValue("Q{$row}", $record->adjustment_remarks ?? '-');
-
-                $invoiceTotal += $record->amount_collected ?? 0;
-                $row++;
-            }
-
-            // Invoice subtotal
-            $sheet->setCellValue("L{$row}", "Subtotal for {$invoiceNumber}:");
-            $sheet->setCellValue("M{$row}", number_format($invoiceTotal, 2));
-            $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
-            $row++;
-
-            $grandTotal += $invoiceTotal;
-        }
-
-        // Grand total
-        // $sheet->setCellValue("L{$row}", "Grand Total:");
-        // $sheet->setCellValue("M{$row}", number_format($grandTotal, 2));
-        // $sheet->getStyle("L{$row}:M{$row}")->getFont()->setBold(true);
-
-        // Borders
-        $lastCol = 'Q';
-        $lastRow = $row;
-        $sheet->getStyle("A{$headerRow}:{$lastCol}{$lastRow}")->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'],
-                ],
+            'font'=>[
+                'bold'=>true
             ],
+
+            'alignment'=>[
+                'horizontal'=>'center'
+            ],
+
+            'fill'=>[
+                'fillType'=>Fill::FILL_SOLID,
+                'startColor'=>[
+                    'argb'=>'FF1F2937'
+                ]
+            ],
+
+            'font'=>[
+                'bold'=>true,
+                'color'=>[
+                    'argb'=>'FFFFFFFF'
+                ]
+            ]
+
         ]);
 
-        // Export
-        $fileName = 'collection_report_' . now()->format('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
+        $sheet->freezePane("A".($headerRow+1));
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment; filename=\"$fileName\"");
-        $writer->save('php://output');
-        exit;
+        /*
+        |--------------------------------------------------------------------------
+        | DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $row = $headerRow + 1;
+        $grandTotal = 0;
+        foreach(
+            collect($collections)->groupBy('invoice_number')
+            as $invoice=>$records
+        ){
+            // Invoice Group Header
+            $sheet->mergeCells("A{$row}:Q{$row}");
+            $sheet->setCellValue(
+                "A{$row}",
+                "Invoice : ".$invoice
+            );
+            $sheet->getStyle("A{$row}:Q{$row}")
+            ->applyFromArray([
+                'font'=>[
+                    'bold'=>true
+                ],
+
+                'fill'=>[
+                    'fillType'=>Fill::FILL_SOLID,
+                    'startColor'=>[
+                        'argb'=>'FFE5E7EB'
+                    ]
+                ]
+
+            ]);
+
+            $row++;
+            $invoiceTotal = 0;
+            foreach($records as $record){
+                $amount =
+                (float)$record->amount_collected;
+                $invoiceTotal += $amount;
+                $grandTotal += $amount;
+                $sheet->fromArray([
+                    $record->collection_number,
+                    Carbon::parse(
+                        $record->collection_date
+                    )->format('M d, Y'),
+                    $record->invoice_number,
+                    $record->customer_name,
+                    $amount,
+                    $record->payment_mode,
+                    $record->check_number ?? '-',
+                    $record->mobile_number ?? '-',
+                    $record->grand_total,
+                    $record->outstanding_balance,
+                    ucfirst(
+                        $record->payment_status
+                    ),
+                    $record->adjustment_type ?? '-',
+                    $record->adjustment_name ?? '-',
+                    $record->adjustment_amount ?? 0,
+                    $record->adjustment_date
+                        ? Carbon::parse(
+                            $record->adjustment_date
+                        )->format('M d, Y')
+                        : '-',
+                    $record->adjustment_remarks ?? '-',
+                    $record->collection_remarks ?? '-'
+                ],null,"A{$row}");
+                $row++;
+            }
+            // Invoice subtotal
+            $sheet->setCellValue(
+                "D{$row}",
+                "Invoice Total:"
+            );
+            $sheet->setCellValue(
+                "E{$row}",
+                $invoiceTotal
+            );
+            $sheet->getStyle(
+                "D{$row}:E{$row}"
+            )->applyFromArray([
+                'font'=>[
+                    'bold'=>true
+                ],
+                'fill'=>[
+                    'fillType'=>Fill::FILL_SOLID,
+                    'startColor'=>[
+                        'argb'=>'FFFDE68A'
+                    ]
+                ]
+
+            ]);
+            $row++;
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | GRAND TOTAL
+        |--------------------------------------------------------------------------
+        */
+        $sheet->setCellValue(
+            "D{$row}",
+            "GRAND TOTAL:"
+        );
+
+        $sheet->setCellValue(
+            "E{$row}",
+            $grandTotal
+        );
+        $sheet->getStyle(
+            "D{$row}:E{$row}"
+        )->applyFromArray([
+
+            'font'=>[
+                'bold'=>true
+            ],
+
+            'fill'=>[
+                'fillType'=>Fill::FILL_SOLID,
+                'startColor'=>[
+                    'argb'=>'FFFFCC00'
+                ]
+            ]
+
+        ]);
+        $sheet->getStyle("E{$headerRow}:E{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('₱#,##0.00');
+
+        $sheet->getStyle("I{$headerRow}:I{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('₱#,##0.00');
+
+        $sheet->getStyle("J{$headerRow}:J{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('₱#,##0.00');
+
+        $sheet->getStyle("N{$headerRow}:N{$row}")
+            ->getNumberFormat()
+            ->setFormatCode('₱#,##0.00');
+        /*
+        |--------------------------------------------------------------------------
+        | BORDER
+        |--------------------------------------------------------------------------
+        */
+
+        $sheet->getStyle(
+            "A{$headerRow}:Q{$row}"
+        )
+        ->getBorders()
+        ->getAllBorders()
+        ->setBorderStyle(
+            Border::BORDER_THIN
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLUMN SIZE
+        |--------------------------------------------------------------------------
+        */
+
+        foreach(range('A','Q') as $column){
+
+            $sheet->getColumnDimension($column)
+                ->setAutoSize(true);
+
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPORT
+        |--------------------------------------------------------------------------
+        */
+        $fileName =
+            'Collection_Report_'
+            .now()->format('Ymd_His')
+            .'.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+        return response()->streamDownload(
+            function() use($writer){
+
+                $writer->save('php://output');
+
+            },
+            $fileName
+        );
     }
 
     public function sales_invoice_summary_report(Request $request)
@@ -3306,16 +3679,11 @@ class ReportController extends Controller
         | DATA
         |--------------------------------------------------------------------------
         */
-
         $row = $headerRow + 1;
-
         $grandQty = 0;
         $grandSales = 0;
-
         $grandMonths = array_fill(1, 12, 0);
-
         foreach ($results as $r) {
-
             $sheet->fromArray([
                 $r->product_code,
                 $r->product_name,
@@ -3353,7 +3721,6 @@ class ReportController extends Controller
 
             $grandQty += $r->total_quantity;
             $grandSales += $r->total_sales;
-
             $row++;
         }
 
@@ -3805,13 +4172,11 @@ class ReportController extends Controller
         $sheet->mergeCells('C1:F1');
         $sheet->mergeCells('C2:F2');
         $sheet->mergeCells('C3:F3');
-
         // Company Name
         $sheet->setCellValue('C1', 'AVT Hardware Trading');
         $sheet->getStyle('C1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('C1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
                                             ->setVertical(Alignment::VERTICAL_CENTER);
-
         // Company Address (ensure this value is present)
         $sheet->setCellValue('C2', ' Wholesale of hardware, electricals, & plumbing supply etc.<br>
             Contact: 0936-8834-275 / 0999-3669-539'); // ← change to your real address
@@ -3819,13 +4184,11 @@ class ReportController extends Controller
         $sheet->getStyle('C2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
                                             ->setVertical(Alignment::VERTICAL_CENTER)
                                             ->setWrapText(true);
-
         // Report Title
         $sheet->setCellValue('C3', $title);
         $sheet->getStyle('C3')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('C3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
                                             ->setVertical(Alignment::VERTICAL_CENTER);
-
     }
 
 }

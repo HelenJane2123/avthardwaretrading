@@ -74,8 +74,7 @@ class InvoiceController extends Controller
             )->with(['supplierItems:id,item_code,item_price']); 
         }])->get();
 
-        $monthYear = strtoupper(date('My')); // e.g., 0226 for Feb 2026
-
+        $monthYear = strtoupper(date('My')); 
         // Start a transaction to safely generate the next invoice number
         $invoiceNumber = DB::transaction(function () use ($monthYear) {
             // Get the last invoice for this month
@@ -112,6 +111,10 @@ class InvoiceController extends Controller
                 'discount_3',
                 'status'
             )
+            ->where(function ($query) {
+                $query->where('is_active', 0)
+                      ->orWhereNull('is_active');
+            })
             ->with([
                 'supplierItems:id,item_code,item_price,supplier_id',
                 'supplierItems.supplier:id,name',
@@ -270,7 +273,12 @@ class InvoiceController extends Controller
 
         // Load all customers, products, units, payment modes, taxes, and active salesmen
         $customers = Customer::all();
-        $products = Product::with(['supplierItems', 'unit'])->get();
+        $products = Product::with(['supplierItems', 'unit'])
+            ->where(function ($query) {
+                $query->where('is_active', 0)
+                      ->orWhereNull('is_active');
+            })
+            ->get();
         $units = Unit::where('status', 1)->get();
         $paymentModes = ModeofPayment::all();
         $taxes = Tax::where('status', 1)->get();
@@ -540,16 +548,13 @@ class InvoiceController extends Controller
         $query = $request->get('q');
 
         $invoices = Invoice::with(['customer', 'paymentMode'])
-            ->withSum('collections as paid_total', 'amount_paid') // total payments
-            ->where('invoice_status', 'approved') // only approved invoices
+            ->withSum('collections as paid_total', 'amount_paid') 
+            ->where('invoice_status', 'printed') 
             ->get()
             ->map(function ($invoice) {
                 $paid = $invoice->paid_total ?? 0;
                 $invoice->balance = $invoice->grand_total - $paid;
-
-                // Add payment mode
                 $invoice->payment_mode_name = $invoice->paymentMode->name ?? 'N/A';
-
                 return $invoice;
             })
             // Exclude fully paid invoices
@@ -558,7 +563,6 @@ class InvoiceController extends Controller
             })
             ->values(); // Reindex collection
 
-        
         if ($query) {
             $invoices = $invoices->filter(function ($invoice) use ($query) {
                 return str_contains(strtolower($invoice->invoice_number), strtolower($query)) ||
@@ -567,7 +571,6 @@ class InvoiceController extends Controller
                     str_contains(strtolower($invoice->customer->mobile), strtolower($query));
             })->values();
         }
-
         return response()->json($invoices);
     }
 
