@@ -57,6 +57,8 @@ Route::get('/keep-alive', function () {
     return response()->json(['status' => 'ok']);
 })->middleware('auth')->name('keep-alive');
 
+Route::view('/help', 'help')->middleware('auth')->name('help');
+
 Route::get(
     '/supplier-items/check-description',
     [SupplierItemController::class, 'checkDescription']

@@ -125,11 +125,11 @@
                                                         <i class="fa fa-eye"></i>
                                                     </button>
 
-                                                    <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
-                                                        <i class="fa fa-edit"></i>
-                                                    </a>
-
                                                     @if($add->product->is_active == 0)
+                                                        <a class="btn btn-primary btn-sm" href="{{ route('product.edit', $add->product->id) }}">
+                                                            <i class="fa fa-edit"></i>
+                                                        </a>
+
                                                         <button class="btn btn-warning btn-sm" type="button"
                                                                 onclick="toggleProductStatus('{{ $add->product->id }}', 'deactivate')">
                                                             <i class="fa fa-ban"></i>

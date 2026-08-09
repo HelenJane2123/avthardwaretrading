@@ -263,7 +263,6 @@
 <script src="{{ asset('js/app.js') }}"></script>
 <!-- Auto Logout Warning Modal -->
 @stack('js')
-@include('partials.help-modal')
 @include('partials.footer')
 </body>
 </html>

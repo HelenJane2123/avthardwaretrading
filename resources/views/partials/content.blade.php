@@ -188,6 +188,59 @@
 .dashboard-card .stat-icon.primary { background: rgba(37, 99, 235, 0.15); color: #2563eb; }
 .dashboard-card .stat-icon.info { background: rgba(6, 182, 212, 0.15); color: #0f766e; }
 
+.inventory-alert {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #fffbeb;
+  border-left: 5px solid #f59e0b;
+  border-radius: 16px;
+  padding: 18px 22px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  margin-top: 22px;
+}
+.inventory-alert .alert-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  font-size: 1.25rem;
+}
+.inventory-alert .alert-copy h5 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+.inventory-alert .alert-copy p {
+  margin: 6px 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+.inventory-alert .alert-action {
+  margin-left: auto;
+}
+.inventory-alert .alert-action a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .2s ease, background .2s ease;
+}
+.inventory-alert .alert-action a:hover {
+  transform: translateY(-1px);
+  background: #d97706;
+}
+
 .dashboard-card h6 {
     font-size: 12px;
     text-transform: uppercase;
@@ -279,8 +332,28 @@
       </div>
       <div class="hero-badge"><i class="fa fa-calendar-check-o me-2"></i> Updated {{ now()->format('M d, Y') }}</div>
   </div>
+  @if(($lowStockCount ?? 0) > 0 || ($outOfStockCount ?? 0) > 0)
+      <div class="inventory-alert fade-in">
+          <div class="alert-icon"><i class="fa fa-exclamation-triangle"></i></div>
+          <div class="alert-copy">
+              <h5>Inventory alert</h5>
+              <p>
+                  @if(($outOfStockCount ?? 0) > 0)
+                      {{ $outOfStockCount }} {{ Str::plural('product', $outOfStockCount) }} are out of stock.
+                  @endif
+                  @if(($lowStockCount ?? 0) > 0)
+                      @if(($outOfStockCount ?? 0) > 0) and @endif
+                      {{ $lowStockCount }} {{ Str::plural('product', $lowStockCount) }} are low on stock.
+                  @endif
+              </p>
+          </div>
+          <div class="alert-action">
+              <a href="{{ route('product.index') }}"><i class="fa fa-boxes me-2"></i> Review Inventory</a>
+          </div>
+      </div>
+  @endif
 
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-4 mt-4">
       <div class="col-lg-3 col-md-6">
           <div class="card dashboard-card">
               <div class="stat-icon warning"><i class="fa fa-cubes"></i></div>
@@ -313,7 +386,7 @@
           </div>
       </div>
 
-      <div class="col-lg-3 col-md-6">
+      <div class="col-lg-3 col-md-6 mt-4">
           <div class="card dashboard-card">
               <div class="stat-icon primary"><i class="fa fa-shopping-cart"></i></div>
               <h6>Total Purchases</h6>
@@ -321,7 +394,7 @@
           </div>
       </div>
 
-      <div class="col-lg-3 col-md-6">
+      <div class="col-lg-3 col-md-6 mt-4">
           <div class="card dashboard-card">
               <div class="stat-icon warning"><i class="fa fa-dollar"></i></div>
               <h6>Estimated Income</h6>
@@ -329,7 +402,7 @@
           </div>
       </div>
 
-      <div class="col-lg-3 col-md-6">
+      <div class="col-lg-3 col-md-6 mt-4">
           <div class="card dashboard-card">
               <div class="stat-icon info"><i class="fa fa-money"></i></div>
               <h6>Total Collections</h6>

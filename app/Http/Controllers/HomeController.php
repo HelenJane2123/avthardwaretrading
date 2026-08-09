@@ -62,6 +62,17 @@ class HomeController extends Controller
                 ->get();
         $estimatedIncome = $totalSales - $totalPurchases;
 
+        $lowStockCount = Product::where('is_active', 0)
+            ->where('remaining_stock', '>', 0)
+            ->whereColumn('remaining_stock', '<=', 'threshold')
+            ->count();
+
+        $outOfStockCount = Product::where('is_active', 0)
+            ->where(function ($query) {
+                $query->where('remaining_stock', '<=', 0)
+                      ->orWhereNull('remaining_stock');
+            })->count();
+
         // Monthly sales from invoices
         $monthlySales = Invoice::selectRaw('SUM(grand_total) as total_amount, MONTH(created_at) as month')
             ->groupBy(DB::raw('MONTH(created_at)'))
@@ -175,7 +186,9 @@ class HomeController extends Controller
             'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
             'topStores'         => $topStores,
             'totalPurchases'    => $totalPurchases,
-            'estimatedIncome'   => $estimatedIncome
+            'estimatedIncome'   => $estimatedIncome,
+            'lowStockCount'    => $lowStockCount,
+            'outOfStockCount'  => $outOfStockCount,
         ]);
     }
 
