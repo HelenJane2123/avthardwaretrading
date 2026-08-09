@@ -26,10 +26,19 @@
         </div>
     @endif
 
-    <div class="mb-3">
+    <div class="mb-3 d-flex gap-2 flex-wrap">
         <a class="btn btn-outline-primary" href="{{ route('product.index') }}">
             <i class="fa fa-list"></i> Manage Products
         </a>
+        @if($product->is_active == 0)
+            <button type="button" class="btn btn-warning" onclick="toggleProductStatus('{{ $product->id }}', 'deactivate')">
+                <i class="fa fa-ban"></i> Deactivate Product
+            </button>
+        @else
+            <button type="button" class="btn btn-success" onclick="toggleProductStatus('{{ $product->id }}', 'activate')">
+                <i class="fa fa-check"></i> Activate Product
+            </button>
+        @endif
     </div>
 
     <div class="row">
@@ -701,6 +710,45 @@
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open');
         });
+
+        function toggleProductStatus(productId, action) {
+            const actionText = action === 'deactivate' ? 'Deactivate' : 'Activate';
+            Swal.fire({
+                title: `${actionText} this product?`,
+                text: `Are you sure you want to ${actionText.toLowerCase()} this product?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: `Yes, ${actionText}`
+            }).then(function(result) {
+                if (result.value) {
+                    fetch(`{{ url('/product') }}/${productId}/toggle-status`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: new URLSearchParams({
+                            _method: 'PATCH'
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Success', `Product ${actionText.toLowerCase()}d.`, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', 'Unable to update the product status.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'Unable to update the product status.', 'error');
+                    });
+                }
+            });
+        }
 
         function updateDiscountDescription(discounts) {
             const desc = document.getElementById('discountDescription');

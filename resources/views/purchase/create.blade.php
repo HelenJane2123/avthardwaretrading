@@ -239,8 +239,11 @@
 
                         {{-- Remarks --}}
                         <div class="form-group mb-4">
-                            <label class="form-label">Comments / Special Instructions</label>
-                            <textarea name="remarks" rows="3" class="form-control" placeholder="Enter any notes or delivery instructions..."></textarea>
+                            <label class="form-label">Comments/Remarks <span class="text-danger">*</span></label>
+                            <textarea name="remarks" rows="3" class="form-control" placeholder="Enter any notes or delivery instructions...">{{ old('remarks') }}</textarea>
+                            @error('remarks')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
 
                         <div class="d-flex justify-content-end">
@@ -413,6 +416,17 @@
                     icon: 'warning',
                     title: 'Missing Mode of Payment',
                     text: 'Please select a mode of payment.',
+                    confirmButtonColor: '#ff9f43'
+                });
+                return;
+            }
+
+            const remarks = $.trim($('[name="remarks"]').val());
+            if (!remarks) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Comments/Remarks',
+                    text: 'Please enter DR number or other details.',
                     confirmButtonColor: '#ff9f43'
                 });
                 return;

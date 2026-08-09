@@ -57,6 +57,8 @@ Route::get('/keep-alive', function () {
     return response()->json(['status' => 'ok']);
 })->middleware('auth')->name('keep-alive');
 
+Route::view('/help', 'help')->middleware('auth')->name('help');
+
 Route::get(
     '/supplier-items/check-description',
     [SupplierItemController::class, 'checkDescription']
@@ -69,6 +71,7 @@ Route::resource('supplier', SupplierController::class);
 Route::resource('supplier-items', SupplierItemController::class);
 Route::resource('customer', CustomerController::class);
 Route::resource('product', ProductController::class);
+Route::match(['get', 'patch', 'post'], '/product/{id}/toggle-status', [ProductController::class, 'toggleStatus'])->name('product.toggleStatus');
 Route::resource('invoice', InvoiceController::class)->except([
     'update', 'show', 'destroy'
 ]);
@@ -202,6 +205,31 @@ Route::prefix('reports')->group(function () {
     Route::get('/reports/collection-report', [ReportController::class, 'collection_report'])->name('reports.collection_report');
     Route::get('reports/collection_report/export', [ReportController::class, 'exportCollection'])
         ->name('reports.collection_report_export');
-});
+    
+    Route::get('/reports/customer-sales-yearly', [ReportController::class, 'sales_report_by_customer_yearly'])->name('reports.customer_sales_yearly');
+    Route::get('reports/customer-sales-yearly/export', [ReportController::class, 'exportCustomerSalesYearly'])
+        ->name('reports.customer_sales_yearly_export');
 
+    Route::get('/sales-yearly-location', [ReportController::class, 'sales_report_by_location_yearly'])
+        ->name('reports.location_sales_yearly');
+    Route::get('/sales-yearly-location-export', [ReportController::class, 'exportLocationSalesYearly'])
+        ->name('reports.location_sales_yearly_export');
+    
+    Route::get('/sales-yearly-salesman', [ReportController::class, 'sales_report_by_salesman_yearly'])
+        ->name('reports.salesman_sales_yearly');
+    Route::get('/sales-yearly-salesman-export', [ReportController::class, 'exportSalesmanSalesYearly'])
+        ->name('reports.salesman_sales_yearly_export');
+
+    Route::get('/reports/top-selling-products', [ReportController::class, 'topSellingProducts'])
+        ->name('reports.top_selling_products');
+    Route::get('/reports/top-selling-products/export', [ReportController::class, 'exportTopSellingProducts'])
+        ->name('reports.top_selling_products_export');
+
+    Route::get('/reports/purchase-yearly', [ReportController::class, 'purchaseYearly'])
+    ->name('reports.purchase_yearly');
+
+    Route::get('/reports/purchase-yearly/export', [ReportController::class, 'exportPurchaseYearly'])
+        ->name('reports.purchase_yearly_export');
+
+});
 

@@ -22,89 +22,105 @@
                     <div class="tile-body">
                         <div class="container">
                             {{-- Filters --}}
-                            <form method="GET" action="{{ route('reports.sales_invoice_summary_report') }}" class="row g-4 mb-4">
-                                <div class="col-md-2">
-                                    <label class="form-label">End Date</label>    
-                                    <!-- Start Date -->
-                                    <input
-                                        type="text"
-                                        name="start_date"
-                                        id="start_date"
-                                        class="form-control form-control-sm"
-                                        value="{{ now()->startOfYear()->format('F d, Y') }}"
-                                        readonly
-                                    >
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                            <small class="text-muted">Use the filters below to narrow sales summary results.</small>
+                                        </div>
+                                        <a href="{{ route('reports.sales_invoice_summary_report') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-times"></i> Clear Filters
+                                        </a>
+                                    </div>
                                 </div>
-                                <!-- End Date -->
-                                <div class="col-md-2">
-                                    <label class="form-label">End Date</label>
-                                    <input
-                                        type="text"
-                                        name="end_date"
-                                        id="end_date"
-                                        class="form-control form-control-sm"
-                                        value="{{ request('end_date')
-                                            ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                            : now()->format('F d, Y') }}"
-                                    >
+                                <div class="card-body">
+                                    <form method="GET" action="{{ route('reports.sales_invoice_summary_report') }}" class="row g-4 mb-4">
+                                        <div class="col-md-2">
+                                            <label class="form-label">Start Date</label>    
+                                            <!-- Start Date -->
+                                            <input
+                                                type="text"
+                                                name="start_date"
+                                                id="start_date"
+                                                class="form-control form-control-sm"
+                                                value="{{ request('start_date')
+                                                    ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                                    : now()->startOfYear()->format('F d, Y') }}"
+                                            >
+                                        </div>
+                                        <!-- End Date -->
+                                        <div class="col-md-2">
+                                            <label class="form-label">End Date</label>
+                                            <input
+                                                type="text"
+                                                name="end_date"
+                                                id="end_date"
+                                                class="form-control form-control-sm"
+                                                value="{{ request('end_date')
+                                                    ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                                    : now()->format('F d, Y') }}"
+                                            >
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Invoice Status</label>
+                                            <select name="status" id="statusSelect" class="form-control">
+                                                <option value="">-- Select Status --</option>
+                                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                                <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                                                <option value="printed" {{ request('status') == 'printed' ? 'selected' : '' }}>Printed</option>
+                                                <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Canceled</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Salesman</label>
+                                            <select name="salesman" id="salesmanSelect" class="form-control">
+                                                <option value="">-- Select Salesman --</option>
+                                                @foreach($salesmen as $salesman)
+                                                    <option value="{{ $salesman->salesman }}" {{ request('salesman') == $salesman->salesman ? 'selected' : '' }}>
+                                                        {{ $salesman->salesman_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <!-- Location -->
+                                        <div class="col-md-3">
+                                            <label class="form-label">Location</label>
+                                            <select name="location" id="locationSelect" class="form-control form-control-sm">
+                                                <option value="">-- All Locations --</option>
+                                                @foreach($locations as $loc)
+                                                    <option value="{{ $loc->location }}"
+                                                        {{ request('location') == $loc->location ? 'selected' : '' }}>
+                                                        {{ $loc->location }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <!-- Customer -->
+                                        <div class="col-md-3">
+                                            <label class="form-label">Customer</label>
+                                            <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
+                                                <option value="">-- All Customers --</option>
+                                                @foreach($customers as $customer)
+                                                    <option value="{{ $customer->id }}"
+                                                        {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                        {{ $customer->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
+                                            <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filter</button>
+                                            <a href="{{ route('reports.sales_invoice_summary_report_export', request()->all()) }}" class="btn btn-success">
+                                                <i class="fa fa-file-excel-o"></i> Export
+                                            </a>
+                                            <button type="button" id="clearFilters" class="btn btn-secondary">
+                                                <i class="fa fa-eraser"></i> Clear Filters
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Invoice Status</label>
-                                    <select name="status" id="statusSelect" class="form-control">
-                                        <option value="">-- Select Status --</option>
-                                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
-                                        <option value="printed" {{ request('status') == 'printed' ? 'selected' : '' }}>Printed</option>
-                                        <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Canceled</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Salesman</label>
-                                    <select name="salesman" id="salesmanSelect" class="form-control">
-                                        <option value="">-- Select Salesman --</option>
-                                        @foreach($salesmen as $salesman)
-                                            <option value="{{ $salesman->salesman }}" {{ request('salesman') == $salesman->salesman ? 'selected' : '' }}>
-                                                {{ $salesman->salesman_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <!-- Location -->
-                                <div class="col-md-3">
-                                    <label class="form-label">Location</label>
-                                    <select name="location" id="locationSelect" class="form-control form-control-sm">
-                                        <option value="">-- All Locations --</option>
-                                        @foreach($locations as $loc)
-                                            <option value="{{ $loc->location }}"
-                                                {{ request('location') == $loc->location ? 'selected' : '' }}>
-                                                {{ $loc->location }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <!-- Customer -->
-                                <div class="col-md-3">
-                                    <label class="form-label">Customer</label>
-                                    <select name="customer_id" id="customerSelect" class="form-control form-control-sm">
-                                        <option value="">-- All Customers --</option>
-                                        @foreach($customers as $customer)
-                                            <option value="{{ $customer->id }}"
-                                                {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
-                                                {{ $customer->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-12 d-flex justify-content-end gap-2 mt-3">
-                                    <button type="submit" class="btn btn-primary"><i class="fa fa-filter"></i> Filter</button>
-                                    <a href="{{ route('reports.sales_invoice_summary_report_export', request()->all()) }}" class="btn btn-success">
-                                        <i class="fa fa-file-excel-o"></i> Export
-                                    </a>
-                                    <button type="button" id="clearFilters" class="btn btn-secondary">
-                                        <i class="fa fa-eraser"></i> Clear Filters
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
 
                             {{-- Report Table --}}
                             <div class="table-responsive mt-3">

@@ -28,7 +28,7 @@
                 <a class="dropdown-item" href="{{ route('edit_profile') }}">
                     <i class="fa fa-user fa-lg"></i> Edit Profile
                 </a>
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#helpModal">
+                <a class="dropdown-item" href="{{ route('help') }}">
                     <i class="fa fa-question-circle fa-lg"></i> Help
                 </a>
                 <a class="dropdown-item" href="#"

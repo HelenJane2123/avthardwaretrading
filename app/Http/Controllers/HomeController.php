@@ -62,6 +62,17 @@ class HomeController extends Controller
                 ->get();
         $estimatedIncome = $totalSales - $totalPurchases;
 
+        $lowStockCount = Product::where('is_active', 0)
+            ->where('remaining_stock', '>', 0)
+            ->whereColumn('remaining_stock', '<=', 'threshold')
+            ->count();
+
+        $outOfStockCount = Product::where('is_active', 0)
+            ->where(function ($query) {
+                $query->where('remaining_stock', '<=', 0)
+                      ->orWhereNull('remaining_stock');
+            })->count();
+
         // Monthly sales from invoices
         $monthlySales = Invoice::selectRaw('SUM(grand_total) as total_amount, MONTH(created_at) as month')
             ->groupBy(DB::raw('MONTH(created_at)'))
@@ -175,7 +186,9 @@ class HomeController extends Controller
             'monthlyEstimatedIncome' => $monthlyEstimatedIncome,
             'topStores'         => $topStores,
             'totalPurchases'    => $totalPurchases,
-            'estimatedIncome'   => $estimatedIncome
+            'estimatedIncome'   => $estimatedIncome,
+            'lowStockCount'    => $lowStockCount,
+            'outOfStockCount'  => $outOfStockCount,
         ]);
     }
 
@@ -184,49 +197,51 @@ class HomeController extends Controller
          return view('profile.edit_profile');
     }
 
-    public function update_profile(Request $request, $id){
+    public function update_profile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
 
+        if ($user->id !== Auth::id()) {
+            abort(403);
+        }
 
-        $user = User::find($id);
-        $user->f_name = $request->f_name;
-        $user->l_name = $request->l_name;
-        $user->email = $request->email;
+        $validated = $request->validate([
+            'f_name' => 'required|string|max:50',
+            'l_name' => 'required|string|max:50',
+            'email' => 'required|email|max:150|unique:users,email,' . $user->id,
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'current_password' => 'nullable|required_with:new_password,new_password_confirmation|min:8',
+            'new_password' => 'nullable|required_with:current_password,new_password_confirmation|min:8|different:current_password|confirmed',
+        ], [
+            'new_password.confirmed' => 'The new password confirmation does not match.',
+        ]);
 
-        if ($request->hasFile('image')){
-            $image_path ="images/user/".$user->image;
-            if (file_exists($image_path)){
-                unlink($image_path);
+        $user->f_name = $validated['f_name'];
+        $user->l_name = $validated['l_name'];
+        $user->email = $validated['email'];
+
+        if ($request->hasFile('image')) {
+            $oldImage = $user->image;
+            if ($oldImage && file_exists(public_path('images/user/' . $oldImage))) {
+                unlink(public_path('images/user/' . $oldImage));
             }
-            $imageName =request()->image->getClientOriginalName();
-            request()->image->move(public_path('images/user/'), $imageName);
+
+            $imageName = time() . '_' . preg_replace('/\s+/', '_', $request->file('image')->getClientOriginalName());
+            $request->file('image')->move(public_path('images/user'), $imageName);
             $user->image = $imageName;
         }
 
-        if ($request->filled(['current_password', 'new_password', 'confirm_password'])) {
-            // Validate password change fields
-            $request->validate([
-                'current_password' => 'required',
-                'new_password' => 'required|min:8|different:current_password',
-                'confirm_password' => 'required|same:new_password',
-            ]);
-        
-            // Verify if the entered current password matches the actual password
-            if (Hash::check($request->current_password, $user->password)) {
-                // Check if the new and confirm passwords match
-                if ($request->new_password !== $request->confirm_password) {
-                    return redirect()->back()->with('error', 'New and confirm passwords do not match');
-                }
-        
-                // Hash and update the new password
-                $user->password = Hash::make($request->new_password);
-            } else {
+        if (!empty($request->new_password)) {
+            if (!Hash::check($request->current_password, $user->password)) {
                 return redirect()->back()->with('error', 'Incorrect current password');
             }
+
+            $user->password = Hash::make($request->new_password);
         }
-        
+
         $user->save();
 
-        return redirect()->back()->with('success', 'Profile updated successfully');
+        return redirect()->back()->with('success', 'Your profile has been updated successfully.');
     }
 
     public function resetPassword($id)

@@ -23,61 +23,76 @@
                 <div class="tile-body">
                     <div class="container">
                         {{-- Filters --}}
-                        <form method="GET" action="{{ route('reports.purchase_report') }}" class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input
-                                    type="text"
-                                    name="start_date"
-                                    id="start_date"
-                                    class="form-control form-control-sm"
-                                    value="{{ request('start_date')
-                                        ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
-                                        : \Carbon\Carbon::now()->startOfYear()->format('F d, Y') }}"
-                                >
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                        <small class="text-muted">Use the filters below to narrow purchase results.</small>
+                                    </div>
+                                    <a href="{{ route('reports.purchase_report') }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fa fa-times"></i> Clear Filters
+                                    </a>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input
-                                    type="text"
-                                    name="end_date"
-                                    id="end_date"
-                                    class="form-control form-control-sm"
-                                    value="{{ request('end_date')
-                                        ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
-                                        : now()->format('F d, Y') }}"
-                                >
+                            <div class="card-body">
+                                <form method="GET" action="{{ route('reports.purchase_report') }}" class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label for="start_date" class="form-label">Start Date</label>
+                                        <input
+                                            type="text"
+                                            name="start_date"
+                                            id="start_date"
+                                            class="form-control form-control-sm"
+                                            value="{{ request('start_date')
+                                                ? \Carbon\Carbon::parse(request('start_date'))->format('F d, Y')
+                                                : \Carbon\Carbon::now()->startOfYear()->format('F d, Y') }}"
+                                        >
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="end_date" class="form-label">End Date</label>
+                                        <input
+                                            type="text"
+                                            name="end_date"
+                                            id="end_date"
+                                            class="form-control form-control-sm"
+                                            value="{{ request('end_date')
+                                                ? \Carbon\Carbon::parse(request('end_date'))->format('F d, Y')
+                                                : now()->format('F d, Y') }}"
+                                        >
+                                    </div>
+                                     <div class="col-md-4">
+                                        <label for="supplier" class="form-label">Supplier</label>
+                                        <select name="supplier_id" id="supplier_id" class="form-control">
+                                            <option value="">All Suppliers</option>
+                                            @foreach($suppliers as $supplier)
+                                                <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                                    {{ $supplier->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="product_id" class="form-label">Product</label>
+                                        <select name="product_id" id="product_id" class="form-control">
+                                            <option value="">All Products</option>
+                                            @foreach($products as $product)
+                                                <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
+                                                    {{ $product->product_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                        <a href="{{ route('reports.purchase_report_export', request()->all()) }}" class="btn btn-success">
+                                            <i class="fa fa-file-excel-o"></i> Export
+                                        </a>
+                                        <button id="clearFilters" class="btn btn-secondary ms-2">Clear Filters</button>
+                                    </div>
+                                </form>
                             </div>
-                             <div class="col-md-4">
-                                <label for="supplier" class="form-label">Supplier</label>
-                                <select name="supplier_id" id="supplier_id" class="form-control">
-                                    <option value="">All Suppliers</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="product_id" class="form-label">Product</label>
-                                <select name="product_id" id="product_id" class="form-control">
-                                    <option value="">All Products</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
-                                            {{ $product->product_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary me-2">Filter</button>
-                                <a href="{{ route('reports.purchase_report_export', request()->all()) }}" class="btn btn-success">
-                                    <i class="fa fa-file-excel-o"></i> Export
-                                </a>
-                                <button id="clearFilters" class="btn btn-secondary ms-2">Clear Filters</button>
-                            </div>
-                        </form>
+                        </div>
 
                         <div class="table-responsive mt-3">
                             <table class="table table-bordered table-striped" id="purchaseTable">
@@ -111,7 +126,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No purchases found.</td>
+                                            <td colspan="9" class="text-center">No purchases found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -170,13 +185,6 @@
                 }
             }
         });
-        // if (!$.fn.DataTable.isDataTable('#purchaseTable')) {
-        //     purchaseTable = $('#purchaseTable').DataTable({
-        //         pageLength: 25,
-        //         order: [[2, 'desc']],
-        //         responsive: true
-        //     });
-        // }
         flatpickr("#start_date", {
             dateFormat: "F d, Y",
             altInput: true,

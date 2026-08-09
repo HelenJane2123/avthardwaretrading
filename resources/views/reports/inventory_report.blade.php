@@ -23,52 +23,67 @@
                     <div class="tile-body">
                         <div class="container">
                             {{-- Filters --}}
-                            <form method="GET" action="{{ route('reports.inventory_report') }}" class="row g-3 mb-4">
-                                {{-- Status Filter --}}
-                                <div class="col-md-3">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select name="status" id="status" class="form-control">
-                                        <option value="All" {{ request('status') == 'All' ? 'selected' : '' }}>All</option>
-                                        <option value="In Stock" {{ request('status') == 'In Stock' ? 'selected' : '' }}>In Stock</option>
-                                        <option value="Out of Stock" {{ request('status') == 'Out of Stock' ? 'selected' : '' }}>Out of Stock</option>
-                                        <option value="Low Stock" {{ request('status') == 'Low Stock' ? 'selected' : '' }}>Low Stock</option>
-                                    </select>
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                            <small class="text-muted">Use the filters below to narrow inventory results.</small>
+                                        </div>
+                                        <a href="{{ route('reports.inventory_report') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-times"></i> Clear Filters
+                                        </a>
+                                    </div>
                                 </div>
+                                <div class="card-body">
+                                    <form method="GET" action="{{ route('reports.inventory_report') }}" class="row g-3 mb-4">
+                                        {{-- Status Filter --}}
+                                        <div class="col-md-3">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select name="status" id="status" class="form-control">
+                                                <option value="All" {{ request('status') == 'All' ? 'selected' : '' }}>All</option>
+                                                <option value="In Stock" {{ request('status') == 'In Stock' ? 'selected' : '' }}>In Stock</option>
+                                                <option value="Out of Stock" {{ request('status') == 'Out of Stock' ? 'selected' : '' }}>Out of Stock</option>
+                                                <option value="Low Stock" {{ request('status') == 'Low Stock' ? 'selected' : '' }}>Low Stock</option>
+                                            </select>
+                                        </div>
 
-                                {{-- Category Filter --}}
-                                <div class="col-md-3">
-                                    <label for="category_id" class="form-label">Category</label>
-                                    <select name="category_id" id="category_id" class="form-control">
-                                        <option value="">All Categories</option>
-                                        @foreach($categories as $cat)
-                                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                                                {{ $cat->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                        {{-- Category Filter --}}
+                                        <div class="col-md-3">
+                                            <label for="category_id" class="form-label">Category</label>
+                                            <select name="category_id" id="category_id" class="form-control">
+                                                <option value="">All Categories</option>
+                                                @foreach($categories as $cat)
+                                                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                                        {{ $cat->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                                {{-- Supplier Filter --}}
-                                <div class="col-md-3">
-                                    <label for="supplier_id" class="form-label">Supplier</label>
-                                    <select name="supplier_id" id="supplier_id" class="form-control">
-                                        <option value="">All Suppliers</option>
-                                        @foreach($suppliers as $sup)
-                                            <option value="{{ $sup->id }}" {{ request('supplier_id') == $sup->id ? 'selected' : '' }}>
-                                                {{ $sup->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                        {{-- Supplier Filter --}}
+                                        <div class="col-md-3">
+                                            <label for="supplier_id" class="form-label">Supplier</label>
+                                            <select name="supplier_id" id="supplier_id" class="form-control">
+                                                <option value="">All Suppliers</option>
+                                                @foreach($suppliers as $sup)
+                                                    <option value="{{ $sup->id }}" {{ request('supplier_id') == $sup->id ? 'selected' : '' }}>
+                                                        {{ $sup->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary me-2">Filter</button>
-                                    <a href="{{ route('reports.inventory_report_export', request()->all()) }}" 
-                                        class="btn btn-success">
-                                        <i class="fa fa-file-excel-o"></i> Export
-                                    </a>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                            <a href="{{ route('reports.inventory_report_export', request()->all()) }}" 
+                                                class="btn btn-success">
+                                                <i class="fa fa-file-excel-o"></i> Export
+                                            </a>
+                                        </div>
+                                    </form>
                                 </div>
-                            </form>
+                            </div>
                             {{-- Report Table --}}
                             <div class="table-responsive mt-3">
                                 <table class="table table-bordered table-striped" id="inventoryProductTable">

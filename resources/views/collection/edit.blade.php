@@ -1,106 +1,259 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('title', 'Edit Collection | ')
+
 @section('content')
-    @include('partials.header')
-    @include('partials.sidebar')
+
+@include('partials.header')
+@include('partials.sidebar')
 
 <main class="app-content">
     <div class="app-title d-flex justify-content-between align-items-center">
         <div>
             <h1><i class="fa fa-money"></i> Edit Collection</h1>
-            <p class="text-muted mb-0">Update collection details for the selected invoice.</p>
+            <p class="text-muted mb-0">Update customer payment information.</p>
         </div>
         <ul class="app-breadcrumb breadcrumb">
             <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
             <li class="breadcrumb-item">Collection</li>
-            <li class="breadcrumb-item active">Edit Collection</li>
+            <li class="breadcrumb-item active">Edit</li>
         </ul>
     </div>
 
     <div class="mb-3">
-        <a class="btn btn-sm btn-outline-primary" href="{{ route('collection.index') }}">
+        <a href="{{ route('collection.index') }}" class="btn btn-sm btn-outline-primary">
             <i class="fa fa-list"></i> Manage Collections
         </a>
     </div>
 
     @if(session()->has('message'))
-        <div class="alert alert-success">
-            {{ session()->get('message') }}
-        </div>
+        <div class="alert alert-success">{{ session()->get('message') }}</div>
     @endif
 
     <div class="row">
         <div class="col-md-12">
             <div class="tile shadow-sm">
-                <h3 class="tile-title mb-4"><i class="fa fa-money"></i> Edit Collection</h3>
-                <div class="container">
-                    <form action="{{ route('collection.update', $collection->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
+                <h3 class="tile-title"><i class="fa fa-edit"></i> Update Collection</h3>
+                <form method="POST" action="{{ route('collection.update', $collection->id) }}">
+                    @csrf
+                    @method('PUT')
 
-                        {{-- Invoice Details --}}
-                        <div class="mb-3">
-                            <h5>Invoice Details</h5>
-                            <table class="table table-bordered table-sm">
-                                <tbody>
-                                    <tr>
-                                        <th width="30%">Invoice #</th>
-                                        <td>{{ $collection->invoice->invoice_number }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Total Amount</th>
-                                        <td>₱{{ number_format($collection->invoice->grand_total, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Balance</th>
-                                        <td>₱<span id="detailBalance">{{ number_format($collection->invoice->outstanding_balance, 2) }}</span></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Payment Mode</th>
-                                        <td>{{ $collection->invoice->paymentMode->name ?? 'N/A' }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- Customer Details --}}
-                        <div class="mb-3">
-                            <h5>Customer Details</h5>
-                            <table class="table table-bordered table-sm">
-                                <tbody>
-                                    <tr>
-                                        <th width="30%">Name</th>
-                                        <td>{{ $collection->invoice->customer->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Email</th>
-                                        <td>{{ $collection->invoice->customer->email ?? 'N/A' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Phone</th>
-                                        <td>{{ $collection->invoice->customer->mobile ?? 'N/A' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Address</th>
-                                        <td>{{ $collection->invoice->customer->address ?? 'N/A' }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Collapsible Payment History -->
-                        <div class="mt-4">
-                            <button class="btn btn-outline-primary" type="button" data-toggle="collapse" data-target="#paymentHistoryWrapper" aria-expanded="false" aria-controls="paymentHistoryWrapper">
-                                Show Previous Payments
-                            </button>
-
-                            <div class="collapse mt-3" id="paymentHistoryWrapper">
-                                <h5>Previous Payments</h5>
-                                <table class="table table-bordered table-sm">
-                                    <thead>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong><i class="fa fa-file-text"></i> Invoice Details</strong>
+                                </div>
+                                <div class="card-body p-2">
+                                    <table class="table table-bordered table-sm mb-0">
                                         <tr>
-                                            <th>Payment Date</th>
-                                            <th>Last Amount Paid</th>
+                                            <th width="40%">Invoice #</th>
+                                            <td>{{ $collection->invoice->invoice_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total Amount</th>
+                                            <td>₱{{ number_format($collection->invoice->grand_total, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Current Balance</th>
+                                            <td class="text-danger">₱{{ number_format($collection->invoice->outstanding_balance, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Mode</th>
+                                            <td>{{ $collection->invoice->paymentMode->name ?? 'N/A' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong><i class="fa fa-user"></i> Customer Details</strong>
+                                </div>
+                                <div class="card-body p-2">
+                                    <table class="table table-bordered table-sm mb-0">
+                                        <tr>
+                                            <th width="35%">Name</th>
+                                            <td>{{ $collection->invoice->customer->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email</th>
+                                            <td>{{ $collection->invoice->customer->email ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Phone</th>
+                                            <td>{{ $collection->invoice->customer->mobile ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Address</th>
+                                            <td>{{ $collection->invoice->customer->address ?? 'N/A' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong><i class="fa fa-credit-card"></i> Payment Information</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Collection Number</label>
+                                        <input type="text"
+                                            name="collection_number"
+                                            class="form-control form-control-sm"
+                                            value="{{ $collection->collection_number }}"
+                                            readonly>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Payment Date</label>
+                                        <input type="date"
+                                            name="payment_date"
+                                            class="form-control form-control-sm"
+                                            value="{{ 
+                                        \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Amount Paid</label>
+                                        <input type="number"
+                                            step="0.01"
+                                            name="amount_paid"
+                                            id="amountPaid"
+                                            class="form-control form-control-sm"
+                                            value="{{ $collection->amount_paid }}"
+                                            required>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Remaining Balance</label>
+                                        <input type="number"
+                                            step="0.01"
+                                            id="balance"
+                                            name="balance"
+                                            class="form-control form-control-sm"
+                                            value="{{ $collection->invoice->outstanding_balance }}"
+                                            readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="pdcSection" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Bank Name</label>
+                                            <input type="text"
+                                                name="bank_name"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->bank_name ?? '' }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Check Date</label>
+                                            <input type="date"
+                                                name="check_date"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') : '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Check Number</label>
+                                            <input type="text"
+                                                name="check_number"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->check_number ?? '' }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Check Amount</label>
+                                            <input type="number"
+                                                step="0.01"
+                                                name="check_amount"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->check_amount ?? '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="gcashSection" style="display:none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>GCash Name</label>
+                                            <input type="text"
+                                                name="gcash_name"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->gcash_name ?? '' }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>GCash Mobile Number</label>
+                                            <input type="text"
+                                                name="gcash_number"
+                                                class="form-control form-control-sm"
+                                                value="{{ $collection->gcash_number ?? '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Payment Status</label>
+                                <select name="payment_status" class="form-control form-control-sm" required>
+                                    <option value="pending" {{ $collection->invoice->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="partial" {{ $collection->invoice->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
+                                    <option value="paid" {{ $collection->invoice->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
+                                    <option value="overdue" {{ $collection->invoice->payment_status == 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                    <option value="approved" {{ $collection->invoice->payment_status == 'approved' ? 'selected' : '' }}>Approved</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <textarea name="remarks" rows="3" class="form-control form-control-sm">{{ $collection->remarks }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3" id="paymentHistorySection">
+                        <div class="card-header bg-light">
+                            <strong><i class="fa fa-history"></i> Payment History</strong>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm mb-0">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Amount</th>
                                             <th>Bank</th>
                                             <th>Check #</th>
                                         </tr>
@@ -109,188 +262,88 @@
                                 </table>
                             </div>
                         </div>
-                        <!-- /Payment History -->
                     </div>
 
-                        {{-- Editable Fields --}}
-                        <div class="mb-3">
-                            <label>Collection Number</label>
-                            <input type="text" name="collection_number" class="form-control form-control-sm" 
-                                   value="{{ $collection->collection_number }}" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Last Payment Date</label>
-                            <input type="date" class="form-control form-control-sm"
-                                value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" disabled>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Last Amount Paid</label>
-                            <input type="number" step="0.01" name="last_paid_amount" class="form-control form-control-sm" 
-                                   value="{{ $collection->last_paid_amount }}" required disabled>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Payment Date</label>
-                            <input type="date" name="payment_date" class="form-control form-control-sm" 
-                                   value="{{ \Carbon\Carbon::parse($collection->payment_date)->format('Y-m-d') }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Amount Paid</label>
-                            <input type="number" step="0.01" name="amount_paid" class="form-control form-control-sm" 
-                                value="{{ old('last_paid_amount', $collection->last_paid_amount ?? '') }}"
-                                required>
-                        </div>
-                        <div id="pdcCheck" class="mb-3" style="display: none;">
-                            <label>Check Date</label>
-                            <input type="date" name="check_date" class="form-control form-control-sm" 
-                                value="{{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('Y-m-d') : '' }}">
-                        </div>
-                        <div id="pdcFields" class="mb-3" style="display: none;">
-                            <label>Check Number</label>
-                            <input type="text" name="check_number" class="form-control form-control-sm"
-                                value="{{ old('check_number', $collection->check_number ?? '') }}"
-                                placeholder="Enter check number">
-                        </div>
-
-                        <div id="gcashFields" style="display: none;">
-                            <div class="mb-3">
-                                <label>GCash Name</label>
-                                <input type="text" name="gcash_name" class="form-control form-control-sm"
-                                    value="{{ old('gcash_name', $collection->gcash_name ?? '') }}"
-                                    placeholder="Enter GCash account name">
-                            </div>
-                            <div class="mb-3">
-                                <label>GCash Mobile Number</label>
-                                <input type="text" name="gcash_number" class="form-control form-control-sm"
-                                    value="{{ old('gcash_number', $collection->gcash_number ?? '') }}"
-                                    placeholder="Enter GCash mobile number">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Balance</label>
-                            <input type="number" step="0.01" name="balance" 
-                                   class="form-control form-control-sm" 
-                                   value="{{ $collection->invoice->outstanding_balance }}" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Payment Status</label>
-                            <select name="payment_status" class="form-control form-control-sm" required>
-                                <option value="pending" {{ $collection->invoice->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="partial" {{ $collection->invoice->payment_status == 'partial' ? 'selected' : '' }}>Partial</option>
-                                <option value="paid" {{ $collection->invoice->payment_status == 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="overdue" {{ $collection->invoice->payment_status == 'overdue' ? 'selected' : '' }}>Overdue</option>
-                                <option value="approved" {{ $collection->invoice->payment_status == 'approved' ? 'selected' : '' }}>Approved</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label>Remarks</label>
-                            <textarea name="remarks" class="form-control form-control-sm" rows="2">{{ $collection->remarks }}</textarea>
-                        </div>
-
-                        <button class="btn btn-sm btn-success"><i class="fa fa-save"></i> Update Collection</button>
-                    </form>
-                </div>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fa fa-save"></i> Update Collection
+                    </button>
+                    <a href="{{ route('collection.index') }}" class="btn btn-secondary btn-sm">
+                        <i class="fa fa-times"></i> Cancel
+                    </a>
+                </form>
             </div>
         </div>
     </div>
 </main>
 @endsection
+
 @push('js')
 <script src="https://unpkg.com/sweetalert2@7.19.1/dist/sweetalert2.all.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const paymentMode = "{{ strtolower($collection->invoice->paymentMode->name ?? '') }}";
-
-    // Hide all first
-    document.getElementById('pdcFields').style.display = 'none';
-    document.getElementById('pdcCheck').style.display = 'none';
-    document.getElementById('gcashFields').style.display = 'none';
-
-    // Show based on payment method
+$(document).ready(function() {
+    let paymentMode = "{{ strtolower($collection->invoice->paymentMode->name ?? '') }}";
     if (paymentMode === 'pdc/check') {
-        document.getElementById('pdcCheck').style.display = 'block';
-        document.getElementById('pdcFields').style.display = 'block';
+        $('#pdcSection').show();
     } else if (paymentMode === 'gcash') {
-        document.getElementById('gcashFields').style.display = 'block';
+        $('#gcashSection').show();
     }
-    
-    const invoiceId = "{{ $collection->invoice_id }}";
+
+    let invoiceId = "{{ $collection->invoice_id }}";
     $.ajax({
         url: `/invoice/${invoiceId}/collections`,
-        method: 'GET',
-        success: function (data) {
-            const tbody = $("#paymentHistoryBody");
+        type: 'GET',
+        success: function(data) {
+            let tbody = $('#paymentHistoryBody');
             tbody.empty();
-
             if (!Array.isArray(data) || data.length === 0) {
-                tbody.append(`<tr><td colspan="5" class="text-center">No previous payments found.</td></tr>`);
-            } else {
-                data.forEach(row => {
-                    const payDate = row.payment_date ? row.payment_date : '';
-                    const amount = row.amount_paid ? parseFloat(row.amount_paid).toFixed(2) : '0.00';
-                    // const mode = row.payment_mode ? row.payment_mode : '';
-                    const bank = row.bank_name ? row.bank_name : '';
-                    const checkNo = row.check_number ? row.check_number : '';
-
-                    tbody.append(`
-                        <tr>
-                            <td>${payDate}</td>
-                            <td>₱${amount}</td>
-                            <td>${bank}</td>
-                            <td>${checkNo}</td>
-                        </tr>
-                    `);
-                });
+                tbody.append(`
+                    <tr>
+                        <td colspan="4" class="text-center">No previous payments found.</td>
+                    </tr>
+                `);
+                return;
             }
-
-            // Expand the collapsible so user sees history immediately
-            if (!$('#paymentHistoryWrapper').hasClass('show')) {
-                $('#paymentHistoryWrapper').collapse('show');
-            }
+            $.each(data, function(index, row) {
+                tbody.append(`
+                    <tr>
+                        <td>${formatDate(row.payment_date)}</td>
+                        <td>${formatCurrency(row.amount_paid)}</td>
+                        <td>${row.bank_name ?? ''}</td>
+                        <td>${row.check_number ?? ''}</td>
+                    </tr>
+                `);
+            });
         },
-        error: function () {
-            console.error('Failed to load payment history');
+        error: function() {
+            console.log('Unable to load payment history');
         }
     });
 
-});
+    $('form').submit(function(e) {
+        let currentBalance = parseFloat($('#balance').val()) || 0;
+        let oldPayment = parseFloat("{{ $collection->amount_paid }}") || 0;
+        let newPayment = parseFloat($('#amountPaid').val()) || 0;
+        let availableBalance = currentBalance + oldPayment;
 
-$(document).on("submit", "form", function (e) {
-    // Only check if this is the collection/payment form
-    const $form = $(this);
+        if (newPayment > availableBalance) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Payment',
+                text: `Amount paid cannot exceed remaining balance ₱${availableBalance.toFixed(2)}`,
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
 
-    // Clean and parse numeric values (remove ₱, commas, etc.)
-    const balance = parseFloat(($form.find("input[name='balance']").val() || "0").replace(/[^0-9.-]/g, ""));
-    const amountPaid = parseFloat(($form.find("input[name='amount_paid']").val() || "0").replace(/[^0-9.-]/g, ""));
-    const paymentStatus = $form.find("select[name='payment_status']");
-
-    // Debugging helper (optional)
-    console.log("Balance:", balance, "Amount Paid:", amountPaid);
-
-    // Prevent overpayment
-    if (amountPaid > balance) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "error",
-            title: "Invalid Payment",
-            text: `The amount paid (₱${amountPaid.toFixed(2)}) cannot exceed the balance (₱${balance.toFixed(2)}).`,
-            confirmButtonColor: "#d33",
-        });
-        return false;
-    }
-
-    // Auto-update payment status
-    if (amountPaid < balance) {
-        paymentStatus.val("partial");
-    } else if (amountPaid === balance) {
-        paymentStatus.val("paid");
-    }
+        let status = $('select[name="payment_status"]');
+        let remaining = availableBalance - newPayment;
+        if (remaining <= 0) {
+            status.val('paid');
+        } else if (newPayment > 0) {
+            status.val('partial');
+        }
+    });
 });
 </script>
 @endpush

@@ -35,12 +35,19 @@
             border-collapse: collapse;
             margin-bottom: 20px;
         }
-        .details td {
-            padding: 8px 5px;
+        .details td, .details th {
+            padding: 8px 10px;
             vertical-align: top;
+            border: 1px solid #ececec;
         }
-        .details strong {
+        .details th {
+            width: 30%;
+            background-color: #f8f9fb;
+            text-align: left;
             color: #004085;
+        }
+        .details td {
+            color: #333;
         }
         .items th, .items td {
             border: 1px solid #ddd;
@@ -50,10 +57,16 @@
         .items th {
             background-color: #f2f2f2;
         }
+        .items td.text-right {
+            text-align: right;
+        }
         .total {
             text-align: right;
             font-size: 16px;
             margin-top: 20px;
+        }
+        .summary-row {
+            background-color: #f8f9fb;
         }
         .print-btn {
             display: inline-block;
@@ -102,13 +115,13 @@
                 <td><strong>Mobile:</strong> {{ $collection->invoice->customer->mobile ?? '-' }}</td>
                 <td><strong>Invoice Date:</strong> {{ \Carbon\Carbon::parse($collection->invoice->invoice_date)->format('M d, Y') }}</td>
             </tr>
-            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['PDC/Check']))
+            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['pdc/check']))
                 <tr>
                     <td><strong>Check Number:</strong> {{ $collection->check_number ?? '-' }}</td>
                     <td><strong>Check Date:</strong> {{ $collection->check_date ? \Carbon\Carbon::parse($collection->check_date)->format('M d, Y') : '-' }}</td>
                 </tr>
             @endif
-            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['GCash']))
+            @if(in_array(strtolower($collection->invoice->paymentMode->name), ['gcash']))
                 <tr>
                     <td><strong>GCash Name:</strong> {{ $collection->gcash_name ?? '-'}}</td>
                     <td><strong>GCash Number:</strong> {{ $collection->gcash_number ?? '-' }}</td>
@@ -125,9 +138,9 @@
             </tr>
             @foreach($allPayments as $payment)
                 @if($payment->payment_date <= $collection->payment_date)
-                <tr @if($payment->id === $collection->id) style="background-color:#d4edda;" @endif>
+                <tr @if($payment->id === $collection->id) class="summary-row" @endif>
                     <td>{{ \Carbon\Carbon::parse($payment->payment_date)->format('M d, Y') }}</td>
-                    <td>{{ number_format($payment->amount_paid, 2) }}</td>
+                    <td class="text-right">₱{{ number_format($payment->amount_paid, 2) }}</td>
                     <td>{{ $payment->remarks ?? '-' }}</td>
                 </tr>
                 @endif
@@ -135,11 +148,9 @@
         </table>
 
        <div class="total">
-            <p><strong>Invoice Total:</strong> {{ number_format($invoice->grand_total, 2) }}</p>
-            <p><strong>Total Paid So Far:</strong> 
-            {{ number_format($allPayments->where('payment_date', '<=', $collection->payment_date)->sum('amount_paid'), 2) }}
-            </p>
-            <p><strong>Outstanding Balance:</strong> {{ number_format($balance, 2) }}</p>
+            <p><strong>Invoice Total:</strong> ₱{{ number_format($invoice->grand_total, 2) }}</p>
+            <p><strong>Total Paid So Far:</strong> ₱{{ number_format($allPayments->where('payment_date', '<=', $collection->payment_date)->sum('amount_paid'), 2) }}</p>
+            <p><strong>Outstanding Balance:</strong> ₱{{ number_format($balance, 2) }}</p>
             <p><strong>Payment Status:</strong> {{ ucfirst($invoice->payment_status) }}</p>
         </div>
         <p>Thank you for your payment!</p>

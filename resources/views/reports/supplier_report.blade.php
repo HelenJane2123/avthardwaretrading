@@ -23,28 +23,43 @@
                     <div class="tile-body">
                         <div class="container">
                             {{-- Filters --}}
-                            <form method="GET" action="{{ route('reports.supplier_report') }}" class="row g-4 mb-4">
-                                <div class="col-md-3">
-                                    <select name="status" class="form-control">
-                                        <option value="">-- Select Status --</option>
-                                        <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
-                                        <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                                    </select>
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                            <small class="text-muted">Use the filters below to narrow supplier results.</small>
+                                        </div>
+                                        <a href="{{ route('reports.supplier_report') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-times"></i> Clear Filters
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                                <div class="card-body">
+                                    <form method="GET" action="{{ route('reports.supplier_report') }}" class="row g-4 mb-4">
+                                        <div class="col-md-3">
+                                            <select name="status" class="form-control">
+                                                <option value="">-- Select Status --</option>
+                                                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
+                                                <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                                        </div>
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary me-2">Filter</button>
+                                            <a href="{{ route('reports.supplier_report_export', request()->all()) }}" 
+                                                class="btn btn-success">
+                                                <i class="fa fa-file-excel-o"></i> Export
+                                            </a>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div class="col-md-2">
-                                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
-                                </div>
-                                <div class="col-md-3 d-flex align-items-end">
-                                    <button type="submit" class="btn btn-primary me-2">Filter</button>
-                                    <a href="{{ route('reports.supplier_report_export', request()->all()) }}" 
-                                        class="btn btn-success">
-                                        <i class="fa fa-file-excel-o"></i> Export
-                                    </a>
-                                </div>
-                            </form>
+                            </div>
 
                             {{-- Report Table --}}
                             <div class="table-responsive mt-3">

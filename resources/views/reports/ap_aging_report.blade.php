@@ -23,60 +23,75 @@
                     <div class="tile-body">
                         <div class="container">
                             {{-- Filters --}}
-                            <form method="GET" action="{{ route('reports.ap_aging_report') }}">
-                                <div class="row align-items-end g-2">
-                                    <!-- Customer Filter -->
-                                    <div class="col-md-3">
-                                        <label for="supplier_id" class="form-label">Customer</label>
-                                        <select name="supplier_id" class="form-control">
-                                            <option value="">-- All Suppliers --</option>
-                                            @foreach($suppliers as $supplier)
-                                                <option value="{{ $supplier->id }}" 
-                                                    {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
-                                                    {{ $supplier->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <!-- Payment Method Filter -->
-                                    <div class="col-md-3">
-                                        <label for="payment_id" class="form-label">Payment Method</label>
-                                        <select name="payment_id" class="form-control">
-                                            <option value="">-- All Payment Methods --</option>
-                                            @foreach($paymentMethods as $method)
-                                                <option value="{{ $method->id }}"
-                                                    {{ request('payment_id') == $method->id ? 'selected' : '' }}>
-                                                    {{ $method->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <!-- As of Date Filter -->
-                                    <div class="col-md-3">
-                                        <label for="as_of_date" class="form-label">As of Date</label>
-                                        <input
-                                            type="text"
-                                            name="as_of_date"
-                                            id="as_of_date"
-                                            class="form-control"
-                                            value="{{ request('as_of_date')
-                                                ? \Carbon\Carbon::parse(request('as_of_date'))->format('F d, Y')
-                                                : now()->format('F d, Y') }}"
-                                        >
-                                    </div>
-
-                                    <!-- Buttons -->
-                                    <div class="col-md-3 d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">Filter</button>
-                                        <a href="{{ route('reports.ap_aging_export', request()->all()) }}" 
-                                            class="btn btn-success">
-                                            <i class="fa fa-file-excel-o"></i> Export
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0"><i class="fa fa-filter"></i> Report Filters</h5>
+                                            <small class="text-muted">Use the filters below to narrow aging results.</small>
+                                        </div>
+                                        <a href="{{ route('reports.ap_aging_report') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-times"></i> Clear Filters
                                         </a>
                                     </div>
                                 </div>
-                            </form>
+                                <div class="card-body">
+                                    <form method="GET" action="{{ route('reports.ap_aging_report') }}">
+                                        <div class="row align-items-end g-2">
+                                            <!-- Customer Filter -->
+                                            <div class="col-md-3">
+                                                <label for="supplier_id" class="form-label">Customer</label>
+                                                <select name="supplier_id" class="form-control">
+                                                    <option value="">-- All Suppliers --</option>
+                                                    @foreach($suppliers as $supplier)
+                                                        <option value="{{ $supplier->id }}" 
+                                                            {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                                            {{ $supplier->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- Payment Method Filter -->
+                                            <div class="col-md-3">
+                                                <label for="payment_id" class="form-label">Payment Method</label>
+                                                <select name="payment_id" class="form-control">
+                                                    <option value="">-- All Payment Methods --</option>
+                                                    @foreach($paymentMethods as $method)
+                                                        <option value="{{ $method->id }}"
+                                                            {{ request('payment_id') == $method->id ? 'selected' : '' }}>
+                                                            {{ $method->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- As of Date Filter -->
+                                            <div class="col-md-3">
+                                                <label for="as_of_date" class="form-label">As of Date</label>
+                                                <input
+                                                    type="text"
+                                                    name="as_of_date"
+                                                    id="as_of_date"
+                                                    class="form-control"
+                                                    value="{{ request('as_of_date')
+                                                        ? \Carbon\Carbon::parse(request('as_of_date'))->format('F d, Y')
+                                                        : now()->format('F d, Y') }}"
+                                                >
+                                            </div>
+
+                                            <!-- Buttons -->
+                                            <div class="col-md-3 d-flex gap-2">
+                                                <button type="submit" class="btn btn-primary">Filter</button>
+                                                <a href="{{ route('reports.ap_aging_export', request()->all()) }}" 
+                                                    class="btn btn-success">
+                                                    <i class="fa fa-file-excel-o"></i> Export
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                             {{-- Report Table --}}
                             <div class="table-responsive mt-3">
                                 <table class="table table-striped table-hover table-bordered" id="ApAgingTable">

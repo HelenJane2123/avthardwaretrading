@@ -25,6 +25,7 @@ class Product extends Model
         'discount_3', 
         'image', 
         'threshold', 
+        'is_active',
         'status',
         'volume_less',
         'regular_less',

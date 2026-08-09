@@ -304,7 +304,9 @@
                             @endforeach
                         </select>
                     </div>
-                    <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
+                    <div class="mb-3">
+                        <input type="text" id="productSearch" class="form-control" placeholder="Search product...">
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-bordered" id="productTable">
                             <thead>
@@ -352,8 +354,9 @@
                                         @else
                                             <span class="text-success">In Stock</span>
                                         @endif
+                                    </td>
                                     <td>
-                                    <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                                        <button type="button" class="btn btn-success btn-sm select-this">Select</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -439,17 +442,19 @@
 
         // Open modal when search button clicked
         $(document).on('click', '.select-product-btn', function() {
-            currentRow = $(this).closest('tr'); // remember which row opened the modal
+            currentRow = $(this).closest('tr'); 
             $('#productModal').modal('show');
-            $('#productSearch').val('').trigger('input'); // reset search
+            $('#productSearch').val('').trigger('input'); 
         });
         // Filter products as you type
         $('#productSearch').on('input', function() {
-            productTable.search($(this).val()).draw();
+            if (productTable) {
+                productTable.search($(this).val().trim()).draw();
+            }
         });
 
         $('#productModal .btn-close').on('click', function() {
-            $('#productModal').modal('hide'); // jQuery fallback
+            $('#productModal').modal('hide');
         });
         // When selecting a product
         $(document).on('click', '.select-this', function() {

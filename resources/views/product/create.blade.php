@@ -34,7 +34,7 @@
 
        
         <div class="mb-3">
-            <a class="btn btn-sm btn-outline-primary" href="{{route('product.index')}}">
+            <a class="btn btn-sm btn-outline-primary shadow-sm" href="{{route('product.index')}}">
                 <i class="fa fa-list"></i> Manage Products
             </a>
         </div>
@@ -197,8 +197,8 @@
                                 </div>
                             </div>
                             {{-- Supplier Section --}}
-                            <div class="card mt-4">
-                                <div class="card-header bg-secondary text-white">
+                            <div class="card mt-4 shadow-sm">
+                                <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fa fa-truck"></i> Supplier Details</h6>
                                     <small class="text-light">Selected supplier for the item will display the item's base price and net cost.</small>
                                 </div>

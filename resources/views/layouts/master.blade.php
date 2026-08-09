@@ -31,6 +31,131 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('css/main.css') }}">
     <!-- Font-icon css-->
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+            color: #0f172a;
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+
+        .app-title {
+            background: linear-gradient(135deg, #0f172a 0%, #2563eb 55%, #38bdf8 100%);
+            color: #fff;
+            border-radius: 20px;
+            padding: 24px 28px;
+            box-shadow: 0 16px 40px rgba(37, 99, 235, 0.16);
+            margin-bottom: 20px;
+        }
+
+        .app-title h1 {
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .app-title .text-muted,
+        .app-title p {
+            color: rgba(255,255,255,0.9) !important;
+        }
+
+        .app-title .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        .app-title .breadcrumb-item,
+        .app-title .breadcrumb-item a {
+            color: rgba(255,255,255,0.92);
+        }
+
+        .tile {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            border-radius: 18px;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+            padding: 20px;
+        }
+
+        .tile-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 14px;
+        }
+
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table td,
+        .table th {
+            vertical-align: middle;
+            padding: 12px 14px;
+        }
+
+        .table-hover tbody tr:hover {
+            background: #f8fbff;
+        }
+
+        .btn {
+            border-radius: 10px;
+            transition: transform .2s ease, box-shadow .2s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .form-control,
+        .select2-selection,
+        .form-select {
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 14px 16px;
+        }
+
+        .badge {
+            border-radius: 999px;
+            padding: 0.45em 0.7em;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+        }
+    </style>
 </head>
 <body class="app sidebar-mini rtl">
 <!-- Navbar-->
@@ -138,7 +263,6 @@
 <script src="{{ asset('js/app.js') }}"></script>
 <!-- Auto Logout Warning Modal -->
 @stack('js')
-@include('partials.help-modal')
 @include('partials.footer')
 </body>
 </html>

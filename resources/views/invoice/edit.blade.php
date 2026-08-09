@@ -249,7 +249,9 @@
                 <button type="button" class="btn btn-close" data-bs-dismiss="modal">x</button>
             </div>
             <div class="modal-body">
-                <!-- <input type="text" id="productSearch" class="form-control mb-3" placeholder="Search product..."> -->
+                <div class="mb-3">
+                    <input type="text" id="productSearch" class="form-control" placeholder="Search product...">
+                </div>
                 <div class="mb-2">
                     <label for="filterSupplier" class="form-label">Filter by Supplier</label>
                     <select id="filterSupplier" class="form-control form-control-sm">
@@ -308,7 +310,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                    <button type="button" class="btn btn-success btn-sm select-this">Select</button>
+                                        <button type="button" class="btn btn-success btn-sm select-this">Select</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -373,7 +375,8 @@
         // Open modal when search button clicked
         $(document).on('click', '.select-product-btn', function() {
             currentRow = $(this).closest('tr'); // remember which row opened the modal
-            $('#productModal').modal('show');
+            $('#productSearch').val('');
+            $('#filterSupplier').val('');
 
             if (!productTable) {
                 productTable = $('#productTable').DataTable({
@@ -384,22 +387,52 @@
                     info: false,
                     autoWidth: false
                 });
+            } else {
+                $.fn.dataTable.ext.search = [];
+                productTable.search('').draw();
             }
 
-            $('#filterSupplier').on('change', function () {
-                let supplierId = $(this).val();
-                
-                // Use column().search() if supplier is a column, or use a custom filter
-                $.fn.dataTable.ext.search.push(
-                    function(settings, data, dataIndex) {
-                        if (!supplierId) return true; // show all if no filter
-                        let rowSupplier = $('#productTable').find('tr:eq(' + (dataIndex + 1) + ')').data('supplier');
-                        return rowSupplier == supplierId;
-                    }
-                );
+            $('#productModal').modal('show');
+        });
+
+        $('#filterSupplier').on('change', function () {
+            if (!productTable) {
+                return;
+            }
+
+            let supplierId = $(this).val();
+            $.fn.dataTable.ext.search = [];
+
+            if (!supplierId) {
                 productTable.draw();
-                $.fn.dataTable.ext.search.pop(); // remove after draw to avoid stacking filters
+                return;
+            }
+
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let rowNode = productTable.row(dataIndex).node();
+                let rowSupplier = $(rowNode).data('supplier');
+                return rowSupplier == supplierId;
             });
+
+            productTable.draw();
+        });
+
+        $('#productSearch').on('input', function () {
+            if (productTable) {
+                productTable.search($(this).val().trim()).draw();
+            }
+        });
+
+        $('#productModal').on('hidden.bs.modal', function () {
+            if (!productTable) {
+                return;
+            }
+
+            productTable.search('').draw();
+            $('#productSearch').val('');
+            $('#filterSupplier').val('');
+            $.fn.dataTable.ext.search = [];
+            productTable.draw();
         });
 
         // When selecting a product from modal

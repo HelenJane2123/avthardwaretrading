@@ -12,7 +12,7 @@
             $user = Auth::user();
             $userImage = $user && $user->image 
                 ? asset('images/user/' . $user->image) 
-                : asset('images/default-avatar.png'); // fallback image
+                : asset('images/default-avatar.png'); 
         @endphp
 
         <img width="40px" class="app-sidebar__user-avatar" src="{{ $userImage }}" alt="User Image">
@@ -219,22 +219,101 @@
 
         <li class="treeview">
             <a class="app-menu__item {{ request()->is('reports*') ? 'active' : ''}}" href="#" data-toggle="treeview">
-                <i class="app-menu__icon fa fa-bar-chart"></i><span class="app-menu__label">Reports</span>
+                <i class="app-menu__icon fa fa-bar-chart"></i>
+                <span class="app-menu__label">Reports</span>
                 <i class="treeview-indicator fa fa-angle-right"></i>
             </a>
+
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}"><i class="icon fa fa-circle-o"></i> AR Aging</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.ap_aging_report') }}"><i class="icon fa fa-circle-o"></i> AP Aging</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.inventory_report') }}"><i class="icon fa fa-circle-o"></i> Inventory Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.collection_report') }}"><i class="icon fa fa-circle-o"></i> Collection Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.purchase_report') }}"><i class="icon fa fa-circle-o"></i> Purchase Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.sales_report') }}"><i class="icon fa fa-circle-o"></i> Sales Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.sales_invoice_summary_report') }}"><i class="icon fa fa-circle-o"></i> Sales Invoice Summary Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.customer_report') }}"><i class="icon fa fa-circle-o"></i> Customer Report</a></li>
-                <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}"><i class="icon fa fa-circle-o"></i> Supplier Report</a></li>
-                @if(auth()->user()->user_role === 'super_admin')
-                    <li><a class="treeview-item" href="{{ route('reports.estimated_income_report') }}"><i class="icon fa fa-circle-o"></i> Estimated Income Report</a></li>
-                @endif
+                {{-- Financial Reports --}}
+                <li class="treeview">
+                    <a class="treeview-item" href="#" data-toggle="treeview">
+                        <i class="icon fa fa-money"></i> Financial Reports
+                        <i class="treeview-indicator fa fa-angle-right"></i>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a class="treeview-item" href="{{ route('reports.ar_aging_report') }}">AR Aging</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.ap_aging_report') }}">AP Aging</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.collection_report') }}">Collection Report</a></li>
+
+                        @if(auth()->user()->user_role === 'super_admin')
+                            <li><a class="treeview-item" href="{{ route('reports.estimated_income_report') }}">Estimated Income Report</a></li>
+                        @endif
+
+                        {{-- Future Reports --}}
+                        <li><a class="treeview-item" href="#">Monthly Income Report</a></li>
+                        <li><a class="treeview-item" href="#">Yearly Income Report</a></li>
+                    </ul>
+                </li>
+
+                {{-- Sales Reports --}}
+                <li class="treeview">
+                    <a class="treeview-item" href="#" data-toggle="treeview">
+                        <i class="icon fa fa-line-chart"></i> Sales Reports
+                        <i class="treeview-indicator fa fa-angle-right"></i>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a class="treeview-item" href="{{ route('reports.sales_report') }}">Daily Sales Report</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.sales_invoice_summary_report') }}">Sales Invoice Summary</a></li>
+
+                        {{-- Future Reports --}}
+                        <li><a class="treeview-item" href="{{ route('reports.customer_sales_yearly') }}">Yearly Sales Report by Customer</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.location_sales_yearly') }}">Yearly Sales Report by Location</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.salesman_sales_yearly') }}">Yearly Sales Report by Salesman</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.top_selling_products') }}">Top Selling Products</a></li>
+                    </ul>
+                </li>
+
+                {{-- Purchasing Reports --}}
+                <li class="treeview">
+                    <a class="treeview-item" href="#" data-toggle="treeview">
+                        <i class="icon fa fa-shopping-cart"></i> Purchasing Reports
+                        <i class="treeview-indicator fa fa-angle-right"></i>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a class="treeview-item" href="{{ route('reports.purchase_report') }}">Purchase Report</a></li>
+
+                        {{-- Future Reports --}}
+                        {{-- <li><a class="treeview-item" href="#">Monthly Purchase Report</a></li> --}}
+                        <li><a class="treeview-item" href="{{ route('reports.purchase_yearly') }}">Yearly Purchase Report</a></li>
+                        {{-- <li><a class="treeview-item" href="#">Supplier Purchase Summary</a></li> --}}
+                    </ul>
+                </li>
+
+                {{-- Inventory Reports --}}
+                <li class="treeview">
+                    <a class="treeview-item" href="#" data-toggle="treeview">
+                        <i class="icon fa fa-cubes"></i> Inventory Reports
+                        <i class="treeview-indicator fa fa-angle-right"></i>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a class="treeview-item" href="{{ route('reports.inventory_report') }}">Inventory Report</a></li>
+
+                        {{-- Future Reports --}}
+                        {{-- <li><a class="treeview-item" href="#">Inventory Movement Report</a></li>
+                        <li><a class="treeview-item" href="#">Inventory Valuation Report</a></li>
+                        <li><a class="treeview-item" href="#">Low Stock Report</a></li>
+                        <li><a class="treeview-item" href="#">Out of Stock Report</a></li> --}}
+                    </ul>
+                </li>
+
+                {{-- Customer & Supplier Reports --}}
+                <li class="treeview">
+                    <a class="treeview-item" href="#" data-toggle="treeview">
+                        <i class="icon fa fa-users"></i> Customer & Supplier Reports
+                        <i class="treeview-indicator fa fa-angle-right"></i>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li><a class="treeview-item" href="{{ route('reports.customer_report') }}">Customer Report</a></li>
+                        <li><a class="treeview-item" href="{{ route('reports.supplier_report') }}">Supplier Report</a></li>
+
+                        {{-- Future Reports --}}
+                        {{-- <li><a class="treeview-item" href="#">Customer Sales Summary</a></li>
+                        <li><a class="treeview-item" href="#">Customer Collection Summary</a></li>
+                        <li><a class="treeview-item" href="#">Supplier Purchase Summary</a></li> --}}
+                    </ul>
+                </li>
+
             </ul>
         </li>
     </ul>
